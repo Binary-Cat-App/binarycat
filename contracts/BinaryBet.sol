@@ -7,10 +7,7 @@ contract BinaryBet {
     uint blocksForBetting;
     
     enum BetSide {down, up} 
-    struct Bet {
-        uint betValue;
-        BetSide side;
-    }
+
     
     
     struct Pool {
@@ -25,10 +22,8 @@ contract BinaryBet {
         Pool windowPool;
     }
     
-    mapping (uint => BettingWindow) windows;
+    mapping (uint => BettingWindow) windows; //windowNumber => window
 
-    
-    mapping(address => uint) balance;
     
 
     
@@ -47,27 +42,35 @@ contract BinaryBet {
 
         require(block.number <= lastBetBlock, "bets closed for this window");
         if(windows[windowNumber].windowPool.settlementBlock != 0) { //window exists (cant remember the best way to check this)
-            updatePool (windowNumber, value, side);
+            updatePool (windowNumber, value, uint8(side));
         }
 
         else {
-            createPool (windowNumber, startingBlock, value, side);
+            createPool (windowNumber, startingBlock, value, uint8(side));
         }
     }        
     
-    function updatePool (uint windowNumber, uint value, BetSide side) public {
-        if (uint8(side) == 0) { //down
+
+
+    //Internal but set as public for testing
+    function updatePool (uint windowNumber, uint value, uint8 side) public {
+        BetSide side = BetSide(side);
+        if (side == BetSide.down) { //down
               windows[windowNumber].windowPool.downValue += value;
-        
-        if (uint8(side) == 1) {
-              windows[windowNumber].windowPool.upValue += value;
-            }
         }
+        
+        if (side == BetSide.up) {
+              windows[windowNumber].windowPool.upValue += value;
+        }
+        
 
     }
 
-    function createPool (uint windowNumber, uint startingBlock, uint value, BetSide side) public {
-            if (uint8(side) == 0) { //down
+    //Internal but set as public for testing
+    function createPool (uint windowNumber, uint startingBlock, uint value, uint8 side) public {
+            require(windows[windowNumber].windowPool.settlementBlock == 0, "pool already exists");
+            BetSide side = BetSide(side);
+            if (side == BetSide.down) { //down
               Pool memory newPool = Pool(startingBlock + bettingWindowTotalSize, 0, value, getBlockPrice(startingBlock));
               windows[windowNumber] = BettingWindow(startingBlock, newPool);
              }
@@ -100,5 +103,11 @@ contract BinaryBet {
     function getBlockPrice(uint blockNumber) internal returns (uint currentPrice){
         return 100;
     }
+
+    function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
+        Pool memory pool = windows[windowNumber].windowPool;
+        return (pool.settlementBlock, pool.downValue, pool.upValue, pool.referencePrice);
+    }
+
 }
 

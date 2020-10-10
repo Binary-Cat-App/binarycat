@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 
-describe("BinaryBets", function () {
+describe("BinaryBets Windows", function () {
     it("Should find the correct starting block for the window", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
