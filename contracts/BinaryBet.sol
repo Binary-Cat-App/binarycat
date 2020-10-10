@@ -47,29 +47,36 @@ contract BinaryBet {
 
         require(block.number <= lastBetBlock, "bets closed for this window");
         if(windows[windowNumber].windowPool.settlementBlock != 0) { //window exists (cant remember the best way to check this)
-            if (uint8(side) == 0) { //down
-              windows[windowNumber].windowPool.downValue += value;
-        
-            if (uint8(side) == 1) {
-              windows[windowNumber].windowPool.upValue += value;
-            }
-        }
+            updatePool (windowNumber, value, side);
         }
 
         else {
-            //create new pool 
-             if (uint8(side) == 0) { //down
+            createPool (windowNumber, startingBlock, value, side);
+        }
+    }        
+    
+    function updatePool (uint windowNumber, uint value, BetSide side) public {
+        if (uint8(side) == 0) { //down
+              windows[windowNumber].windowPool.downValue += value;
+        
+        if (uint8(side) == 1) {
+              windows[windowNumber].windowPool.upValue += value;
+            }
+        }
+
+    }
+
+    function createPool (uint windowNumber, uint startingBlock, uint value, BetSide side) public {
+            if (uint8(side) == 0) { //down
               Pool memory newPool = Pool(startingBlock + bettingWindowTotalSize, 0, value, getBlockPrice(startingBlock));
               windows[windowNumber] = BettingWindow(startingBlock, newPool);
              }
+             
              else  { //up
               Pool memory newPool = Pool(startingBlock + bettingWindowTotalSize, value, 0, getBlockPrice(startingBlock));
               windows[windowNumber] = BettingWindow(startingBlock, newPool);
              }  
-        }
-    }        
-    
-        
+    }
     
 
     //Internal but set as public for testing
