@@ -1,6 +1,8 @@
 pragma solidity ^0.6.8;
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract BinaryBet {
+    using SafeMath for uint256;
 
     BettingWindow firstWindow;
     uint bettingWindowTotalSize;
@@ -28,7 +30,7 @@ contract BinaryBet {
 
     
     constructor(uint _firstWindowBlock, uint _bettingWindowTotalSize, uint _blocksForBetting) public{
-        firstWindow = BettingWindow(_firstWindowBlock, Pool(_firstWindowBlock + _bettingWindowTotalSize, 0,0, getBlockPrice(block.number))) ;
+        firstWindow = BettingWindow(_firstWindowBlock, Pool(_firstWindowBlock.add(_bettingWindowTotalSize), 0,0, getBlockPrice(block.number))) ;
         blocksForBetting = _blocksForBetting;
         bettingWindowTotalSize = _bettingWindowTotalSize;
         windows[0] = firstWindow;
@@ -56,11 +58,11 @@ contract BinaryBet {
     function updatePool (uint windowNumber, uint value, uint8 side) public {
         BetSide side = BetSide(side);
         if (side == BetSide.down) { //down
-              windows[windowNumber].windowPool.downValue += value;
+              windows[windowNumber].windowPool.downValue = windows[windowNumber].windowPool.downValue.add(value);
         }
         
         if (side == BetSide.up) {
-              windows[windowNumber].windowPool.upValue += value;
+              windows[windowNumber].windowPool.upValue = windows[windowNumber].windowPool.upValue.add(value);
         }
         
 
@@ -71,12 +73,12 @@ contract BinaryBet {
             require(windows[windowNumber].windowPool.settlementBlock == 0, "pool already exists");
             BetSide side = BetSide(side);
             if (side == BetSide.down) { //down
-              Pool memory newPool = Pool(startingBlock + bettingWindowTotalSize, 0, value, getBlockPrice(startingBlock));
+              Pool memory newPool = Pool(startingBlock.add(bettingWindowTotalSize), 0, value, getBlockPrice(startingBlock));
               windows[windowNumber] = BettingWindow(startingBlock, newPool);
              }
              
              else  { //up
-              Pool memory newPool = Pool(startingBlock + bettingWindowTotalSize, value, 0, getBlockPrice(startingBlock));
+              Pool memory newPool = Pool(startingBlock.add(bettingWindowTotalSize), value, 0, getBlockPrice(startingBlock));
               windows[windowNumber] = BettingWindow(startingBlock, newPool);
              }  
     }
@@ -85,18 +87,18 @@ contract BinaryBet {
     //Internal but set as public for testing
     function getBlockWindow (uint currentBlock) public view returns (uint windowNumber) {
         //n = floor((beg block - first_block)/window_size  + 1)
-        windowNumber = (currentBlock - windows[0].startingBlock)/bettingWindowTotalSize + 1; //integer division => floor    
+        windowNumber = ((currentBlock.sub(windows[0].startingBlock)).div(bettingWindowTotalSize)).add(1); //integer division => floor    
     }
 
     //Internal but set as public for testing
     function getWindowStartingBlock (uint windowNumber) public view returns (uint startingBlock) {
         //firstBlock + (n-1)*window_size
-        startingBlock =  windows[0].startingBlock + (windowNumber -1)*bettingWindowTotalSize;
+        startingBlock =  windows[0].startingBlock.add((windowNumber.sub(1)).mul(bettingWindowTotalSize));
     }
     
     //Internal but set as public for testing
     function getWindowLastBettingBlock (uint startingBlock) public view returns (uint lastBettingBlock) {
-        return startingBlock + blocksForBetting;
+        return startingBlock.add(blocksForBetting);
     }
 
     //TODO Implement price API
