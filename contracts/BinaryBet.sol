@@ -37,6 +37,7 @@ contract BinaryBet {
 
     mapping (address => uint) balance;
     mapping (address => mapping(uint => Stake)) userStake;
+    mapping (address => uint[]) userWindows;
     
 
     
@@ -54,14 +55,25 @@ contract BinaryBet {
     function deposit() payable external {
         balance[msg.sender] = balance[msg.sender].add(msg.value);
     }
+
+    function withdraw(uint value) external {
+        updateBalance(msg.sender);
+        uint funds = balance[msg.sender];
+        require(value <= balance[msg.sender], "not enough funds");
+        balance[msg.sender] = balance[msg.sender].sub(value);
+        msg.sender.transfer(value);
+
+    }
     
-    function bet (uint betValue, BetSide side) payable external {
+    function placeBet (uint betValue, BetSide side) payable external {
         uint windowNumber = getBlockWindow(block.number);
         uint startingBlock = getWindowStartingBlock(windowNumber);
         uint lastBetBlock = getWindowLastBettingBlock(startingBlock);
-
+        updateBalance(msg.sender);
         require(block.number <= lastBetBlock, "bets closed for this window");
+        require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
+        balance[msg.sender] = balance[msg.sender].sub(betValue);
         uint betFee = computeFee(betValue); 
         owner.transfer(betFee);
 
@@ -154,8 +166,19 @@ contract BinaryBet {
 
     }
 
+    function updateBalance(address user) internal {
+        uint[] memory userWindows = userWindows[user];
+        for (uint i = 1; i < userWindows.length; i++) {
+            if(block.number < windows[i].windowPool.settlementBlock) {
+                continue;
+            }
+            else {
+                balance[user] = balance[user].add(settleBet(user, userWindows[i]));
+            }
+        }
+    }
 
-    function settleBet(address bettor, uint windowNumber) public {
+    function settleBet(address bettor, uint windowNumber) public returns (uint gain) {
         Stake storage stake = userStake[bettor][windowNumber];
         Pool storage pool = windows[windowNumber].windowPool;
 
@@ -178,11 +201,10 @@ contract BinaryBet {
         else {
             uint gain = upStake.add(downStake);
         }
-        balance[bettor] = balance[bettor].add(gain);
+        return gain;
     }
 
-   function betResult(uint referencePrice, uint settlementPrice) public pure returns(uint8){
-            
+   function betResult(uint referencePrice, uint settlementPrice) public pure returns(uint8){            
         if(settlementPrice < referencePrice) {
             return 0;
         }   
