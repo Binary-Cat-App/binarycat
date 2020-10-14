@@ -4,7 +4,7 @@ describe("BinaryBets Pool Creation", function () {
     it("Should create the pool if pool does not exist", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 2);
+        let bet = await BinaryBet.deploy(10, 30, 2, 1);
         await bet.deployed();
 
         let windowNumber = 6
@@ -48,7 +48,7 @@ describe("BinaryBets Pool Creation", function () {
     it("Should not create the pool if pool exists", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 2);
+        let bet = await BinaryBet.deploy(10, 30, 2, 1);
         await bet.deployed();
 
         let windowNumber = 6
@@ -75,7 +75,7 @@ describe("BinaryBets Pool Creation", function () {
     it("Should update the pool", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 2);
+        let bet = await BinaryBet.deploy(10, 30, 2, 1);
         await bet.deployed();
 
         const windowNumber = 7

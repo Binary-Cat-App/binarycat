@@ -7,11 +7,14 @@ contract BinaryBet {
     BettingWindow firstWindow;
     uint bettingWindowTotalSize;
     uint blocksForBetting;
+
+    uint fee;
+    address payable owner;
     
     enum BetSide {down, up} 
 
-    
-    
+    enum BetResult {win, loss, tie}
+ 
     struct Pool {
         uint settlementBlock;
         uint upValue;
@@ -23,26 +26,48 @@ contract BinaryBet {
         uint startingBlock;
         Pool windowPool;
     }
+
+    struct Stake {
+        uint upStake;
+        uint downStake;
+    }
     
     mapping (uint => BettingWindow) windows; //windowNumber => window
 
+
+    mapping (address => uint) depositedBalance;
+    mapping (address => mapping(uint => Stake)) userStake;
     
 
     
-    constructor(uint _firstWindowBlock, uint _bettingWindowTotalSize, uint _blocksForBetting) public{
+    constructor(uint _firstWindowBlock, uint _bettingWindowTotalSize, uint _blocksForBetting, uint _fee) public{
+        require(_fee <= 100);
         firstWindow = BettingWindow(_firstWindowBlock, Pool(_firstWindowBlock.add(_bettingWindowTotalSize), 0,0, getBlockPrice(block.number))) ;
         blocksForBetting = _blocksForBetting;
         bettingWindowTotalSize = _bettingWindowTotalSize;
         windows[0] = firstWindow;
+        
+        fee = _fee;
+        owner = msg.sender;
     }
 
+    function deposit() payable external {
+        depositedBalance[msg.sender] = depositedBalance[msg.sender].add(msg.value);
+    }
     
-    function bet (uint value, BetSide side) payable external {
+    function bet (uint betValue, BetSide side) payable external {
         uint windowNumber = getBlockWindow(block.number);
         uint startingBlock = getWindowStartingBlock(windowNumber);
         uint lastBetBlock = getWindowLastBettingBlock(startingBlock);
 
         require(block.number <= lastBetBlock, "bets closed for this window");
+        require(betValue <= depositedBalance[msg.sender].add(msg.value), "not enough money to bet");
+
+        uint betFee = computeFee(betValue); 
+        owner.transfer(betFee);
+
+        uint value = betValue.sub(betFee);
+
         if(windows[windowNumber].windowPool.settlementBlock != 0) { //window exists (cant remember the best way to check this)
             updatePool (windowNumber, value, uint8(side));
         }
@@ -52,11 +77,25 @@ contract BinaryBet {
         }
     }        
     
+    function updateStake(address user, uint8 side, uint windowNumber, uint value) internal{
+        BetSide betSide = BetSide(side);
+        if (betSide == BetSide.down) {
+            Stake storage stake = userStake[user][windowNumber]; 
+            stake.downStake = stake.downStake.add(value); 
+        }
+        if (betSide == BetSide.up) {
+            Stake storage stake = userStake[user][windowNumber]; 
+            stake.upStake = stake.upStake.add(value); 
+
+
+        }
+        
+    }
 
 
     //Internal but set as public for testing
-    function updatePool (uint windowNumber, uint value, uint8 side) public {
-        BetSide side = BetSide(side);
+    function updatePool (uint windowNumber, uint value, uint8 betSide) public {
+        BetSide side = BetSide(betSide);
         if (side == BetSide.down) { //down
               windows[windowNumber].windowPool.downValue = windows[windowNumber].windowPool.downValue.add(value);
         }
@@ -69,9 +108,9 @@ contract BinaryBet {
     }
 
     //Internal but set as public for testing
-    function createPool (uint windowNumber, uint startingBlock, uint value, uint8 side) public {
+    function createPool (uint windowNumber, uint startingBlock, uint value, uint8 betSide) public {
             require(windows[windowNumber].windowPool.settlementBlock == 0, "pool already exists");
-            BetSide side = BetSide(side);
+            BetSide side = BetSide(betSide);
             if (side == BetSide.down) { //down
               Pool memory newPool = Pool(startingBlock.add(bettingWindowTotalSize), 0, value, getBlockPrice(startingBlock));
               windows[windowNumber] = BettingWindow(startingBlock, newPool);
@@ -110,6 +149,40 @@ contract BinaryBet {
         Pool memory pool = windows[windowNumber].windowPool;
         return (pool.settlementBlock, pool.downValue, pool.upValue, pool.referencePrice);
     }
+
+    function computeFee(uint value) public view returns (uint betFee) {
+        betFee = (value.mul(fee)).div(100); 
+
+    }
+
+   function betResult(uint8 betSide, uint referencePrice, uint settlementPrice) public pure returns(uint8){
+        /*
+        returns 0 if win
+        returns 1 if loss
+        returns 2 if tie
+        */
+        
+        if(settlementPrice < referencePrice) {
+            if (BetSide(betSide) == BetSide.up) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }   
+        else if(settlementPrice > referencePrice) {
+            if (BetSide(betSide) == BetSide.up) {
+                return 0;
+            }
+            else {
+                return 1;
+            }
+        } 
+        else {
+            return 2;
+        }
+    }
+    
 
 }
 
