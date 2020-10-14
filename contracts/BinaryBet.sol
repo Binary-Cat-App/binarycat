@@ -13,7 +13,7 @@ contract BinaryBet {
     
     enum BetSide {down, up} 
 
-    enum BetResult {win, loss, tie}
+    enum BetResult {down, up, tie}
  
     struct Pool {
         uint settlementBlock;
@@ -35,7 +35,7 @@ contract BinaryBet {
     mapping (uint => BettingWindow) windows; //windowNumber => window
 
 
-    mapping (address => uint) depositedBalance;
+    mapping (address => uint) balance;
     mapping (address => mapping(uint => Stake)) userStake;
     
 
@@ -52,7 +52,7 @@ contract BinaryBet {
     }
 
     function deposit() payable external {
-        depositedBalance[msg.sender] = depositedBalance[msg.sender].add(msg.value);
+        balance[msg.sender] = balance[msg.sender].add(msg.value);
     }
     
     function bet (uint betValue, BetSide side) payable external {
@@ -61,7 +61,6 @@ contract BinaryBet {
         uint lastBetBlock = getWindowLastBettingBlock(startingBlock);
 
         require(block.number <= lastBetBlock, "bets closed for this window");
-        require(betValue <= depositedBalance[msg.sender].add(msg.value), "not enough money to bet");
 
         uint betFee = computeFee(betValue); 
         owner.transfer(betFee);
@@ -155,28 +154,40 @@ contract BinaryBet {
 
     }
 
-   function betResult(uint8 betSide, uint referencePrice, uint settlementPrice) public pure returns(uint8){
-        /*
-        returns 0 if win
-        returns 1 if loss
-        returns 2 if tie
-        */
-        
+
+    function settleBet(address bettor, uint windowNumber) public {
+        Stake storage stake = userStake[bettor][windowNumber];
+        Pool storage pool = windows[windowNumber].windowPool;
+
+        uint upStake = stake.upStake;
+        uint downStake = stake.downStake;
+
+        stake.upStake = 0;
+        stake.downStake = 0;
+
+        require(pool.settlementBlock > block.number, "bet not resolved yet");
+        uint settlementPrice = getBlockPrice(pool.settlementBlock);
+        BetResult result = BetResult(betResult(pool.referencePrice, settlementPrice));
+        uint gain = 0;
+        if (result == BetResult.up) {
+            uint gain = (upStake.div(pool.upValue)).mul(pool.downValue.add(pool.upValue));
+        } 
+        else if (result == BetResult.down) {
+            uint gain = (downStake.div(pool.downValue)).mul(pool.downValue.add(pool.upValue));
+        }
+        else {
+            uint gain = upStake.add(downStake);
+        }
+        balance[bettor] = balance[bettor].add(gain);
+    }
+
+   function betResult(uint referencePrice, uint settlementPrice) public pure returns(uint8){
+            
         if(settlementPrice < referencePrice) {
-            if (BetSide(betSide) == BetSide.up) {
-                return 1;
-            }
-            else {
-                return 0;
-            }
+            return 0;
         }   
         else if(settlementPrice > referencePrice) {
-            if (BetSide(betSide) == BetSide.up) {
-                return 0;
-            }
-            else {
-                return 1;
-            }
+            return 1;
         } 
         else {
             return 2;
