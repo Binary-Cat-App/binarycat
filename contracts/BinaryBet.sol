@@ -169,13 +169,14 @@ contract BinaryBet {
     }
 
     function updateBalance(address user) internal {
-        uint[] memory userWindows = userWindows[user];
-        for (uint i = 1; i < userWindows.length; i++) {
+        uint[] memory userWindowsList = userWindows[user];
+        for (uint i = userWindowsList.length; i >= 0; i--) {
             if(block.number < windows[i].windowPool.settlementBlock) {
                 continue;
             }
             else {
-                balance[user] = balance[user].add(settleBet(user, userWindows[i]));
+                balance[user] = balance[user].add(settleBet(user, userWindowsList[i]));
+                delete userWindows[user][i];
             }
         }
     }
