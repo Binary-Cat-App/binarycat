@@ -1,6 +1,7 @@
 pragma solidity ^0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
+//SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
     using SafeMath for uint256;
 
@@ -59,7 +60,7 @@ contract BinaryBet {
     function withdraw(uint value) external {
         updateBalance(msg.sender);
         uint funds = balance[msg.sender];
-        require(value <= balance[msg.sender], "not enough funds");
+        require(value <= funds, "not enough funds");
         balance[msg.sender] = balance[msg.sender].sub(value);
         msg.sender.transfer(value);
 
@@ -181,8 +182,8 @@ contract BinaryBet {
         }
     }
 
-    function settleBet(address bettor, uint windowNumber) public returns (uint gain) {
-        Stake storage stake = userStake[bettor][windowNumber];
+    function settleBet(address user, uint windowNumber) public returns (uint gain) {
+        Stake storage stake = userStake[user][windowNumber];
         Pool storage pool = windows[windowNumber].windowPool;
 
         uint upStake = stake.upStake;
@@ -194,15 +195,14 @@ contract BinaryBet {
         require(pool.settlementBlock > block.number, "bet not resolved yet");
         uint settlementPrice = getBlockPrice(pool.settlementBlock);
         BetResult result = BetResult(betResult(pool.referencePrice, settlementPrice));
-        uint gain = 0;
         if (result == BetResult.up) {
-            uint gain = (upStake.div(pool.upValue)).mul(pool.downValue.add(pool.upValue));
+            gain = (upStake.div(pool.upValue)).mul(pool.downValue.add(pool.upValue));
         } 
         else if (result == BetResult.down) {
-            uint gain = (downStake.div(pool.downValue)).mul(pool.downValue.add(pool.upValue));
+            gain = (downStake.div(pool.downValue)).mul(pool.downValue.add(pool.upValue));
         }
         else {
-            uint gain = upStake.add(downStake);
+            gain = upStake.add(downStake);
         }
         return gain;
     }
