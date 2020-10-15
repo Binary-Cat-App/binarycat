@@ -78,6 +78,7 @@ contract BinaryBet {
         owner.transfer(betFee);
 
         uint value = betValue.sub(betFee);
+        userWindows[msg.sender].push(windowNumber);
 
         if(windows[windowNumber].windowPool.settlementBlock != 0) { //window exists (cant remember the best way to check this)
             updatePool (windowNumber, value, uint8(side));
@@ -86,6 +87,7 @@ contract BinaryBet {
         else {
             createPool (windowNumber, startingBlock, value, uint8(side));
         }
+        updateStake(msg.sender, uint8(side), windowNumber, value);
     }        
     
     function updateStake(address user, uint8 side, uint windowNumber, uint value) internal{
