@@ -82,7 +82,7 @@ contract BinaryBet {
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         balance[msg.sender] = balance[msg.sender].sub(betValue);
-        uint betFee = computeFee(betValue); 
+        uint betFee = computeFee(betValue, fee); 
         owner.transfer(betFee);
 
         uint value = betValue.sub(betFee);
@@ -171,8 +171,8 @@ contract BinaryBet {
         return (pool.settlementBlock, pool.downValue, pool.upValue, pool.referencePrice);
     }
 
-    function computeFee(uint value) public view returns (uint betFee) {
-        betFee = (value.mul(fee)).div(100); 
+    function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
+        betFee = (value.mul(_fee)).div(100); 
 
     }
 
