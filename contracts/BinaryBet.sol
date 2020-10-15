@@ -11,7 +11,7 @@ contract BinaryBet {
 
     uint fee;
     address payable owner;
-    
+    mapping(uint => uint) ethPrice;
     enum BetSide {down, up} 
 
     enum BetResult {down, up, tie}
@@ -94,7 +94,59 @@ contract BinaryBet {
             createPool (windowNumber, startingBlock, value, uint8(side));
         }
         updateStake(msg.sender, uint8(side), windowNumber, value);
-    }        
+    }       
+
+        function updateBalance(address user, uint[] memory _userWindowsList) public returns(uint){
+        uint totalGain = 0;
+        uint[] storage userWindowsList = userWindows[user];
+        for (uint i = userWindowsList.length; i >= 0; i--) {
+            Pool memory pool = windows[userWindowsList[i]].windowPool;
+            if(block.number < pool.settlementBlock) {
+                continue;
+            }
+            else {
+                uint referencePrice = pool.referencePrice;
+                uint settlementPrice = getBlockPrice(pool.settlementBlock);
+                Stake storage stake = userStake[user][userWindowsList[i]];
+                uint8 result = betResult(referencePrice, settlementPrice);
+                uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
+
+                stake.downStake = 0;
+                stake.upStake = 0;
+                totalGain = totalGain.add(windowGain);
+                delete userWindowsList[i];
+            }
+        }
+        return totalGain;
+    }
+
+    function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain) {
+        BetResult result = BetResult(betResult);
+        uint poolTotal = poolUp + poolDown;
+        if (result == BetResult.up) {
+            gain = (upStake.div(poolUp)).mul(poolTotal);
+        } 
+        else if (result == BetResult.down) {
+            gain = (downStake.div(poolDown)).mul(poolTotal);
+        }
+        else {
+            gain = upStake.add(downStake);
+        }
+        return gain;
+    }
+
+   function betResult(uint referencePrice, uint settlementPrice) public pure returns(uint8){            
+        if(settlementPrice < referencePrice) {
+            return 0;
+        }   
+        else if(settlementPrice > referencePrice) {
+            return 1;
+        } 
+        else {
+            return 2;
+        }
+    }
+ 
     
     function updateStake(address user, uint8 side, uint windowNumber, uint value) internal{
         BetSide betSide = BetSide(side);
@@ -158,10 +210,6 @@ contract BinaryBet {
         return startingBlock.add(blocksForBetting);
     }
 
-    //TODO Implement price API
-    function getBlockPrice(uint blockNumber) internal returns (uint currentPrice){
-        return 100;
-    }
 
     function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
         Pool memory pool = windows[windowNumber].windowPool;
@@ -173,57 +221,20 @@ contract BinaryBet {
 
     }
 
-    function updateBalance(address user, uint[] storage _userWindowsList) public returns(uint){
-        uint totalGain = 0;
-        uint[] storage userWindowsList = userWindows[user];
-        for (uint i = userWindowsList.length; i >= 0; i--) {
-            Pool memory pool = windows[userWindowsList[i]].windowPool;
-            if(block.number < pool.settlementBlock) {
-                continue;
-            }
-            else {
-                uint referencePrice = pool.referencePrice;
-                uint settlementPrice = getBlockPrice(pool.settlementBlock);
-                Stake storage stake = userStake[user][userWindowsList[i]];
-                uint8 result = betResult(referencePrice, settlementPrice);
-                uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
 
-                stake.downStake = 0;
-                stake.upStake = 0;
-                totalGain = totalGain.add(windowGain);
-                delete userWindowsList[i];
-            }
+    function getBlockPrice(uint blockNumber) internal returns (uint){
+        if(ethPrice[blockNumber] == 0) {
+            ethPrice[blockNumber] = priceOracle(blockNumber);
         }
-        return totalGain;
-    }
-
-    function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain) {
-        BetResult result = BetResult(betResult);
-        uint poolTotal = poolUp + poolDown;
-        if (result == BetResult.up) {
-            gain = (upStake.div(poolUp)).mul(poolTotal);
-        } 
-        else if (result == BetResult.down) {
-            gain = (downStake.div(poolDown)).mul(poolTotal);
-        }
-        else {
-            gain = upStake.add(downStake);
-        }
-        return gain;
-    }
-
-   function betResult(uint referencePrice, uint settlementPrice) public pure returns(uint8){            
-        if(settlementPrice < referencePrice) {
-            return 0;
-        }   
-        else if(settlementPrice > referencePrice) {
-            return 1;
-        } 
-        else {
-            return 2;
-        }
+        return ethPrice[blockNumber];
     }
     
+    //TODO Implement price API
+    function priceOracle(uint blockNumber) internal returns (uint currentPrice){
+        return 100;
+    }
+
+
 
 }
 
