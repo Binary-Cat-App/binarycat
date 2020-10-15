@@ -58,8 +58,7 @@ contract BinaryBet {
     }
 
     function withdraw(uint value) external {
-        (uint gain, uint[] memory remainingWindows) = updateBalance(msg.sender, userWindows[msg.sender]);
-        userWindows[msg.sender] = remainingWindows;
+        uint gain = updateBalance(msg.sender, userWindows[msg.sender]);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
         uint funds = balance[msg.sender];
@@ -74,8 +73,7 @@ contract BinaryBet {
         uint startingBlock = getWindowStartingBlock(windowNumber);
         uint lastBetBlock = getWindowLastBettingBlock(startingBlock);
         
-        (uint gain, uint[] memory remainingWindows) = updateBalance(msg.sender, userWindows[msg.sender]);
-        userWindows[msg.sender] = remainingWindows;
+        uint gain = updateBalance(msg.sender, userWindows[msg.sender]);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
         require(block.number <= lastBetBlock, "bets closed for this window");
@@ -112,7 +110,6 @@ contract BinaryBet {
         }
         
     }
-
 
     //Internal but set as public for testing
     function updatePool (uint windowNumber, uint value, uint8 betSide) public {
@@ -176,39 +173,38 @@ contract BinaryBet {
 
     }
 
-    function updateBalance(address user, uint[] storage _userWindowsList) internal returns(uint, uint[] memory){
+    function updateBalance(address user, uint[] storage _userWindowsList) public returns(uint){
         uint totalGain = 0;
-        uint[] memory userWindowsList = _userWindowsList;
+        uint[] storage userWindowsList = userWindows[user];
         for (uint i = userWindowsList.length; i >= 0; i--) {
-            if(block.number < windows[i].windowPool.settlementBlock) {
+            Pool memory pool = windows[userWindowsList[i]].windowPool;
+            if(block.number < pool.settlementBlock) {
                 continue;
             }
             else {
-                totalGain = totalGain.add(settleBet(user, userWindowsList[i]));
+                uint referencePrice = pool.referencePrice;
+                uint settlementPrice = getBlockPrice(pool.settlementBlock);
+                Stake storage stake = userStake[user][userWindowsList[i]];
+                uint8 result = betResult(referencePrice, settlementPrice);
+                uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
+
+                stake.downStake = 0;
+                stake.upStake = 0;
+                totalGain = totalGain.add(windowGain);
                 delete userWindowsList[i];
             }
         }
-        return (totalGain, userWindowsList);
+        return totalGain;
     }
 
-    function settleBet(address user, uint windowNumber) public returns (uint gain) {
-        Stake storage stake = userStake[user][windowNumber];
-        Pool storage pool = windows[windowNumber].windowPool;
-
-        uint upStake = stake.upStake;
-        uint downStake = stake.downStake;
-
-        stake.upStake = 0;
-        stake.downStake = 0;
-
-        require(pool.settlementBlock > block.number, "bet not resolved yet");
-        uint settlementPrice = getBlockPrice(pool.settlementBlock);
-        BetResult result = BetResult(betResult(pool.referencePrice, settlementPrice));
+    function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain) {
+        BetResult result = BetResult(betResult);
+        uint poolTotal = poolUp + poolDown;
         if (result == BetResult.up) {
-            gain = (upStake.div(pool.upValue)).mul(pool.downValue.add(pool.upValue));
+            gain = (upStake.div(poolUp)).mul(poolTotal);
         } 
         else if (result == BetResult.down) {
-            gain = (downStake.div(pool.downValue)).mul(pool.downValue.add(pool.upValue));
+            gain = (downStake.div(poolDown)).mul(poolTotal);
         }
         else {
             gain = upStake.add(downStake);
