@@ -58,7 +58,10 @@ contract BinaryBet {
     }
 
     function withdraw(uint value) external {
-        updateBalance(msg.sender);
+        (uint gain, uint[] memory remainingWindows) = updateBalance(msg.sender, userWindows[msg.sender]);
+        userWindows[msg.sender] = remainingWindows;
+        balance[msg.sender] = balance[msg.sender].add(gain);
+
         uint funds = balance[msg.sender];
         require(value <= funds, "not enough funds");
         balance[msg.sender] = balance[msg.sender].sub(value);
@@ -70,7 +73,11 @@ contract BinaryBet {
         uint windowNumber = getBlockWindow(block.number);
         uint startingBlock = getWindowStartingBlock(windowNumber);
         uint lastBetBlock = getWindowLastBettingBlock(startingBlock);
-        updateBalance(msg.sender);
+        
+        (uint gain, uint[] memory remainingWindows) = updateBalance(msg.sender, userWindows[msg.sender]);
+        userWindows[msg.sender] = remainingWindows;
+        balance[msg.sender] = balance[msg.sender].add(gain);
+
         require(block.number <= lastBetBlock, "bets closed for this window");
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
@@ -169,17 +176,19 @@ contract BinaryBet {
 
     }
 
-    function updateBalance(address user) internal {
-        uint[] memory userWindowsList = userWindows[user];
+    function updateBalance(address user, uint[] storage _userWindowsList) internal returns(uint, uint[] memory){
+        uint totalGain = 0;
+        uint[] memory userWindowsList = _userWindowsList;
         for (uint i = userWindowsList.length; i >= 0; i--) {
             if(block.number < windows[i].windowPool.settlementBlock) {
                 continue;
             }
             else {
-                balance[user] = balance[user].add(settleBet(user, userWindowsList[i]));
-                delete userWindows[user][i];
+                totalGain = totalGain.add(settleBet(user, userWindowsList[i]));
+                delete userWindowsList[i];
             }
         }
+        return (totalGain, userWindowsList);
     }
 
     function settleBet(address user, uint windowNumber) public returns (uint gain) {
