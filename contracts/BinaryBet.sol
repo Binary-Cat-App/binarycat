@@ -122,13 +122,13 @@ contract BinaryBet {
 
     function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint) {
         BetResult result = BetResult(betResult);
-        uint poolTotal = poolUp + poolDown;
+        uint poolTotal = poolUp.add(poolDown);
         uint gain = 0;
         if (result == BetResult.up) {
-            gain = upStake.mul(poolTotal).div(poolUp);
+            gain = (upStake*poolTotal)/poolUp;
         } 
         else if (result == BetResult.down) {
-            gain = downStake.mul(poolTotal).div(poolDown);
+            gain = (downStake*poolTotal)/poolDown;
         }
         else {
             gain = upStake.add(downStake);

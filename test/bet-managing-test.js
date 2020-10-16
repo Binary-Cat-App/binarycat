@@ -1,4 +1,7 @@
 const { expect } = require("chai");
+const {
+    BN,           // Big Number support
+} = require('@openzeppelin/test-helpers');
 
 describe("BinaryBets Bet management", function () {
     it("Should get the correct bet result", async function () {
@@ -41,6 +44,7 @@ describe("BinaryBets Bet management", function () {
         await bet.deployed();
         // function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain) 
         let result = await bet.settleBet(78, 5, 1708, 1931, 0);
+        value = new BN(9);
         expect(result).to.equal(9);
 
         result = await bet.settleBet(23, 29, 1116, 1912, 2);
@@ -110,7 +114,8 @@ describe("BinaryBets Bet management", function () {
         expect(result).to.equal(2);
 
         result = await bet.settleBet(10, 33, 1837, 1996, 0);
-        (result).to.equal(63);
+        expect(result).to.equal(63);
+
 
         result = await bet.settleBet(47, 3, 1567, 1359, 0);
         expect(result).to.equal(6);
