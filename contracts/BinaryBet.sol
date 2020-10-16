@@ -6,8 +6,8 @@ contract BinaryBet {
     using SafeMath for uint256;
 
     BettingWindow firstWindow;
-    uint bettingWindowTotalSize;
-    uint blocksForBetting;
+    uint windowDuration; //in timestamp
+    uint timeForBetting;     //in timestamp
 
     uint fee;
     address payable owner;
@@ -17,14 +17,14 @@ contract BinaryBet {
     enum BetResult {down, up, tie}
  
     struct Pool {
-        uint settlementBlock;
+        uint settlementTimestamp;
         uint upValue;
         uint downValue;
         uint referencePrice;
     }
     
     struct BettingWindow {
-        uint startingBlock;
+        uint startingTimestamp;
         Pool windowPool;
     }
 
@@ -42,11 +42,11 @@ contract BinaryBet {
     
 
     
-    constructor(uint _firstWindowBlock, uint _bettingWindowTotalSize, uint _blocksForBetting, uint _fee) public{
+    constructor(uint _firstWindowTimestamp, uint _windowDuration, uint _timeForBetting, uint _fee) public{
         require(_fee <= 100);
-        firstWindow = BettingWindow(_firstWindowBlock, Pool(_firstWindowBlock.add(_bettingWindowTotalSize), 0,0, getBlockPrice(block.number))) ;
-        blocksForBetting = _blocksForBetting;
-        bettingWindowTotalSize = _bettingWindowTotalSize;
+        firstWindow = BettingWindow(_firstWindowTimestamp, Pool(_firstWindowTimestamp.add(_windowDuration), 0,0, getTimestampPrice(block.timestamp))) ;
+        timeForBetting = _timeForBetting;
+        windowDuration = _windowDuration;
         windows[0] = firstWindow;
         
         fee = _fee;
@@ -69,14 +69,14 @@ contract BinaryBet {
     }
     
     function placeBet (uint betValue, BetSide side) payable external {
-        uint windowNumber = getBlockWindow(block.number);
-        uint startingBlock = getWindowStartingBlock(windowNumber);
-        uint lastBetBlock = getWindowLastBettingBlock(startingBlock);
+        uint windowNumber = getTimestampWindow(block.timestamp);
+        uint startingTimestamp = getWindowStartingTimestamp(windowNumber);
+        uint lastBetTimestamp = getWindowLastBettingTimestamp(startingTimestamp);
         
         uint gain = updateBalance(msg.sender, userWindows[msg.sender]);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
-        require(block.number <= lastBetBlock, "bets closed for this window");
+        require(block.timestamp <= lastBetTimestamp, "bets closed for this window");
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         balance[msg.sender] = balance[msg.sender].sub(betValue);
@@ -86,12 +86,12 @@ contract BinaryBet {
         uint value = betValue.sub(betFee);
         userWindows[msg.sender].push(windowNumber);
 
-        if(windows[windowNumber].windowPool.settlementBlock != 0) { //window exists (cant remember the best way to check this)
+        if(windows[windowNumber].windowPool.settlementTimestamp != 0) { //window exists (cant remember the best way to check this)
             updatePool (windowNumber, value, uint8(side));
         }
 
         else {
-            createPool (windowNumber, startingBlock, value, uint8(side));
+            createPool (windowNumber, startingTimestamp, value, uint8(side));
         }
         updateStake(msg.sender, uint8(side), windowNumber, value);
     }       
@@ -101,12 +101,12 @@ contract BinaryBet {
         uint[] storage userWindowsList = userWindows[user];
         for (uint i = userWindowsList.length; i >= 0; i--) {
             Pool memory pool = windows[userWindowsList[i]].windowPool;
-            if(block.number < pool.settlementBlock) {
+            if(block.timestamp < pool.settlementTimestamp) {
                 continue;
             }
             else {
                 uint referencePrice = pool.referencePrice;
-                uint settlementPrice = getBlockPrice(pool.settlementBlock);
+                uint settlementPrice = getTimestampPrice(pool.settlementTimestamp);
                 Stake storage stake = userStake[user][userWindowsList[i]];
                 uint8 result = betResult(referencePrice, settlementPrice);
                 uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
@@ -178,42 +178,42 @@ contract BinaryBet {
     }
 
     //Internal but set as public for testing
-    function createPool (uint windowNumber, uint startingBlock, uint value, uint8 betSide) public {
-            require(windows[windowNumber].windowPool.settlementBlock == 0, "pool already exists");
+    function createPool (uint windowNumber, uint startingTimestamp, uint value, uint8 betSide) public {
+            require(windows[windowNumber].windowPool.settlementTimestamp == 0, "pool already exists");
             BetSide side = BetSide(betSide);
             if (side == BetSide.down) { //down
-              Pool memory newPool = Pool(startingBlock.add(bettingWindowTotalSize), 0, value, getBlockPrice(startingBlock));
-              windows[windowNumber] = BettingWindow(startingBlock, newPool);
+              Pool memory newPool = Pool(startingTimestamp.add(windowDuration), 0, value, getTimestampPrice(startingTimestamp));
+              windows[windowNumber] = BettingWindow(startingTimestamp, newPool);
              }
              
              else  { //up
-              Pool memory newPool = Pool(startingBlock.add(bettingWindowTotalSize), value, 0, getBlockPrice(startingBlock));
-              windows[windowNumber] = BettingWindow(startingBlock, newPool);
+              Pool memory newPool = Pool(startingTimestamp.add(windowDuration), value, 0, getTimestampPrice(startingTimestamp));
+              windows[windowNumber] = BettingWindow(startingTimestamp, newPool);
              }  
     }
     
 
     //Internal but set as public for testing
-    function getBlockWindow (uint currentBlock) public view returns (uint windowNumber) {
+    function getTimestampWindow (uint currentTimestamp) public view returns (uint windowNumber) {
         //n = floor((beg block - first_block)/window_size  + 1)
-        windowNumber = ((currentBlock.sub(windows[0].startingBlock)).div(bettingWindowTotalSize)).add(1); //integer division => floor    
+        windowNumber = ((currentTimestamp.sub(windows[0].startingTimestamp)).div(windowDuration)).add(1); //integer division => floor    
     }
 
     //Internal but set as public for testing
-    function getWindowStartingBlock (uint windowNumber) public view returns (uint startingBlock) {
+    function getWindowStartingTimestamp (uint windowNumber) public view returns (uint startingTimestamp) {
         //firstBlock + (n-1)*window_size
-        startingBlock =  windows[0].startingBlock.add((windowNumber.sub(1)).mul(bettingWindowTotalSize));
+        startingTimestamp =  windows[0].startingTimestamp.add((windowNumber.sub(1)).mul(windowDuration));
     }
     
     //Internal but set as public for testing
-    function getWindowLastBettingBlock (uint startingBlock) public view returns (uint lastBettingBlock) {
-        return startingBlock.add(blocksForBetting);
+    function getWindowLastBettingTimestamp (uint startingTimestamp) public view returns (uint lastBettingTimestamp) {
+            return startingTimestamp.add(timeForBetting);
     }
 
 
     function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
         Pool memory pool = windows[windowNumber].windowPool;
-        return (pool.settlementBlock, pool.downValue, pool.upValue, pool.referencePrice);
+        return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referencePrice);
     }
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
@@ -222,15 +222,15 @@ contract BinaryBet {
     }
 
 
-    function getBlockPrice(uint blockNumber) internal returns (uint){
-        if(ethPrice[blockNumber] == 0) {
-            ethPrice[blockNumber] = priceOracle(blockNumber);
+    function getTimestampPrice(uint timestamp) internal returns (uint){
+        if(ethPrice[timestamp] == 0) {
+            ethPrice[timestamp] = priceOracle(timestamp);
         }
-        return ethPrice[blockNumber];
+        return ethPrice[timestamp];
     }
     
     //TODO Implement price API
-    function priceOracle(uint blockNumber) internal returns (uint currentPrice){
+    function priceOracle(uint timestamp) internal returns (uint currentPrice){
         return 100;
     }
 
