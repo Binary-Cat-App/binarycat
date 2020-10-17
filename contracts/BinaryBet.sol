@@ -75,7 +75,9 @@ contract BinaryBet {
         require(block.timestamp <= lastBetTimestamp, "bets closed for this window");
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
-        balance[msg.sender] = balance[msg.sender].sub(betValue);
+        //betValue <= balance + msg.value
+        //0 <= balance + msg.value - betValue
+        balance[msg.sender] = balance[msg.sender].sub(betValue).add(msg.value);
         uint betFee = computeFee(betValue, fee); 
         owner.transfer(betFee);
 
@@ -148,9 +150,7 @@ contract BinaryBet {
         }
         if (betSide == BetSide.up) {
             Stake storage stake = userStake[user][windowNumber]; 
-            stake.upStake = stake.upStake.add(value); 
-
-
+            stake.upStake = stake.upStake.add(value);
         }
         
     }
@@ -212,7 +212,7 @@ contract BinaryBet {
     function priceOracle(uint timestamp) internal returns (uint currentPrice){
         return 100;
     }
-    
+
     function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
         Pool memory pool = pools[windowNumber];
         return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referencePrice);
