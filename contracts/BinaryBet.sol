@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract BinaryBet {
     using SafeMath for uint256;
 
-    BettingWindow firstWindow;
     uint windowDuration; //in timestamp
     uint timeForBetting;     //in timestamp
 
@@ -17,23 +16,20 @@ contract BinaryBet {
     enum BetResult {down, up, tie}
  
     struct Pool {
+        uint startingTimestamp;
         uint settlementTimestamp;
         uint upValue;
         uint downValue;
         uint referencePrice;
     }
-    
-    struct BettingWindow {
-        uint startingTimestamp;
-        Pool windowPool;
-    }
+    Pool firstWindow;
 
     struct Stake {
         uint upStake;
         uint downStake;
     }
     
-    mapping (uint => BettingWindow) windows; //windowNumber => window
+    mapping (uint => Pool) pools; //windowNumber => Pool
 
 
     mapping (address => uint) balance;
@@ -44,10 +40,10 @@ contract BinaryBet {
     
     constructor(uint _firstWindowTimestamp, uint _windowDuration, uint _timeForBetting, uint _fee) public{
         require(_fee <= 100);
-        firstWindow = BettingWindow(_firstWindowTimestamp, Pool(_firstWindowTimestamp.add(_windowDuration), 0,0, getTimestampPrice(block.timestamp))) ;
+        firstWindow = Pool(_firstWindowTimestamp, _firstWindowTimestamp.add(_windowDuration), 0,0, getTimestampPrice(block.timestamp)) ;
         timeForBetting = _timeForBetting;
         windowDuration = _windowDuration;
-        windows[0] = firstWindow;
+        pools[0] = firstWindow;
         
         fee = _fee;
         owner = msg.sender;
@@ -86,13 +82,7 @@ contract BinaryBet {
         uint value = betValue.sub(betFee);
         userWindows[msg.sender].push(windowNumber);
 
-        if(windows[windowNumber].windowPool.settlementTimestamp != 0) { //window exists (cant remember the best way to check this)
-            updatePool (windowNumber, value, uint8(side));
-        }
-
-        else {
-            createPool (windowNumber, startingTimestamp, value, uint8(side));
-        }
+        updatePool (windowNumber, value, uint8(side));
         updateStake(msg.sender, uint8(side), windowNumber, value);
     }       
 
@@ -100,7 +90,7 @@ contract BinaryBet {
         uint totalGain = 0;
         uint[] storage userWindowsList = userWindows[user];
         for (uint i = userWindowsList.length; i >= 0; i--) {
-            Pool memory pool = windows[userWindowsList[i]].windowPool;
+            Pool memory pool = pools[userWindowsList[i]];
             if(block.timestamp < pool.settlementTimestamp) {
                 continue;
             }
@@ -167,44 +157,35 @@ contract BinaryBet {
 
     //Internal but set as public for testing
     function updatePool (uint windowNumber, uint value, uint8 betSide) public {
+        uint startingTimestamp = getWindowStartingTimestamp(windowNumber);
+        if (pools[windowNumber].settlementTimestamp == 0) {
+            pools[windowNumber].settlementTimestamp = startingTimestamp.add(windowDuration);
+            pools[windowNumber].referencePrice = getTimestampPrice(startingTimestamp);
+             
+        }
+
         BetSide side = BetSide(betSide);
         if (side == BetSide.down) { //down
-              windows[windowNumber].windowPool.downValue = windows[windowNumber].windowPool.downValue.add(value);
+              pools[windowNumber].downValue = pools[windowNumber].downValue.add(value);
         }
         
         if (side == BetSide.up) {
-              windows[windowNumber].windowPool.upValue = windows[windowNumber].windowPool.upValue.add(value);
+              pools[windowNumber].upValue = pools[windowNumber].upValue.add(value);
         }
         
 
-    }
-
-    //Internal but set as public for testing
-    function createPool (uint windowNumber, uint startingTimestamp, uint value, uint8 betSide) public {
-            require(windows[windowNumber].windowPool.settlementTimestamp == 0, "pool already exists");
-            BetSide side = BetSide(betSide);
-            if (side == BetSide.down) { //down
-              Pool memory newPool = Pool(startingTimestamp.add(windowDuration), 0, value, getTimestampPrice(startingTimestamp));
-              windows[windowNumber] = BettingWindow(startingTimestamp, newPool);
-             }
-             
-             else  { //up
-              Pool memory newPool = Pool(startingTimestamp.add(windowDuration), value, 0, getTimestampPrice(startingTimestamp));
-              windows[windowNumber] = BettingWindow(startingTimestamp, newPool);
-             }  
-    }
-    
+    }  
 
     //Internal but set as public for testing
     function getTimestampWindow (uint currentTimestamp) public view returns (uint windowNumber) {
         //n = floor((beg block - first_block)/window_size  + 1)
-        windowNumber = ((currentTimestamp.sub(windows[0].startingTimestamp)).div(windowDuration)).add(1); //integer division => floor    
+        windowNumber = ((currentTimestamp.sub(pools[0].startingTimestamp)).div(windowDuration)).add(1); //integer division => floor    
     }
 
     //Internal but set as public for testing
     function getWindowStartingTimestamp (uint windowNumber) public view returns (uint startingTimestamp) {
         //firstBlock + (n-1)*window_size
-        startingTimestamp =  windows[0].startingTimestamp.add((windowNumber.sub(1)).mul(windowDuration));
+        startingTimestamp =  pools[0].startingTimestamp.add((windowNumber.sub(1)).mul(windowDuration));
     }
     
     //Internal but set as public for testing
@@ -213,10 +194,6 @@ contract BinaryBet {
     }
 
 
-    function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
-        Pool memory pool = windows[windowNumber].windowPool;
-        return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referencePrice);
-    }
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
         betFee = (value.mul(_fee)).div(100); 
@@ -234,6 +211,11 @@ contract BinaryBet {
     //TODO Implement price API
     function priceOracle(uint timestamp) internal returns (uint currentPrice){
         return 100;
+    }
+    
+    function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
+        Pool memory pool = pools[windowNumber];
+        return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referencePrice);
     }
 
 
