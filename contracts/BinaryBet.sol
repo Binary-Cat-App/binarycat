@@ -4,17 +4,13 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
     using SafeMath for uint256;
-
-    uint windowDuration; //in timestamp
-    uint timeForBetting;     //in timestamp
-
     uint fee;
     address payable owner;
     mapping(uint => uint) ethPrice;
-    enum BetSide {down, up} 
 
+    enum BetSide {down, up} 
     enum BetResult {down, up, tie}
- 
+
     struct Pool {
         uint startingTimestamp;
         uint settlementTimestamp;
@@ -22,14 +18,19 @@ contract BinaryBet {
         uint downValue;
         uint referencePrice;
     }
+
     Pool firstWindow;
+    uint windowDuration; //in timestamp
+    uint timeForBetting;     //in timestamp
+    mapping (uint => Pool) pools; //windowNumber => Pool
+
+ 
 
     struct Stake {
         uint upStake;
         uint downStake;
     }
     
-    mapping (uint => Pool) pools; //windowNumber => Pool
 
 
     mapping (address => uint) balance;
