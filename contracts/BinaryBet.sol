@@ -98,7 +98,7 @@ contract BinaryBet {
         userBetted[msg.sender][windowNumber] = true;
     }       
 
-        function updateBalance(address user) public returns(uint){
+    function updateBalance(address user) public returns(uint){
         uint totalGain = 0;
         uint[] storage userWindowsList = userWindows[user];
         for (uint i = userWindowsList.length; i >= 0; i--) {
