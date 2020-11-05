@@ -1,0 +1,129 @@
+.btn {
+  @apply relative inline-flex items-center justify-center font-medium py-2 px-8 rounded transition duration-75 bg-gray-800 border border-gray-800 text-white text-center;
+
+  * {
+    @apply pointer-events-none;
+  }
+
+  /* default */
+  &:hover {
+    @apply bg-gray-700  border-gray-700;
+  }
+
+  &:focus,
+  &.is-active {
+    @apply outline-none;
+    box-shadow: 0 0 0 3px theme('colors.gray.100');
+  }
+
+  &:disabled,
+  &.is-disabled {
+    @apply bg-gray-300 text-white  border-gray-300 cursor-default bg-none !important;
+  }
+
+  /* outline */
+  &.btn--outline {
+    @apply border-gray-900 text-gray-900 bg-transparent;
+
+    &:hover {
+      @apply bg-white;
+    }
+
+    &:focus,
+    &.is-active {
+      @apply outline-none;
+    }
+
+    &:disabled,
+    &.is-disabled {
+      @apply text-gray-200  border-gray-200 bg-white !important;
+    }
+  }
+
+  /* blue */
+  &.btn--blue {
+    @apply bg-blue-500  border-blue-500;
+
+    &:hover {
+      @apply bg-blue-600 border-blue-600;
+    }
+
+    &:focus,
+    &.is-active {
+      box-shadow: 0 0 0 3px theme('colors.blue.300');
+    }
+
+    /* outline */
+    &.btn--outline {
+      @apply bg-transparent border-blue-500 text-blue-500;
+
+      &:hover {
+        @apply bg-white;
+      }
+    }
+  }
+
+  /* pink */
+  &.btn--pink {
+    @apply bg-pink-500  border-pink-500;
+
+    &:hover {
+      @apply bg-pink-600 border-pink-600;
+    }
+
+    &:focus,
+    &.is-active {
+      box-shadow: 0 0 0 3px theme('colors.pink.300');
+    }
+
+    /* outline */
+    &.btn--outline {
+      @apply bg-transparent border-pink-500 text-pink-500;
+
+      &:hover {
+        @apply bg-white;
+      }
+    }
+
+    /* gradient */
+    &.btn--gradient {
+      @apply bg-gradient-to-b from-pink-btn-gradient-top to-pink-btn-gradient-bottom border-0;
+
+      &:hover {
+        @apply bg-gradient-to-b from-pink-btn-gradient-top to-pink-600 border-0;
+      }
+    }
+  }
+
+  /* green */
+  &.btn--green {
+    @apply bg-green-500  border-green-500;
+
+    &:hover {
+      @apply bg-green-600 border-green-600;
+    }
+
+    &:focus,
+    &.is-active {
+      box-shadow: 0 0 0 3px theme('colors.green.300');
+    }
+
+    /* outline */
+    &.btn--outline {
+      @apply bg-transparent border-green-500 text-green-500;
+
+      &:hover {
+        @apply bg-white;
+      }
+    }
+
+    /* gradient */
+    &.btn--gradient {
+      @apply bg-gradient-to-b from-green-btn-gradient-top to-green-btn-gradient-bottom border-0;
+
+      &:hover {
+        @apply bg-gradient-to-b from-green-btn-gradient-top to-green-700 border-0;
+      }
+    }
+  }
+}
