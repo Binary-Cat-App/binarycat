@@ -4,7 +4,7 @@ describe("BinaryBets Pool Creation", function () {
     it("Should create the pool if pool does not exist", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 2, 1);
+        let bet = await BinaryBet.deploy(10, 30, 1);
         await bet.deployed();
 
         let windowNumber = 6
@@ -19,16 +19,16 @@ describe("BinaryBets Pool Creation", function () {
 
         /*
         struct Pool {
-            uint settlementBlock;
+            uint settlementTimestamp;
             uint upValue;
             uint downValue;
-            uint referencePrice;
+            uint referenceTimestamp;
         }
         */
-        expect(pool[0]).to.equal(190);
+        expect(pool[0]).to.equal(220);
         expect(pool[1]).to.equal(value);
         expect(pool[2]).to.equal(0);
-        expect(pool[3]).to.equal(100);
+        expect(pool[3]).to.equal(190);
 
 
         windowNumber = 7;
@@ -38,10 +38,10 @@ describe("BinaryBets Pool Creation", function () {
 
         pool = await bet.getPoolValues(windowNumber);
 
-        expect(pool[0]).to.equal(220);
+        expect(pool[0]).to.equal(250);
         expect(pool[1]).to.equal(0);
         expect(pool[2]).to.equal(value);
-        expect(pool[3]).to.equal(100);
+        expect(pool[3]).to.equal(220);
 
     });
 
@@ -51,7 +51,7 @@ describe("BinaryBets Pool Creation", function () {
     it("Should update the pool", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 2, 1);
+        let bet = await BinaryBet.deploy(10, 30, 1);
         await bet.deployed();
 
         const windowNumber = 7

@@ -13,15 +13,16 @@ contract BinaryBet {
 
     struct Pool {
         uint startingTimestamp;
+        uint referenceTimestamp;
         uint settlementTimestamp;
+
         uint upValue;
         uint downValue;
-        uint referencePrice;
     }
 
     Pool firstWindow;
     uint windowDuration; //in timestamp
-    uint timeForBetting;     //in timestamp
+
     mapping (uint => Pool) pools; //windowNumber => Pool
 
  
@@ -41,10 +42,17 @@ contract BinaryBet {
     
 
     
-    constructor(uint _firstWindowTimestamp, uint _windowDuration, uint _timeForBetting, uint _fee) public{
+    constructor(uint _firstWindowTimestamp, uint _windowDuration, uint _fee) public {
         require(_fee <= 100);
-        firstWindow = Pool(_firstWindowTimestamp, _firstWindowTimestamp.add(_windowDuration), 0,0, getTimestampPrice(block.timestamp)) ;
-        timeForBetting = _timeForBetting;
+        //
+        //                  |-------------betting window-----------|--------------settlement period-----------|  
+        //         firstWindowTimestamp                      starting timestamp                         starting timestamp
+        //                                                         +                                          +            
+        //                                                     window size                               2*window size 
+        //                                                         =                                          = 
+        //                                                  referenceTimestamp                          settlementTimestamp
+
+        firstWindow = Pool(_firstWindowTimestamp, _firstWindowTimestamp.add(_windowDuration), _firstWindowTimestamp.add(_windowDuration.mul(2)), 0,0);
         windowDuration = _windowDuration;
         pools[0] = firstWindow;
         
@@ -57,7 +65,7 @@ contract BinaryBet {
     }
 
     function withdraw(uint value) external {
-        uint gain = updateBalance(msg.sender, userWindows[msg.sender]);
+        uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
         uint funds = balance[msg.sender];
@@ -69,14 +77,11 @@ contract BinaryBet {
     
     function placeBet (uint betValue, BetSide side) payable external {
         uint windowNumber = getTimestampWindow(block.timestamp);
-        uint startingTimestamp = getWindowStartingTimestamp(windowNumber);
-        uint lastBetTimestamp = getWindowLastBettingTimestamp(startingTimestamp);
-        
-        uint gain = updateBalance(msg.sender, userWindows[msg.sender]);
+
+        uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
         require(!userBetted[msg.sender][windowNumber]); //First user bet on the window.
-        require(block.timestamp <= lastBetTimestamp, "bets closed for this window");
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         //betValue <= balance + msg.value
@@ -93,7 +98,7 @@ contract BinaryBet {
         userBetted[msg.sender][windowNumber] = true;
     }       
 
-        function updateBalance(address user, uint[] memory _userWindowsList) public returns(uint){
+        function updateBalance(address user) public returns(uint){
         uint totalGain = 0;
         uint[] storage userWindowsList = userWindows[user];
         for (uint i = userWindowsList.length; i >= 0; i--) {
@@ -102,7 +107,7 @@ contract BinaryBet {
                 continue;
             }
             else {
-                uint referencePrice = pool.referencePrice;
+                uint referencePrice =  getTimestampPrice(pool.referenceTimestamp);
                 uint settlementPrice = getTimestampPrice(pool.settlementTimestamp);
                 Stake storage stake = userStake[user][userWindowsList[i]];
                 uint8 result = betResult(referencePrice, settlementPrice);
@@ -164,8 +169,14 @@ contract BinaryBet {
     function updatePool (uint windowNumber, uint value, uint8 betSide) public {
         uint startingTimestamp = getWindowStartingTimestamp(windowNumber);
         if (pools[windowNumber].settlementTimestamp == 0) {
-            pools[windowNumber].settlementTimestamp = startingTimestamp.add(windowDuration);
-            pools[windowNumber].referencePrice = getTimestampPrice(startingTimestamp);
+            //
+            //                  |-------------betting window-----------|--------------settlement period-----------|  
+            //          starting timestamp                      starting timestamp                         starting timestamp
+            //                                                         +                                          +
+            //                                                     window size                               2*window size          
+            
+            pools[windowNumber].referenceTimestamp = startingTimestamp.add(windowDuration);
+            pools[windowNumber].settlementTimestamp = startingTimestamp.add(windowDuration.mul(2));
              
         }
 
@@ -192,13 +203,6 @@ contract BinaryBet {
         //firstBlock + (n-1)*window_size
         startingTimestamp =  pools[0].startingTimestamp.add((windowNumber.sub(1)).mul(windowDuration));
     }
-    
-    //Internal but set as public for testing
-    function getWindowLastBettingTimestamp (uint startingTimestamp) public view returns (uint lastBettingTimestamp) {
-            return startingTimestamp.add(timeForBetting);
-    }
-
-
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
         betFee = (value.mul(_fee)).div(100); 
@@ -220,7 +224,7 @@ contract BinaryBet {
 
     function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
         Pool memory pool = pools[windowNumber];
-        return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referencePrice);
+        return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referenceTimestamp);
     }
 
 

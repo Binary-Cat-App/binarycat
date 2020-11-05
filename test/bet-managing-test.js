@@ -7,7 +7,7 @@ describe("BinaryBets Bet management", function () {
     it("Should get the correct bet result", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        const bet = await BinaryBet.deploy(10, 30, 2, 1);
+        const bet = await BinaryBet.deploy(10, 30, 1);
         await bet.deployed();
 
         // function betResult(uint referencePrice, uint settlementPrice) public pure returns(BetResult)
@@ -40,7 +40,7 @@ describe("BinaryBets Bet management", function () {
 
     it("Should get the correct bet payoff", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        const bet = await BinaryBet.deploy(10, 30, 2, 1);
+        const bet = await BinaryBet.deploy(10, 30, 1);
         await bet.deployed();
         // function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain) 
         let result = await bet.settleBet(78, 5, 1708, 1931, 0);
