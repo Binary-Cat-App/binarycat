@@ -1,0 +1,3 @@
+.form-control {
+  @apply relative block w-full p-2 rounded transition duration-75 bg-white border border-gray-200 text-gray-900 flex-grow outline-none;
+}

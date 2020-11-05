@@ -1,0 +1,18 @@
+.transition-enter {
+  transform: scale(0.9);
+  opacity: 0;
+}
+.transition-enter-active {
+  transition: all 500ms ease-in;
+  transform: scale(1);
+  opacity: 1;
+}
+.transition-exit {
+  transform: scale(1);
+  opacity: 1;
+}
+.transition-exit-active {
+  transition: all 500ms ease-out;
+  transform: scale(0.9);
+  opacity: 0;
+}

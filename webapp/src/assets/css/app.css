@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+
+@layer base {
+  body {
+    @apply bg-gray-50 font-sans text-gray-700;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-gray-900;
+  }
+
+  hr {
+    @apply border-gray-100;
+  }
+}
+
+@layer components {
+  .container {
+    @apply mx-auto px-4 min-w-64;
+  }
+}
+
+@import './components/_btn';
+@import './components/_form-control';
+@import './components/_loading';
+@import './components/_icon';
+@import './components/_transition';
+
+@tailwind utilities;
