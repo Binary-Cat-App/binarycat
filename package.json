@@ -1,0 +1,7 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomiclabs/buidler": "^1.4.8",
+    "hardhat": "^2.0.2"
+  }
+}

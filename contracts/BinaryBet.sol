@@ -35,6 +35,8 @@ contract BinaryBet {
 
     mapping (address => uint) balance;
     mapping (address => mapping(uint => Stake)) userStake;
+    mapping (address => mapping(uint => bool)) userBetted;
+
     mapping (address => uint[]) userWindows;
     
 
@@ -73,6 +75,7 @@ contract BinaryBet {
         uint gain = updateBalance(msg.sender, userWindows[msg.sender]);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
+        require(!userBetted[msg.sender][windowNumber]); //First user bet on the window.
         require(block.timestamp <= lastBetTimestamp, "bets closed for this window");
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
@@ -87,6 +90,7 @@ contract BinaryBet {
 
         updatePool (windowNumber, value, uint8(side));
         updateStake(msg.sender, uint8(side), windowNumber, value);
+        userBetted[msg.sender][windowNumber] = true;
     }       
 
         function updateBalance(address user, uint[] memory _userWindowsList) public returns(uint){
