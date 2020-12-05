@@ -1,9 +1,12 @@
 pragma solidity ^0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
     using SafeMath for uint256;
+    IERC20 private bin;
+
     uint fee;
     address payable owner;
     mapping(uint => uint) ethPrice;
@@ -42,7 +45,7 @@ contract BinaryBet {
     
 
     
-    constructor(uint _firstWindowTimestamp, uint _windowDuration, uint _fee) public {
+    constructor(uint _firstWindowTimestamp, uint _windowDuration, uint _fee, address _binAddress) public {
         require(_fee <= 100);
         //
         //                  |-------------betting window-----------|--------------settlement period-----------|  
@@ -58,6 +61,8 @@ contract BinaryBet {
         
         fee = _fee;
         owner = msg.sender;
+
+        bin = IERC20(_binAddress);
     }
 
     function deposit() payable external {
