@@ -49,6 +49,10 @@ contract BinaryBet {
     mapping (address => mapping(uint => bool)) userBetted;
 
     mapping (address => uint[]) userWindows;
+    event newBet(uint value, BetSide side, address user, uint windowNumber);
+    event newDeposit(uint value, address user);
+    event newWithdraw(uint value, address user);
+    event betSettled(uint gain, uint windowNumber, address user);
     
     function deployToken() internal returns (address) {
         BinToken token = new BinToken();
@@ -75,13 +79,13 @@ contract BinaryBet {
         owner = msg.sender;
 
         tokenAddress = payable(deployToken());
-        // bin = IERC20(_binAddress);
     }
 
 
 
     function deposit() payable external {
         balance[msg.sender] = balance[msg.sender].add(msg.value);
+        emit newDeposit(msg.value, msg.sender);
     }
 
     function withdraw(uint value) external {
@@ -92,6 +96,8 @@ contract BinaryBet {
         require(value <= funds, "not enough funds");
         balance[msg.sender] = balance[msg.sender].sub(value);
         msg.sender.transfer(value);
+        
+        emit newWithdraw(value, msg.sender);
 
     }
     
@@ -118,6 +124,7 @@ contract BinaryBet {
         updatePool (windowNumber, value, uint8(side));
         updateStake(msg.sender, uint8(side), windowNumber, value);
         userBetted[msg.sender][windowNumber] = true;
+        emit newBet(value, side, msg.sender, windowNumber);
     }       
 
     function updateBalance(address user) public returns(uint){
@@ -138,6 +145,7 @@ contract BinaryBet {
                 stake.downStake = 0;
                 stake.upStake = 0;
                 totalGain = totalGain.add(windowGain);
+                emit betSettled(windowGain, userWindowsList[i], user);
                 delete userWindowsList[i];
             }
         }
