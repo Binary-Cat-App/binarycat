@@ -11,7 +11,8 @@ $npm install
 '''
 
 ### Deploy Contracts (localy)
-1) $npx truffle compile
-2) $npx truffle migrate --reset
-3) $npx truffle deploys
+1) Open Truffle Ganache
+2) $npx truffle compile
+3) $npx truffle migrate --reset
+4) $npx truffle deploys
 Now contracts are deployed on Ganache simulated blockchain and contracts artifacts can be found in './build/contracts/'
