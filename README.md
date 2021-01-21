@@ -5,10 +5,9 @@
 * [Truffle Ganache](https://trufflesuite.com/ganache)
 
 ### Setup
-On home folder:
-'''console
+On project root folder:
 $npm install
-'''
+
 
 ### Deploy Contracts (localy)
 1) Open Truffle Ganache
