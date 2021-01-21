@@ -2,7 +2,7 @@
 ## Blockchain
 ### Requirements
 * node 14.x
-* [Truffle Ganache](trufflesuite.com/ganache)
+* [Truffle Ganache](https://trufflesuite.com/ganache)
 
 ### Setup
 On home folder:
