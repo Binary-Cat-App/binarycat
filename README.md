@@ -11,7 +11,7 @@ $npm install
 
 
 ### Deploy Contracts (localy)
-1) Open Truffle Ganache
+1) Open Truffle Ganache and create new workspace. Attach "truffle-config.js" in truffle projects section of the workspace creation wizard. Make sure the default accounts have initial balance, it will be requried for the contracts deployment.
 2) $npx truffle compile
 3) $npx truffle migrate --reset
 4) $npx truffle deploys
