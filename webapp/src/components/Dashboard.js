@@ -17,7 +17,7 @@ const exampleData = {
 };
 
 export const Dashboard = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
 
   const betScrollDiv = useRef(null);

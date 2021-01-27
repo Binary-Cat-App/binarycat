@@ -2,8 +2,10 @@ import React from 'react';
 import { ReactComponent as IconWinningPercentage } from '../assets/images/icon-winning-percantage.svg';
 import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-total-winnings.svg';
 import { ReactComponent as IconBallance } from '../assets/images/icon-ballance.svg';
+import { useMetaMask } from '../context/MataMaskContext';
 
 export const UserSummary = () => {
+  const { balance } = useMetaMask();
   return (
     <div className="flex w-2/3">
       <div className="px-4 w-1/3">
@@ -35,7 +37,9 @@ export const UserSummary = () => {
           </span>
           <dl>
             <dt className="leading-none">Balance</dt>
-            <dd className="text-2xl font-black text-gray-900">10 ETH</dd>
+            <dd className="text-2xl font-black text-gray-900">
+              {balance.toFixed(2)} ETH
+            </dd>
           </dl>
         </div>
       </div>
