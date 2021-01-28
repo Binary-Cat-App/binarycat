@@ -6,6 +6,7 @@ import useInterval from '@use-it/interval';
 import { BetChart } from './Chart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
+import { drizzleConnect } from 'drizzle-react';
 
 const exampleData = {
   blockSize: '11,029,235',
@@ -16,7 +17,9 @@ const exampleData = {
   price: '370',
 };
 
-export const Dashboard = () => {
+const Dashboard = ({ contracts }) => {
+  console.log(contracts.BinaryBet);
+  // console.log('CONT', BinaryBet);
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
 
@@ -94,3 +97,12 @@ export const Dashboard = () => {
     </>
   );
 };
+
+const mapStateToProps = function (store) {
+  console.log(store);
+  return {
+    contracts: store.contracts,
+  };
+};
+
+export default drizzleConnect(Dashboard, mapStateToProps);

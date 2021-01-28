@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom';
 import './assets/css/app.css';
 import App from './components/App';
 import WebFontLoader from 'webfontloader';
+// import { Drizzle, generateStore } from '@drizzle/store';
+// import BinaryBet from './contracts/BinaryBet.json';
+
+// const drizzle = new Drizzle(options);
 
 WebFontLoader.load({
   google: {
