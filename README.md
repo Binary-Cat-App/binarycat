@@ -24,7 +24,9 @@ Now contracts are deployed on Ganache simulated blockchain and contracts artifac
 > npx truffle exec ./scripts/Bets.js
 * To add individual deposits, withdraw and bets:
 > npx truffle exec ./scripts/new_deposit.js <account number (int)> <value (uint)>
+
 > npx truffle exec ./scripts/new_withdraw.js <account number (int)> <value (uint)>
+
 > npx truffle exec ./scripts/new_bet.js <account number (int)> <value of bet (uint)> <value sent with tx (uint)> <bet side (0 or 1)>
 
 Changes should be reflected on Ganache GUI:
