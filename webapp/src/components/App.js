@@ -7,28 +7,12 @@ import Dashboard from './Dashboard';
 import { Container } from './Container';
 import { AuthProvider } from '../context/AuthContext';
 import { MetaMaskProvider } from '../context/MataMaskContext';
-import BinaryBet from '../contracts/BinaryBet.json';
-import { DrizzleProvider } from 'drizzle-react';
-import { LoadingContainer } from 'drizzle-react-components';
-import { drizzleConnect } from 'drizzle-react';
+import { DrizzleProvider, useDrizzle } from '../context/DrizzleContext';
 
-const options = {
-  contracts: [BinaryBet],
-  events: {
-    BinaryBet: ['newBet', 'newDeposit', 'newWithdraw', 'betSettled'],
-  },
-
-  web3: {
-    fallback: {
-      type: 'ws',
-      url: 'ws://127.0.0.1:9545',
-    },
-  },
-};
-
-const RoutesComponent = ({ initialized }) => {
-  if (!initialized) return null;
-
+const RoutesComponent = () => {
+  const { drizzleReadinessState } = useDrizzle();
+  if (drizzleReadinessState.loading)
+    return <div className="min-h-screen flex flex-col"> LOADING...</div>;
   return (
     <div className="min-h-screen flex flex-col">
       <Router>
@@ -53,28 +37,17 @@ const RoutesComponent = ({ initialized }) => {
   );
 };
 
-const mapStateToProps = (store) => {
-  return {
-    initialized: store.drizzleStatus.initialized,
-  };
-};
+const ConnectedRoutesComponent = RoutesComponent;
 
-const ConnectedRoutesComponent = drizzleConnect(
-  RoutesComponent,
-  mapStateToProps
-);
-
-export const App = () => {
+export const App = (props) => {
   return (
-    <DrizzleProvider options={options}>
-      <AuthProvider>
-        <MetaMaskProvider>
-          <LoadingContainer>
-            <ConnectedRoutesComponent />
-          </LoadingContainer>
-        </MetaMaskProvider>
-      </AuthProvider>
-    </DrizzleProvider>
+    <AuthProvider>
+      <MetaMaskProvider>
+        <DrizzleProvider drizzle={props.drizzle}>
+          <ConnectedRoutesComponent />
+        </DrizzleProvider>
+      </MetaMaskProvider>
+    </AuthProvider>
   );
 };
 
