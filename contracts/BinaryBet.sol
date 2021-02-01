@@ -1,8 +1,8 @@
 pragma solidity ^0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import "./BinToken.sol";
+
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
     using SafeMath for uint256;
@@ -11,12 +11,11 @@ contract BinaryBet {
     uint fee;
 
     address payable owner;
+    mapping(uint => int) ethPrice;
 
 
     // BinToken public token;
     address payable tokenAddress;
-
-    mapping(uint => uint) ethPrice;
 
     enum BetSide {down, up} 
     enum BetResult {down, up, tie}
@@ -49,7 +48,7 @@ contract BinaryBet {
     mapping (address => mapping(uint => bool)) userBetted;
 
     mapping (address => uint[]) userWindows;
-    event newBet(uint value, BetSide side, address user, uint windowNumber);
+    event newBet(uint value, uint8 side, address user, uint windowNumber);
     event newDeposit(uint value, address user);
     event newWithdraw(uint value, address user);
     event betSettled(uint gain, uint windowNumber, address user);
@@ -92,8 +91,7 @@ contract BinaryBet {
         uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
-        uint funds = balance[msg.sender];
-        require(value <= funds, "not enough funds");
+        require(value <= balance[msg.sender], "not enough funds");
         balance[msg.sender] = balance[msg.sender].sub(value);
         msg.sender.transfer(value);
         
@@ -101,22 +99,21 @@ contract BinaryBet {
 
     }
     
-    function placeBet (uint betValue, BetSide side) payable external {
-        uint windowNumber = getTimestampWindow(block.timestamp);
+    function placeBet (uint betValue, uint8 side) payable external {
+        uint windowNumber = getTimestampWindow(block.number);
 
         uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
-
         require(!userBetted[msg.sender][windowNumber]); //First user bet on the window.
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         //betValue <= balance + msg.value
         //0 <= balance + msg.value - betValue
-        balance[msg.sender] = balance[msg.sender].sub(betValue).add(msg.value);
+        balance[msg.sender] = balance[msg.sender].add(msg.value).sub(betValue);
         uint betFee = computeFee(betValue, fee); 
         
         
-        tokenAddress.transfer(betFee);
+        //tokenAddress.transfer(betFee);
 
         uint value = betValue.sub(betFee);
         userWindows[msg.sender].push(windowNumber);
@@ -130,24 +127,28 @@ contract BinaryBet {
     function updateBalance(address user) public returns(uint){
         uint totalGain = 0;
         uint[] storage userWindowsList = userWindows[user];
-        for (uint i = userWindowsList.length; i >= 0; i--) {
+        if(userWindowsList.length == 0) {
+            return 0;
+        }
+        for (uint i = userWindowsList.length-1; i >= 0; i--) {
             Pool memory pool = pools[userWindowsList[i]];
-            if(block.timestamp < pool.settlementTimestamp) {
+            if(block.number < pool.settlementTimestamp) {
                 continue;
             }
-            else {
-                uint referencePrice =  getTimestampPrice(pool.referenceTimestamp);
-                uint settlementPrice = getTimestampPrice(pool.settlementTimestamp);
-                Stake storage stake = userStake[user][userWindowsList[i]];
-                uint8 result = betResult(referencePrice, settlementPrice);
-                uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
 
-                stake.downStake = 0;
-                stake.upStake = 0;
-                totalGain = totalGain.add(windowGain);
-                emit betSettled(windowGain, userWindowsList[i], user);
-                delete userWindowsList[i];
-            }
+            int referencePrice =  ethPrice[pool.referenceTimestamp];
+            int settlementPrice = ethPrice[pool.settlementTimestamp];
+            Stake storage stake = userStake[user][userWindowsList[i]];
+            uint8 result = betResult(referencePrice, settlementPrice);
+            uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
+
+            stake.downStake = 0;
+            stake.upStake = 0;
+            totalGain = totalGain.add(windowGain);
+            emit betSettled(windowGain, userWindowsList[i], user);
+
+            userWindowsList[i] = userWindowsList[userWindowsList.length -1];
+            userWindowsList.pop();
         }
         return totalGain;
     }
@@ -169,7 +170,7 @@ contract BinaryBet {
         return gain;
     }
 
-   function betResult(uint referencePrice, uint settlementPrice) public pure returns(uint8){            
+   function betResult(int referencePrice, int settlementPrice) public pure returns(uint8){            
         if(settlementPrice < referencePrice) {
             return 0;
         }   
@@ -182,7 +183,8 @@ contract BinaryBet {
     }
  
     
-    function updateStake(address user, uint8 side, uint windowNumber, uint value) internal{
+    //Internal but set as public for testing
+    function updateStake(address user, uint8 side, uint windowNumber, uint value) public{
         BetSide betSide = BetSide(side);
         if (betSide == BetSide.down) {
             Stake storage stake = userStake[user][windowNumber]; 
@@ -240,7 +242,7 @@ contract BinaryBet {
     }
 
 
-    function getTimestampPrice(uint timestamp) internal returns (uint){
+    function getTimestampPrice(uint timestamp) internal returns (int){
         if(ethPrice[timestamp] == 0) {
             ethPrice[timestamp] = priceOracle(timestamp);
         }
@@ -248,15 +250,24 @@ contract BinaryBet {
     }
     
     //TODO Implement price API
-    function priceOracle(uint timestamp) internal returns (uint currentPrice){
+    function priceOracle(uint timestamp) internal returns (int currentPrice){
         return 100;
     }
 
+    //Getters
     function getPoolValues(uint windowNumber) public view returns (uint, uint, uint, uint) {
         Pool memory pool = pools[windowNumber];
         return (pool.settlementTimestamp, pool.downValue, pool.upValue, pool.referenceTimestamp);
     }
 
+    function getUserStake(uint windowNumber, address user) public view returns (uint, uint) {
+        Stake  memory stake  = userStake[user][windowNumber];
+        return (stake.downStake, stake.upStake);
+    }
+    function getBalance(address user) public view returns(uint) {
+        return balance[user];
+    }
+    
 
 
 }

@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const {
     BN,           // Big Number support
+    expectRevert,
 } = require('@openzeppelin/test-helpers');
 
 describe("BinaryBets Bet management", function () {
@@ -152,6 +153,63 @@ describe("BinaryBets Bet management", function () {
 
 
 
+    });
+    
+    it("Should bet with deposited funds", async function () {
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        const [owner, account1] = await ethers.getSigners();
+
+        const bet = await BinaryBet.deploy(1, 30, 1);
+        await bet.deployed();
+
+        await bet.connect(account1).deposit({value:100});
+        let balance = await bet.getBalance(account1._address);
+        expect(balance).to.equal(100);
+        await bet.connect(account1).placeBet(100, 0);
+    });
+
+    it("Should bet with sent  funds", async function () {
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        const [owner, account1] = await ethers.getSigners();
+
+        const bet = await BinaryBet.deploy(1, 30, 1);
+        await bet.deployed();
+
+        await bet.connect(account1).placeBet(100, 0, {value: 100});
+    });
+
+    it("Should revert without enough funds", async function () {
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        const [owner, account1] = await ethers.getSigners();
+
+        const bet = await BinaryBet.deploy(1, 30, 1);
+        await bet.deployed();
+        await bet.connect(account1).deposit({value:100});
+
+        await bet.connect(account1).placeBet(250, 0, {value: 100})
+    });
+
+    it("Should update user stake", async function () {
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        const [owner, account1] = await ethers.getSigners();
+
+        const bet = await BinaryBet.deploy(1, 30, 1);
+        await bet.deployed();
+        const user = account1._address;
+
+        let side = 1;
+        let window_number = 5;
+        let value = 100;
+        await bet.updateStake(user,side,window_number, value);
+        let stake = await bet.getUserStake(window_number, user)
+        expect(stake[1]).to.equal(value);
+
+        side = 0;
+        window_number = 1;
+        value = 200;
+        await bet.updateStake(user,side,window_number, value);
+        stake = await bet.getUserStake(window_number, user)
+        expect(stake[0]).to.equal(value);
     });
 
 });
