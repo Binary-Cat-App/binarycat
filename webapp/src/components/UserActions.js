@@ -12,15 +12,14 @@ export const UserActions = () => {
   }, [drizzle.contracts]);
 
   const handleDeposit = () => {
-    const eth = parseInt(drizzle.web3.utils.toWei('3.125', 'ether'));
+    const eth = parseInt(drizzle.web3.utils.toWei('10', 'ether'));
     contract.methods['deposit'].cacheSend({
       from: ethAccount,
       value: eth,
     });
   };
   const handleWithdraw = () => {
-    const eth = drizzle.web3.utils.toWei('0.3', 'ether');
-    console.log(eth);
+    const eth = drizzle.web3.utils.toWei('5', 'ether');
     contract.methods['withdraw'].cacheSend(eth, {
       from: ethAccount,
     });
