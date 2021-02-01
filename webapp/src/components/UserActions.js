@@ -12,10 +12,18 @@ export const UserActions = () => {
   }, [drizzle.contracts]);
 
   const handleDeposit = () => {
-    contract.methods['deposit'].cacheSend();
-    // contract.events['newDeposit'](1, ethAccount).subscribe((data) => {
-    //   console.log(data);
-    // });
+    const eth = parseInt(drizzle.web3.utils.toWei('3.125', 'ether'));
+    contract.methods['deposit'].cacheSend({
+      from: ethAccount,
+      value: eth,
+    });
+  };
+  const handleWithdraw = () => {
+    const eth = drizzle.web3.utils.toWei('0.3', 'ether');
+    console.log(eth);
+    contract.methods['withdraw'].cacheSend(eth, {
+      from: ethAccount,
+    });
   };
   return (
     <div className="px-4 ml-auto">
@@ -33,7 +41,7 @@ export const UserActions = () => {
           variant="default"
           outline
           className="ml-4"
-          handleClick={() => console.log('Withdraw')}
+          handleClick={handleWithdraw}
         >
           Withdraw
         </Button>
