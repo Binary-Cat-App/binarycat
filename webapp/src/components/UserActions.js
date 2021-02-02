@@ -1,6 +1,8 @@
 import React from 'react';
-import { Button } from './Button';
+
 import MetaMaskLogo from '../assets/images/metamask.svg';
+import { ModalDeposit } from './ModalDeposit';
+import { ModalWithdraw } from './ModalWithdraw';
 
 export const UserActions = () => {
   return (
@@ -12,17 +14,8 @@ export const UserActions = () => {
         </span>
       </div>
       <div className="flex">
-        <Button variant="default" handleClick={() => console.log('Deposit')}>
-          Deposit
-        </Button>
-        <Button
-          variant="default"
-          outline
-          className="ml-4"
-          handleClick={() => console.log('Withdraw')}
-        >
-          Withdraw
-        </Button>
+        <ModalDeposit />
+        <ModalWithdraw />
       </div>
     </div>
   );
