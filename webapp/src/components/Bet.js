@@ -41,13 +41,9 @@ export const Bet = ({
     setBetDirection(direction);
   }
 
-  // useEffect(() => {
-  //   console.log('from bet');
-  // }, []);
-
   return (
     <div className="w-1/3 px-4 flex-shrink-0">
-      <div className="bg-white p-4 sm:p-6 h-full flex flex-col">
+      <div className="bg-white p-4 sm:p-6 h-full flex flex-col relative">
         <div className="mb-2">
           <h2 className="text-center text-2xl font-medium">
             {betStatus === 'finalized' && 'Finalized'}

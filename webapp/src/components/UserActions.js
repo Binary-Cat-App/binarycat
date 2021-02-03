@@ -1,8 +1,11 @@
 import React from 'react';
-import { Button } from './Button';
+
 import MetaMaskLogo from '../assets/images/metamask.svg';
+import { ModalDeposit } from './ModalDeposit';
+import { ModalWithdraw } from './ModalWithdraw';
 import { useDrizzle } from '../context/DrizzleContext';
 import { useMetaMask } from '../context/MataMaskContext';
+import { Button } from './Button';
 
 export const UserActions = () => {
   const { ethAccount } = useMetaMask();
@@ -11,19 +14,26 @@ export const UserActions = () => {
     return drizzle.contracts.BinaryBet;
   }, [drizzle.contracts]);
 
-  const handleDeposit = () => {
-    const eth = parseInt(drizzle.web3.utils.toWei('10', 'ether'));
+  const handleDeposit = (value) => {
+    const eth = parseInt(drizzle.web3.utils.toWei(value, 'ether'));
     contract.methods['deposit'].cacheSend({
       from: ethAccount,
       value: eth,
     });
   };
-  const handleWithdraw = () => {
-    const eth = drizzle.web3.utils.toWei('5', 'ether');
+  const handleWithdraw = (value) => {
+    const eth = drizzle.web3.utils.toWei(value, 'ether');
     contract.methods['withdraw'].cacheSend(eth, {
       from: ethAccount,
     });
   };
+
+  // const balance = React.useMemo(() => {
+  //   const bal = contract.methods['getBalance'].cacheCall(ethAccount);
+  //   console.log('BALANCE', parseInt(bal));
+  //   console.log(drizzle.web3.utils);
+  //   return 10;
+  // }, [drizzle]);
   return (
     <div className="px-4 ml-auto">
       <div className="flex items-center mb-1">
@@ -33,7 +43,7 @@ export const UserActions = () => {
         </span>
       </div>
       <div className="flex">
-        <Button variant="default" handleClick={handleDeposit}>
+        {/*<Button variant="default" handleClick={handleDeposit}>
           Deposit
         </Button>
         <Button
@@ -43,7 +53,17 @@ export const UserActions = () => {
           handleClick={handleWithdraw}
         >
           Withdraw
-        </Button>
+        </Button>*/}
+        <ModalDeposit
+          onDeposit={(value) => {
+            handleDeposit(value);
+          }}
+        />
+        <ModalWithdraw
+          onWithdraw={(value) => {
+            handleWithdraw(value);
+          }}
+        />
       </div>
     </div>
   );
