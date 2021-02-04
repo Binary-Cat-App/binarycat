@@ -68,7 +68,6 @@ export const ModalDeposit = ({ onDeposit }) => {
                     onDeposit(value);
                     setShowModal(!showModal);
                   }
-                  console.log(Number(value), balance);
                 }}
               >
                 Deposit

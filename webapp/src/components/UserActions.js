@@ -28,12 +28,31 @@ export const UserActions = () => {
     });
   };
 
-  // const balance = React.useMemo(() => {
-  //   const bal = contract.methods['getBalance'].cacheCall(ethAccount);
-  //   console.log('BALANCE', parseInt(bal));
-  //   console.log(drizzle.web3.utils);
-  //   return 10;
-  // }, [drizzle]);
+  const balance = React.useMemo(() => {
+    if (
+      drizzleReadinessState.loading === false &&
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
+    ) {
+      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
+      const bal =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
+          balKey
+        ];
+      if (bal) {
+        const ethBal =
+          Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
+          100;
+        return ethBal;
+      }
+    }
+    return 0;
+  }, [
+    contract.methods,
+    drizzleReadinessState.loading,
+    drizzleReadinessState.drizzleState.contracts.BinaryBet,
+    drizzle.web3.utils,
+    ethAccount,
+  ]);
   return (
     <div className="px-4 ml-auto">
       <div className="flex items-center mb-1">
@@ -60,6 +79,7 @@ export const UserActions = () => {
           }}
         />
         <ModalWithdraw
+          balance={balance}
           onWithdraw={(value) => {
             handleWithdraw(value);
           }}

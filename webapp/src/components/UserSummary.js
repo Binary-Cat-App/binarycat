@@ -3,9 +3,41 @@ import { ReactComponent as IconWinningPercentage } from '../assets/images/icon-w
 import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-total-winnings.svg';
 import { ReactComponent as IconBallance } from '../assets/images/icon-ballance.svg';
 import { useMetaMask } from '../context/MataMaskContext';
+import { useDrizzle } from '../context/DrizzleContext';
 
 export const UserSummary = () => {
-  const { balance } = useMetaMask();
+  const { ethAccount } = useMetaMask();
+  const { drizzleReadinessState, drizzle } = useDrizzle();
+  const contract = React.useMemo(() => {
+    return drizzle.contracts.BinaryBet;
+  }, [drizzle.contracts]);
+
+  const balance = React.useMemo(() => {
+    if (
+      drizzleReadinessState.loading === false &&
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
+    ) {
+      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
+      const bal =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
+          balKey
+        ];
+      if (bal) {
+        const ethBal =
+          Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
+          100;
+        return ethBal;
+      }
+    }
+    return 0;
+  }, [
+    contract.methods,
+    drizzleReadinessState.loading,
+    drizzleReadinessState.drizzleState.contracts.BinaryBet,
+    drizzle.web3.utils,
+    ethAccount,
+  ]);
+
   return (
     <div className="flex w-2/3">
       <div className="px-4 w-1/3">

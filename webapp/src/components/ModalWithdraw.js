@@ -4,7 +4,7 @@ import { Button } from './Button';
 import { Modal } from './Modal';
 import { Alert } from './Alert';
 
-export const ModalWithdraw = ({ onWithdraw }) => {
+export const ModalWithdraw = ({ onWithdraw, balance }) => {
   const [showModal, setShowModal] = React.useState(false);
   const [error, setError] = React.useState(false);
   const [value, setValue] = React.useState(false);
@@ -26,9 +26,9 @@ export const ModalWithdraw = ({ onWithdraw }) => {
       {showModal && (
         <Modal title="Withdraw" handleModalToggle={handleModalToggle}>
           <div className="mb-4 pb-2">
-            Your Current Balance is <strong>10 ETH</strong>
+            Your Current Balance is <strong>{balance} ETH</strong>
           </div>
-          {error && <Alert color="red" />}
+          {error && <Alert color="red">Not enough balance!</Alert>}
           <div className="min-w-0 flex items-center mb-4 py-2 px-4 bg-gray-100 rounded">
             <NumberFormat
               thousandSeparator=" "
@@ -64,8 +64,12 @@ export const ModalWithdraw = ({ onWithdraw }) => {
                 variant="green"
                 className="w-full"
                 handleClick={() => {
-                  onWithdraw(value);
-                  setShowModal(!showModal);
+                  if (Number(value) > balance) {
+                    setError(true);
+                  } else {
+                    onWithdraw(value);
+                    setShowModal(!showModal);
+                  }
                 }}
               >
                 Withdraw
