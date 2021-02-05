@@ -34,11 +34,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (drizzleReadinessState.loading === false) {
       drizzle.web3.eth.getBlock('latest').then((data) => {
-        setCurrentBlock(data.hash);
+        setCurrentBlock({ number: data.number, hash: data.hash });
       });
       setInterval(() => {
         drizzle.web3.eth.getBlock('latest').then((data) => {
-          setCurrentBlock(data.hash);
+          setCurrentBlock({ number: data.number, hash: data.hash });
         });
       }, 10000);
     }

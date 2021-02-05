@@ -11,6 +11,10 @@ export const ModalDeposit = ({ onDeposit }) => {
   const [error, setError] = React.useState(false);
   const [value, setValue] = React.useState(false);
 
+  React.useEffect(() => {
+    if (showModal === false) setValue(false);
+  }, [showModal]);
+
   const handleModalToggle = React.useCallback(() => {
     setShowModal(!showModal);
   }, [showModal]);
