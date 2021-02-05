@@ -45,9 +45,8 @@ contract BinaryBet {
         require(amount > 0);
         require(amount <= stakingBalance[msg.sender].stakedBin);
 
-        stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.sub(amount);
-
         release(msg.sender);
+        stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.sub(amount);
 
         binToken.transfer(msg.sender, amount);
         emit Unstaked(msg.sender, amount);
