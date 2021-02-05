@@ -4,10 +4,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BinToken.sol";
 
 //SPDX-License-Identifier: UNLICENSED
-contract BinaryBet {
+contract BinaryStaking {
     using SafeMath for uint256;
     IERC20 public binToken;
 
+    address payable owner;
+    uint MUL_CONST = 1000;
     event Staked(address user, uint amount);
     event Unstaked(address user, uint amount);
     struct StakingAccount {
@@ -19,12 +21,18 @@ contract BinaryBet {
     uint accumulatedRewards; //(per staked token)
 
     constructor(address token) public {
+        owner = msg.sender;
         binToken = BinToken(token);
     }
 
-    function receiveFunds () public payable {
+    function receiveFunds() public payable {
         uint value = msg.value;
-        accumulatedRewards = accumulatedRewards.add(value.div(binToken.balanceOf(address(this))));
+        if (binToken.balanceOf(address(this)) != 0) {
+            accumulatedRewards = accumulatedRewards.add(value.div(binToken.balanceOf(address(this))).mul(MUL_CONST));
+        }
+        else {
+            owner.transfer(value);
+        }
     }
 
     function stake(uint amount) external{
@@ -32,7 +40,9 @@ contract BinaryBet {
         uint allowance = binToken.allowance(msg.sender, address(this));
         require(allowance >= amount);
 
-        release(msg.sender);
+        if (stakingBalance[msg.sender].stakedBin != 0) {
+            release(msg.sender);
+        }
 
         binToken.transferFrom(msg.sender, address(this), amount);
         stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.add(amount);
@@ -53,8 +63,11 @@ contract BinaryBet {
     }
 
     function release (address user) public {
+        if (accumulatedRewards == 0){
+            return;
+        }
         StakingAccount storage balance = stakingBalance[user];
-        uint amount = (accumulatedRewards.sub(balance.lastReleased)).mul(balance.stakedBin);
+        uint amount = (accumulatedRewards.sub(balance.lastReleased)).mul(balance.stakedBin).div(MUL_CONST);
         
         accumulatedRewards = accumulatedRewards.sub(amount.div( binToken.balanceOf(address(this))));
         balance.lastReleased = accumulatedRewards;                                                        
