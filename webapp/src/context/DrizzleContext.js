@@ -12,6 +12,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     loading: true,
   });
 
+  const [currentBlock, setCurrentBlock] = useState(null);
+
   useEffect(() => {
     const unsubscribe = drizzle.store.subscribe(() => {
       // every time the store updates, grab the state from drizzle
@@ -29,9 +31,23 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     };
   }, [drizzle.store, drizzleReadinessState]);
 
+  useEffect(() => {
+    if (drizzleReadinessState.loading === false) {
+      drizzle.web3.eth.getBlock('latest').then((data) => {
+        setCurrentBlock(data.hash);
+      });
+      setInterval(() => {
+        drizzle.web3.eth.getBlock('latest').then((data) => {
+          setCurrentBlock(data.hash);
+        });
+      }, 10000);
+    }
+  }, [drizzleReadinessState.loading]);
+
   const value = {
     drizzle,
     drizzleReadinessState,
+    currentBlock,
   };
 
   return (

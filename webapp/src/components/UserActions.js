@@ -9,7 +9,12 @@ import { Button } from './Button';
 
 export const UserActions = () => {
   const { ethAccount } = useMetaMask();
-  const { drizzleReadinessState, drizzle } = useDrizzle();
+  const { drizzleReadinessState, drizzle, currentBlock } = useDrizzle();
+
+  React.useEffect(() => {
+    console.log(currentBlock);
+  }, [currentBlock]);
+
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
   }, [drizzle.contracts]);
