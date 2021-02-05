@@ -2,6 +2,7 @@ pragma solidity ^0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BinToken.sol";
+import "./BinStaking.sol";
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
@@ -13,9 +14,6 @@ contract BinaryBet {
     address payable owner;
     mapping(uint => int) ethPrice;
 
-
-    // BinToken public token;
-    address payable tokenAddress;
 
     enum BetSide {down, up} 
     enum BetResult {down, up, tie}
@@ -53,10 +51,12 @@ contract BinaryBet {
     event newWithdraw(uint value, address user);
     event betSettled(uint gain, uint windowNumber, address user);
     
-    function deployToken() internal returns (address) {
-        BinToken token = new BinToken();
-        return address(token);
-        
+    bool stakingSet = false;
+    address payable stakingAddress;
+    function setStakingAddress(address stakingContract) external {
+        require(!stakingSet);
+        stakingAddress = payable(stakingContract);
+        stakingSet = true;
     }
 
     
@@ -80,7 +80,6 @@ contract BinaryBet {
         fee = _fee;
         owner = msg.sender;
 
-        tokenAddress = payable(deployToken());
     }
 
 
@@ -115,8 +114,8 @@ contract BinaryBet {
         balance[msg.sender] = balance[msg.sender].add(msg.value).sub(betValue);
         uint betFee = computeFee(betValue, fee); 
         
-        
-        //tokenAddress.transfer(betFee);
+        BinaryStaking staking = BinaryStaking(stakingAddress); 
+        staking.receiveFunds.value(betFee)();
 
         uint value = betValue.sub(betFee);
         userWindows[msg.sender].push(windowNumber);
