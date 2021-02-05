@@ -8,7 +8,7 @@ import { useState } from 'react';
 export const UserGuest = () => {
   const [isLoading] = useState(false);
   // const { signUp } = useAuth();
-  const { connectMataMask } = useMetaMask();
+  // const { connectMataMask } = useMetaMask();
 
   // async function handleSignUp() {
   //   setIsLoading(true);
@@ -30,7 +30,9 @@ export const UserGuest = () => {
           variant="default"
           size="normal"
           className="py-3 text-xl w-full"
-          handleClick={connectMataMask}
+          handleClick={() => {
+            // connectMataMask();
+          }}
           isLoading={isLoading}
         >
           Connect my wallet

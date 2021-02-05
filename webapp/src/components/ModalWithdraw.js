@@ -64,10 +64,11 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
                 variant="green"
                 className="w-full"
                 handleClick={() => {
-                  if (Number(value) > balance) {
+                  const val = value.replace(/\s/gi, '');
+                  if (Number(val) > balance) {
                     setError(true);
                   } else {
-                    onWithdraw(value);
+                    onWithdraw(val);
                     setShowModal(!showModal);
                   }
                 }}

@@ -62,10 +62,11 @@ export const ModalDeposit = ({ onDeposit }) => {
                 variant="green"
                 className="w-full"
                 handleClick={() => {
-                  if (Number(value) > balance) {
+                  const val = value.replace(/\s/gi, '');
+                  if (Number(val) > balance) {
                     setError(true);
                   } else {
-                    onDeposit(value);
+                    onDeposit(val);
                     setShowModal(!showModal);
                   }
                 }}

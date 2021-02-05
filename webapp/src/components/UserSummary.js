@@ -23,10 +23,12 @@ export const UserSummary = () => {
           balKey
         ];
       if (bal) {
-        const ethBal =
-          Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
-          100;
-        return ethBal;
+        if (bal.value) {
+          const ethBal =
+            Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
+            100;
+          return ethBal;
+        }
       }
     }
     return 0;
