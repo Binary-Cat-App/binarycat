@@ -157,24 +157,44 @@ describe("BinaryBets Bet management", function () {
     
     it("Should bet with deposited funds", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        const BinaryStaking = await ethers.getContractFactory("BinaryStaking");
+        const BinToken = await ethers.getContractFactory("BinToken");
         const [owner, account1] = await ethers.getSigners();
 
         const bet = await BinaryBet.deploy(1, 30, 1);
         await bet.deployed();
 
+        const token = await BinToken.deploy();
+        await token.deployed();
+
         await bet.connect(account1).deposit({value:100});
+
+        const stk = await BinaryStaking.deploy(token.address);
+        await stk.deployed()
+
         let balance = await bet.getBalance(account1._address);
         expect(balance).to.equal(100);
+
+        await bet.setStakingAddress(stk.address);
         await bet.connect(account1).placeBet(100, 0);
     });
 
     it("Should bet with sent  funds", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        const BinaryStaking = await ethers.getContractFactory("BinaryStaking");
+        const BinToken = await ethers.getContractFactory("BinToken");
         const [owner, account1] = await ethers.getSigners();
 
         const bet = await BinaryBet.deploy(1, 30, 1);
         await bet.deployed();
 
+        const token = await BinToken.deploy();
+        await token.deployed();
+
+        const stk = await BinaryStaking.deploy(token.address);
+        await stk.deployed()
+
+        await bet.setStakingAddress(stk.address);
         await bet.connect(account1).placeBet(100, 0, {value: 100});
     });
 
