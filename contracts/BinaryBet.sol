@@ -106,7 +106,7 @@ contract BinaryBet {
 
         uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
-        require(!userBetted[msg.sender][windowNumber]); //First user bet on the window.
+        require(!userBetted[msg.sender][windowNumber], "user can only bet one time per window"); //First user bet on the window.
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         //betValue <= balance + msg.value
