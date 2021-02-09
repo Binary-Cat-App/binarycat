@@ -246,14 +246,14 @@ contract BinaryBet {
 
     function getBlockPrice(uint block) internal returns (int){
         if(ethPrice[block] == 0) {
-            ethPrice[block] = priceOracle(block);
+            ethPrice[block] = priceOracle();
         }
         return ethPrice[block];
     }
     
     //TODO Implement price API
-    function priceOracle(uint block) internal returns (int currentPrice){
-        return 100;
+    function priceOracle() internal returns (int currentPrice){
+        currentPrice =  int(uint(keccak256(abi.encodePacked(now)))%250 + 10);
     }
 
     //Getters
