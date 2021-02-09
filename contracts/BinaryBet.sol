@@ -28,7 +28,7 @@ contract BinaryBet {
     }
 
     Pool firstWindow;
-    uint windowDuration; //in block
+    uint windowDuration; //in blocks
 
     mapping (uint => Pool) pools; //windowNumber => Pool
 

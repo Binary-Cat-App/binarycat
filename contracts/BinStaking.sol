@@ -14,7 +14,7 @@ contract BinaryStaking {
     event Unstaked(address user, uint amount);
     struct StakingAccount {
         uint stakedBin;
-        uint lastReleased; //Global acummulated value of new_rewards/total_staked when user last got rewards. 
+        uint valueWhenLastRelesed; //Global acummulated value of new_rewards/total_staked when user last got rewards. 
     }
 
     mapping(address => StakingAccount) stakingBalance;
@@ -36,9 +36,8 @@ contract BinaryStaking {
     }
 
     function stake(uint amount) external{
-        require(amount > 0);
+        require(amount > 0, "Amount should be greater than 0");
         uint allowance = binToken.allowance(msg.sender, address(this));
-        require(allowance >= amount);
 
         if (stakingBalance[msg.sender].stakedBin != 0) {
             release(msg.sender);
@@ -46,14 +45,14 @@ contract BinaryStaking {
 
         binToken.transferFrom(msg.sender, address(this), amount);
         stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.add(amount);
-        stakingBalance[msg.sender].lastReleased = accumulatedRewards;
+        stakingBalance[msg.sender].valueWhenLastRelesed = accumulatedRewards;
 
         emit Staked(msg.sender, amount);
     }
 
     function unstake(uint amount) external {
-        require(amount > 0);
-        require(amount <= stakingBalance[msg.sender].stakedBin);
+        require(amount > 0, "Amount should be greater than 0");
+        require(amount <= stakingBalance[msg.sender].stakedBin, "Cannot unstake more than balance");
 
         release(msg.sender);
         stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.sub(amount);
@@ -67,10 +66,10 @@ contract BinaryStaking {
             return;
         }
         StakingAccount storage balance = stakingBalance[user];
-        uint amount = (accumulatedRewards.sub(balance.lastReleased)).mul(balance.stakedBin).div(MUL_CONST);
+        uint amount = (accumulatedRewards.sub(balance.valueWhenLastRelesed)).mul(balance.stakedBin).div(MUL_CONST);
         
         accumulatedRewards = accumulatedRewards.sub(amount.div( binToken.balanceOf(address(this))));
-        balance.lastReleased = accumulatedRewards;                                                        
+        balance.valueWhenLastRelesed = accumulatedRewards;                                                        
         
         payable(user).transfer(amount);
         
