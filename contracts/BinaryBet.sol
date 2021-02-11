@@ -85,11 +85,13 @@ contract BinaryBet {
 
 
     function deposit() payable external {
+        bool update = updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);
         emit newDeposit(msg.value, msg.sender);
     }
 
     function withdraw(uint value) external {
+        updatePrice();
         uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
@@ -102,6 +104,7 @@ contract BinaryBet {
     }
     
     function placeBet (uint betValue, uint8 side) payable external {
+        updatePrice();
         uint windowNumber = getBlockWindow(block.number);
 
         uint gain = updateBalance(msg.sender);
@@ -244,11 +247,12 @@ contract BinaryBet {
     }
 
 
-    function getBlockPrice(uint block) internal returns (int){
-        if(ethPrice[block] == 0) {
-            ethPrice[block] = priceOracle();
+    function updatePrice() public  returns (bool){
+        if(ethPrice[block.number] == 0) {
+            ethPrice[block.number] = priceOracle();
+            return true;
         }
-        return ethPrice[block];
+        return false;
     }
     
     //TODO Implement price API
