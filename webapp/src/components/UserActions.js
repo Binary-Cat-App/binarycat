@@ -11,9 +11,9 @@ export const UserActions = () => {
   const { ethAccount } = useMetaMask();
   const { drizzleReadinessState, drizzle, currentBlock } = useDrizzle();
 
-  React.useEffect(() => {
-    console.log(currentBlock);
-  }, [currentBlock]);
+  // React.useEffect(() => {
+  //   console.log(currentBlock);
+  // }, [currentBlock]);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;

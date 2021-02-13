@@ -6,6 +6,7 @@ import { BetChart } from './Chart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
+import { useDrizzle } from '../context/DrizzleContext';
 
 const exampleData = {
   blockSize: '11,029,235',
@@ -17,11 +18,29 @@ const exampleData = {
 };
 
 const betSessionPeriod = 10;
+const FIRST_BLOCK = 190;
+const WINDOW_DURATION = 15;
 
 export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const [counter, setCounter] = useState(betSessionPeriod);
+  const { currentBlock } = useDrizzle();
+  const [startBlock, setStartBlock] = useState(0);
+  const [progressValue, setProgressValue] = useState(100);
+
+  useEffect(() => {
+    if (currentBlock) {
+      const windowNumber = Math.floor(
+        (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+      );
+      const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
+      console.log('FIRST', start);
+      const progress =
+        100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
+      setProgressValue(progress);
+    }
+  }, [currentBlock]);
 
   const betScrollDiv = useRef(null);
 
@@ -85,9 +104,7 @@ export const Dashboard = () => {
     <>
       <UserArea />
 
-      <BetProgressBar
-        completed={Math.ceil((counter / betSessionPeriod) * 100)}
-      />
+      <BetProgressBar completed={progressValue} />
 
       <div className="-mx-4 overflow-x-hidden">
         <div

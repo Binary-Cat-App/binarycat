@@ -36,11 +36,27 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       drizzle.web3.eth.getBlock('latest').then((data) => {
         setCurrentBlock({ number: data.number, hash: data.hash });
       });
-      setInterval(() => {
-        drizzle.web3.eth.getBlock('latest').then((data) => {
-          setCurrentBlock({ number: data.number, hash: data.hash });
+      var subscription = drizzle.web3.eth
+        .subscribe('newBlockHeaders')
+        .on('connected', function (subscriptionId) {
+          console.log(subscriptionId);
+        })
+        .on('data', function (blockHeader) {
+          setCurrentBlock({
+            number: blockHeader.number,
+            hash: blockHeader.hash,
+          });
+        })
+        .on('error', console.error);
+
+      // unsubscribes the subscription
+      return () => {
+        subscription.unsubscribe(function (error, success) {
+          if (success) {
+            console.log('Successfully unsubscribed!');
+          }
         });
-      }, 10000);
+      };
     }
   }, [drizzleReadinessState.loading]);
 
