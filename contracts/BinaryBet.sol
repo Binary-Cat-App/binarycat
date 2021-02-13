@@ -85,11 +85,13 @@ contract BinaryBet {
 
 
     function deposit() payable external {
+        bool update = updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);
         emit newDeposit(msg.value, msg.sender);
     }
 
     function withdraw(uint value) external {
+        updatePrice();
         uint gain = updateBalance(msg.sender);
         balance[msg.sender] = balance[msg.sender].add(gain);
 
@@ -102,6 +104,7 @@ contract BinaryBet {
     }
     
     function placeBet (uint betValue, uint8 side) payable external {
+        updatePrice();
         uint windowNumber = getBlockWindow(block.number);
 
         uint gain = updateBalance(msg.sender);
@@ -160,14 +163,18 @@ contract BinaryBet {
         BetResult result = BetResult(betResult);
         uint poolTotal = poolUp.add(poolDown);
         uint gain = 0;
-        if (result == BetResult.up) {
+        if (result == BetResult.up && poolUp != 0) {
             gain = (upStake.mul(poolTotal)).div(poolUp);
         } 
-        else if (result == BetResult.down) {
+        else if (result == BetResult.down && poolDown != 0) {
             gain = (downStake.mul(poolTotal)).div(poolDown);
         }
-        else {
+        else if (result == BetResult.tie) {
             gain = upStake.add(downStake);
+        }
+        else {
+            //Define what happens when the winning pool is empty.
+            gain = 0;
         }
         
         return gain;
@@ -245,16 +252,17 @@ contract BinaryBet {
     }
 
 
-    function getBlockPrice(uint block) internal returns (int){
-        if(ethPrice[block] == 0) {
-            ethPrice[block] = priceOracle(block);
+    function updatePrice() public  returns (bool){
+        if(ethPrice[block.number] == 0) {
+            ethPrice[block.number] = priceOracle();
+            return true;
         }
-        return ethPrice[block];
+        return false;
     }
     
     //TODO Implement price API
-    function priceOracle(uint block) internal returns (int currentPrice){
-        return 100;
+    function priceOracle() internal returns (int currentPrice){
+        currentPrice =  int(uint(keccak256(abi.encodePacked(now)))%250 + 10);
     }
 
     //Getters
