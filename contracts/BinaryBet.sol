@@ -132,24 +132,25 @@ contract BinaryBet {
         if(userWindowsList.length == 0) {
             return 0;
         }
-        for (uint i = userWindowsList.length-1; i >= 0; i--) {
-            Pool memory pool = pools[userWindowsList[i]];
+        for (uint i = userWindowsList.length; i > 0; i--) {
+            uint window = userWindowsList[i-1];
+            Pool memory pool = pools[window];
             if(block.number < pool.settlementBlock) {
                 continue;
             }
 
             int referencePrice =  ethPrice[pool.referenceBlock];
             int settlementPrice = ethPrice[pool.settlementBlock];
-            Stake storage stake = userStake[user][userWindowsList[i]];
+            Stake storage stake = userStake[user][window];
             uint8 result = betResult(referencePrice, settlementPrice);
             uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
 
             stake.downStake = 0;
             stake.upStake = 0;
             totalGain = totalGain.add(windowGain);
-            emit betSettled(windowGain, userWindowsList[i], user);
+            emit betSettled(windowGain, window, user);
 
-            userWindowsList[i] = userWindowsList[userWindowsList.length -1];
+            userWindowsList[i-1] = userWindowsList[userWindowsList.length -1];
             userWindowsList.pop();
         }
         return totalGain;
@@ -160,10 +161,10 @@ contract BinaryBet {
         uint poolTotal = poolUp.add(poolDown);
         uint gain = 0;
         if (result == BetResult.up) {
-            gain = (upStake*poolTotal)/poolUp;
+            gain = (upStake.mul(poolTotal)).div(poolUp);
         } 
         else if (result == BetResult.down) {
-            gain = (downStake*poolTotal)/poolDown;
+            gain = (downStake.mul(poolTotal)).div(poolDown);
         }
         else {
             gain = upStake.add(downStake);
