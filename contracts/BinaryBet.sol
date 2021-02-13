@@ -163,14 +163,18 @@ contract BinaryBet {
         BetResult result = BetResult(betResult);
         uint poolTotal = poolUp.add(poolDown);
         uint gain = 0;
-        if (result == BetResult.up) {
+        if (result == BetResult.up && poolUp != 0) {
             gain = (upStake.mul(poolTotal)).div(poolUp);
         } 
-        else if (result == BetResult.down) {
+        else if (result == BetResult.down && poolDown != 0) {
             gain = (downStake.mul(poolTotal)).div(poolDown);
         }
-        else {
+        else if (result == BetResult.tie) {
             gain = upStake.add(downStake);
+        }
+        else {
+            //Define what happens when the winning pool is empty.
+            gain = 0;
         }
         
         return gain;
