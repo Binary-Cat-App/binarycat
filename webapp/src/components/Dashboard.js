@@ -35,7 +35,10 @@ export const Dashboard = () => {
         (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
       );
       const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
-      console.log('FIRST', start);
+      console.log('---');
+      console.log('BettingWindow', windowNumber);
+      console.log('WindowFirstBlock', start);
+      console.log('CurrentBlock', currentBlock.number)
       const progress =
         100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
       setProgressValue(progress);
