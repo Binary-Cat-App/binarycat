@@ -18,8 +18,8 @@ const exampleData = {
 };
 
 const betSessionPeriod = 10;
-const FIRST_BLOCK = 190;
-const WINDOW_DURATION = 15;
+const FIRST_BLOCK = 1;
+const WINDOW_DURATION = 10;
 
 export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
