@@ -12,8 +12,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     loading: true,
   });
 
-  const [currentBlock, setCurrentBlock] = useState(null);
-
   useEffect(() => {
     const unsubscribe = drizzle.store.subscribe(() => {
       // every time the store updates, grab the state from drizzle
@@ -31,39 +29,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     };
   }, [drizzle.store, drizzleReadinessState]);
 
-  useEffect(() => {
-    if (drizzleReadinessState.loading === false) {
-      drizzle.web3.eth.getBlock('latest').then((data) => {
-        setCurrentBlock({ number: data.number, hash: data.hash });
-      });
-      var subscription = drizzle.web3.eth
-        .subscribe('newBlockHeaders')
-        .on('connected', function (subscriptionId) {
-          console.log(subscriptionId);
-        })
-        .on('data', function (blockHeader) {
-          setCurrentBlock({
-            number: blockHeader.number,
-            hash: blockHeader.hash,
-          });
-        })
-        .on('error', console.error);
-
-      // unsubscribes the subscription
-      return () => {
-        subscription.unsubscribe(function (error, success) {
-          if (success) {
-            console.log('Successfully unsubscribed!');
-          }
-        });
-      };
-    }
-  }, [drizzleReadinessState.loading]);
-
   const value = {
     drizzle,
-    drizzleReadinessState,
-    currentBlock,
+    drizzleReadinessState
   };
 
   return (
