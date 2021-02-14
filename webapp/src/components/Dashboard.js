@@ -25,32 +25,25 @@ export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const [counter, setCounter] = useState(betSessionPeriod);
-  const { drizzleReadinessState } = useDrizzle();
+  const { currentBlock } = useDrizzle();
   const [startBlock, setStartBlock] = useState(0);
   const [progressValue, setProgressValue] = useState(100);
 
   useEffect(() => {
-    
-    const currentBlock = drizzleReadinessState.drizzleState.currentBlock;
-
     if (currentBlock) {
       const windowNumber = Math.floor(
         (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
       );
-      
       const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
-      
       console.log('---');
       console.log('BettingWindow', windowNumber);
       console.log('WindowFirstBlock', start);
-      console.log('CurrentBlock', currentBlock.number);
-
+      console.log('CurrentBlock', currentBlock.number)
       const progress =
         100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
-      
       setProgressValue(progress);
     }
-  }, [drizzleReadinessState]);
+  }, [currentBlock]);
 
   const betScrollDiv = useRef(null);
 
