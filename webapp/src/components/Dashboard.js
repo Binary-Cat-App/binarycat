@@ -25,25 +25,52 @@ export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const [counter, setCounter] = useState(betSessionPeriod);
-  const { currentBlock } = useDrizzle();
+  const { drizzle, drizzleReadinessState, currentBlock } = useDrizzle();
   const [startBlock, setStartBlock] = useState(0);
   const [progressValue, setProgressValue] = useState(100);
+  const [currentWindow, setCurrentWindow] = useState(null);
+  const [currentWindowValue, setCurrentWindowValue] = useState(null);
+
+  const contract = React.useMemo(() => {
+    return drizzle.contracts.BinaryBet;
+  }, [drizzle.contracts]);
 
   useEffect(() => {
     if (currentBlock) {
       const windowNumber = Math.floor(
         (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
       );
+      setCurrentWindow(windowNumber);
       const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
       console.log('---');
       console.log('BettingWindow', windowNumber);
       console.log('WindowFirstBlock', start);
-      console.log('CurrentBlock', currentBlock.number)
+      console.log('CurrentBlock', currentBlock.number);
       const progress =
         100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
       setProgressValue(progress);
+
+      const winKey = contract.methods['getPoolValues'].cacheCall(windowNumber);
+      const windowData =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+          winKey
+        ];
+      if (windowData) {
+        setCurrentWindowValue(windowData.value);
+      }
     }
   }, [currentBlock]);
+
+  React.useEffect(() => {
+    console.log(currentWindowValue);
+    if (currentWindowValue) {
+      const updateBets = bets.slice(0);
+      const current = updateBets.find((el) => el.status === 'open');
+      current.poolTotalUp = currentWindowValue['2'];
+      current.poolTotalDown = currentWindowValue['1'];
+      setBets(updateBets);
+    }
+  }, [currentWindowValue]);
 
   const betScrollDiv = useRef(null);
 
@@ -79,25 +106,22 @@ export const Dashboard = () => {
   }, [betSession]);
 
   React.useEffect(() => {
-    const timer =
-      counter > 0 && setTimeout(() => setCounter(counter - 1), 1000);
+    console.log('WINDOW::', currentWindow);
+    if (!currentWindow) return;
 
-    if (counter === 0) {
-      setBets((prev) => [
-        {
-          ...exampleData,
-          status: 'open',
-          id: uuid(),
-          betSessionPeriod: betSessionPeriod,
-        },
-        ...prev,
-      ]);
-      setBetSession((prev) => prev + 1);
-      setCounter(betSessionPeriod);
-    }
-
-    return () => clearTimeout(timer);
-  }, [counter]);
+    setBets((prev) => [
+      {
+        ...exampleData,
+        status: 'open',
+        blockSize: currentBlock.number,
+        id: uuid(),
+        betSessionPeriod: betSessionPeriod,
+      },
+      ...prev,
+    ]);
+    setBetSession((prev) => prev + 1);
+    setCounter(betSessionPeriod);
+  }, [currentWindow]);
 
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
