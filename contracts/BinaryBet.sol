@@ -12,7 +12,7 @@ contract BinaryBet {
     uint fee;
 
     address payable owner;
-    mapping(uint => int) ethPrice;
+    mapping(uint => int) public  price;
 
 
     enum BetSide {down, up} 
@@ -30,7 +30,7 @@ contract BinaryBet {
     Pool firstWindow;
     uint windowDuration; //in blocks
 
-    mapping (uint => Pool) pools; //windowNumber => Pool
+    mapping (uint => Pool) public pools; //windowNumber => Pool
 
  
 
@@ -41,8 +41,8 @@ contract BinaryBet {
     
 
 
-    mapping (address => uint) balance;
-    mapping (address => mapping(uint => Stake)) userStake;
+    mapping (address => uint) public balance;
+    mapping (address => mapping(uint => Stake)) public  userStake;
     mapping (address => mapping(uint => bool)) userBetted;
 
     mapping (address => uint[]) userWindows;
@@ -142,8 +142,8 @@ contract BinaryBet {
                 continue;
             }
 
-            int referencePrice =  ethPrice[pool.referenceBlock];
-            int settlementPrice = ethPrice[pool.settlementBlock];
+            int referencePrice =  price[pool.referenceBlock];
+            int settlementPrice = price[pool.settlementBlock];
             Stake storage stake = userStake[user][window];
             uint8 result = betResult(referencePrice, settlementPrice);
             uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
@@ -253,8 +253,8 @@ contract BinaryBet {
 
 
     function updatePrice() public  returns (bool){
-        if(ethPrice[block.number] == 0) {
-            ethPrice[block.number] = priceOracle();
+        if(price[block.number] == 0) {
+            price[block.number] = priceOracle();
             return true;
         }
         return false;
@@ -275,8 +275,13 @@ contract BinaryBet {
         Stake  memory stake  = userStake[user][windowNumber];
         return (stake.downStake, stake.upStake);
     }
+
     function getBalance(address user) public view returns(uint) {
         return balance[user];
+    }
+
+    function getPrice(uint blockNumber) public view returns(int) {
+        return price[blockNumber];
     }
     
 
