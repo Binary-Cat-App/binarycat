@@ -33,6 +33,22 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   useEffect(() => {
     if (drizzleReadinessState.loading === false) {
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const yourContractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+      setInterval(() => {
+        yourContractWeb3.getPastEvents('allEvents', {}).then((data) => {
+          console.log('\n\n----\ngetPastEvents:::', data, '\n\n----\n\n');
+        });
+      }, 3000);
+    }
+  }, [drizzleReadinessState.loading, drizzle.web3]);
+
+  useEffect(() => {
+    if (drizzleReadinessState.loading === false) {
       drizzle.web3.eth.getBlock('latest').then((data) => {
         setCurrentBlock({ number: data.number, hash: data.hash });
       });

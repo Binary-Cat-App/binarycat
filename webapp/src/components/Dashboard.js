@@ -163,8 +163,17 @@ export const Dashboard = () => {
       const updateBets = bets.slice(0);
       const current = updateBets.find((el) => el.status === 'open');
       if (current) {
-        current.poolTotalUp = Number(currentWindowValue['2']).toFixed(2);
-        current.poolTotalDown = Number(currentWindowValue['1']).toFixed(2);
+        const upValue =
+          Math.round(
+            drizzle.web3.utils.fromWei(currentWindowValue['2'], 'ether') * 100
+          ) / 100;
+        const downValue =
+          Math.round(
+            drizzle.web3.utils.fromWei(currentWindowValue['1'], 'ether') * 100
+          ) / 100;
+        current.poolTotalUp = Number(upValue).toFixed(2);
+        current.poolTotalDown = Number(downValue).toFixed(2);
+        current.poolSize = (Number(upValue) + Number(downValue)).toFixed(2);
         setBets(updateBets);
       }
     }
