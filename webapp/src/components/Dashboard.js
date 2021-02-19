@@ -10,8 +10,8 @@ import { useDrizzle } from '../context/DrizzleContext';
 
 const exampleData = {
   blockSize: '11,029,235',
-  poolTotalUp: '22.46',
-  poolTotalDown: '11.01',
+  poolTotalUp: '0.00',
+  poolTotalDown: '0.00',
   poolSize: '33.47',
   accounts: '100',
   price: '370',
@@ -22,7 +22,7 @@ const FIRST_BLOCK = 1;
 const WINDOW_DURATION = 10;
 
 export const Dashboard = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const [counter, setCounter] = useState(betSessionPeriod);
   const { drizzle, drizzleReadinessState, currentBlock } = useDrizzle();
@@ -30,6 +30,9 @@ export const Dashboard = () => {
   const [progressValue, setProgressValue] = useState(100);
   const [currentWindow, setCurrentWindow] = useState(null);
   const [currentWindowValue, setCurrentWindowValue] = useState(null);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const betScrollDiv = useRef(null);
+  const [bets, setBets] = useState([]);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
@@ -61,41 +64,104 @@ export const Dashboard = () => {
     }
   }, [currentBlock]);
 
+  useEffect(() => {
+    const betsArr = bets.slice(0);
+    const current = betsArr.find((el) => el.status === 'open');
+    const finalized = betsArr.find((el) => el.status === 'finalized');
+    if (finalized) {
+      finalized.blockSize = currentBlock.number - 2;
+    }
+    if (current) {
+      current.blockSize = currentBlock.number;
+    }
+    setBets(betsArr);
+  }, [currentBlock]);
+
   React.useEffect(() => {
-    console.log(currentWindowValue);
+    if (currentBlock) {
+      const windowNumber = Math.floor(
+        (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+      );
+      const windowEndingBlock = Math.floor(
+        FIRST_BLOCK + windowNumber * WINDOW_DURATION - 1
+      );
+      const windowFinalizedBlock = Math.floor(
+        (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+      );
+      if (isFirstLoad) {
+        setBets((prev) => [
+          {
+            ...exampleData,
+            status: 'open',
+            blockSize: currentBlock.number,
+            id: uuid(),
+          },
+          {
+            ...exampleData,
+            initialPrice: '0.00',
+            finalPrice: '',
+            status: 'ongoing',
+            blockSize: windowEndingBlock,
+            id: uuid(),
+          },
+          {
+            ...exampleData,
+            finalPrice: '0.00',
+            initialPrice: '0.00',
+            status: 'finalized',
+            blockSize: currentBlock.number - 2,
+            id: uuid(),
+          },
+          {
+            ...exampleData,
+            finalPrice: '0.00',
+            initialPrice: '0.00',
+            status: 'finalized',
+            blockSize: windowFinalizedBlock,
+            id: uuid(),
+          },
+        ]);
+        setBetSession((prev) => prev + 1);
+        setCounter(betSessionPeriod);
+        setIsFirstLoad(false);
+      } else {
+        const prevBets = bets.slice(0);
+        const opened = prevBets.find((el) => el.status === 'open');
+        const ongoing = prevBets.find((el) => el.status === 'ongoing');
+        opened.status = 'ongoing';
+        opened.blockSize = windowEndingBlock;
+        opened.initialPrice = '0.00';
+        opened.finalPrice = '?';
+        ongoing.status = 'finalized';
+        ongoing.blockSize = currentBlock.number - 2;
+        ongoing.finalPrice = '0.00';
+        ongoing.finalPrice = '0.00';
+
+        prevBets.unshift({
+          ...exampleData,
+          status: 'open',
+          blockSize: currentBlock.number,
+          id: uuid(),
+        });
+
+        setBets(prevBets);
+        setBetSession((prev) => prev + 1);
+        setCounter(betSessionPeriod);
+      }
+    }
+  }, [currentWindow]);
+
+  React.useEffect(() => {
     if (currentWindowValue) {
       const updateBets = bets.slice(0);
       const current = updateBets.find((el) => el.status === 'open');
-      current.poolTotalUp = currentWindowValue['2'];
-      current.poolTotalDown = currentWindowValue['1'];
-      setBets(updateBets);
+      if (current) {
+        current.poolTotalUp = Number(currentWindowValue['2']).toFixed(2);
+        current.poolTotalDown = Number(currentWindowValue['1']).toFixed(2);
+        setBets(updateBets);
+      }
     }
   }, [currentWindowValue]);
-
-  const betScrollDiv = useRef(null);
-
-  const [bets, setBets] = useState([
-    {
-      ...exampleData,
-      finalPrice: '384.02',
-      initialPrice: '370',
-      status: 'finalized',
-      id: uuid(),
-    },
-    {
-      ...exampleData,
-      initialPrice: '370',
-      finalPrice: '',
-      status: 'ongoing',
-      id: uuid(),
-    },
-
-    {
-      ...exampleData,
-      status: 'open',
-      id: uuid(),
-    },
-  ]);
 
   useEffect(() => {
     const betDivWidth =
@@ -104,24 +170,6 @@ export const Dashboard = () => {
 
     betScrollDiv.current.style.transform = `translateX(${-pixelsToMove}px)`;
   }, [betSession]);
-
-  React.useEffect(() => {
-    console.log('WINDOW::', currentWindow);
-    if (!currentWindow) return;
-
-    setBets((prev) => [
-      {
-        ...exampleData,
-        status: 'open',
-        blockSize: currentBlock.number,
-        id: uuid(),
-        betSessionPeriod: betSessionPeriod,
-      },
-      ...prev,
-    ]);
-    setBetSession((prev) => prev + 1);
-    setCounter(betSessionPeriod);
-  }, [currentWindow]);
 
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">

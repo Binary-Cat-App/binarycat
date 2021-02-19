@@ -3,7 +3,7 @@ import { Button } from './Button';
 import { ReactComponent as IconUp } from '../assets/images/icon-up.svg';
 import { ReactComponent as IconDown } from '../assets/images/icon-down.svg';
 import NumberFormat from 'react-number-format';
-import { useAuth } from '../context/AuthContext';
+import { useMetaMask } from '../context/MataMaskContext';
 
 export const PlaceBet = ({
   betAmount,
@@ -11,7 +11,7 @@ export const PlaceBet = ({
   handleBetAmount,
   handleBetDirection,
 }) => {
-  const { currentUser } = useAuth();
+  const { ethAccount } = useMetaMask();
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-8">
@@ -22,21 +22,23 @@ export const PlaceBet = ({
         handleClick={() => {
           handleBetDirection('up');
         }}
-        isDisabled={!currentUser}
+        isDisabled={!ethAccount}
       >
         <IconUp className="icon w-16 h-auto" />
       </Button>
       <div className="min-w-0 py-2 px-4 flex items-center bg-gray-100">
         <NumberFormat
           value={betAmount}
-          onChange={handleBetAmount}
+          onValueChange={(values) => {
+            handleBetAmount(values.formattedValue);
+          }}
           thousandSeparator=" "
           decimalSeparator="."
           decimalScale="2"
           fixedDecimalScale="2"
           allowNegative="false"
           className="form-control font-digits text-xl xl:text-2xl border-0 bg-transparent text-center "
-          disabled={!currentUser}
+          disabled={!ethAccount}
         />
 
         <label htmlFor="betAmount" className="ml-2 text-lg flex-shrink-0">
@@ -50,7 +52,7 @@ export const PlaceBet = ({
         handleClick={() => {
           handleBetDirection('down');
         }}
-        isDisabled={!currentUser}
+        isDisabled={!ethAccount}
       >
         <IconDown className="icon w-16 h-auto" />
       </Button>
