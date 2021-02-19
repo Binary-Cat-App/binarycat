@@ -16,6 +16,8 @@ export const Bet = ({
   betSession,
   status,
   id,
+  onBet,
+  isOpenForBetting,
 }) => {
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
@@ -26,6 +28,10 @@ export const Bet = ({
 
   function handleBetDirection(direction) {
     setBetDirection(direction);
+    if (status === 'open' && isOpenForBetting) {
+      onBet &&
+        onBet({ value: betAmount, direction: direction === 'up' ? 1 : 0 });
+    }
   }
 
   return (
@@ -48,6 +54,7 @@ export const Bet = ({
               betAmount={betAmount}
               handleBetAmount={handleBetAmount}
               handleBetDirection={handleBetDirection}
+              isOpenForBetting={isOpenForBetting}
             />
           ) : (
             <BetChart classAlt="h-48" />

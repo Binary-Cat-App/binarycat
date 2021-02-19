@@ -7,6 +7,9 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
 import { useDrizzle } from '../context/DrizzleContext';
+import { useMetaMask } from '../context/MataMaskContext';
+
+const MIN_BET_AMOUNT = 0;
 
 const exampleData = {
   blockSize: '11,029,235',
@@ -22,6 +25,8 @@ const FIRST_BLOCK = 1;
 const WINDOW_DURATION = 10;
 
 export const Dashboard = () => {
+  const { ethAccount } = useMetaMask();
+
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const [counter, setCounter] = useState(betSessionPeriod);
@@ -33,10 +38,39 @@ export const Dashboard = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
+  const [isOpenForBetting, setIsOpenForBetting] = useState(true);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
   }, [drizzle.contracts]);
+
+  const balance = React.useMemo(() => {
+    if (
+      drizzleReadinessState.loading === false &&
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
+    ) {
+      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
+      const bal =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
+          balKey
+        ];
+      if (bal) {
+        if (bal.value) {
+          const ethBal =
+            Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
+            100;
+          return ethBal;
+        }
+      }
+    }
+    return 0;
+  }, [
+    contract.methods,
+    drizzleReadinessState.loading,
+    drizzleReadinessState.drizzleState.contracts.BinaryBet,
+    drizzle.web3.utils,
+    ethAccount,
+  ]);
 
   useEffect(() => {
     if (currentBlock) {
@@ -156,6 +190,7 @@ export const Dashboard = () => {
         setBetSession((prev) => prev + 1);
         setCounter(betSessionPeriod);
       }
+      setIsOpenForBetting(true);
     }
   }, [currentWindow]);
 
@@ -200,6 +235,21 @@ export const Dashboard = () => {
     betScrollDiv.current.style.transform = `translateX(${-pixelsToMove}px)`;
   }, [betSession]);
 
+  const onBetHandler = ({ value, direction }) => {
+    if (Number(value) <= MIN_BET_AMOUNT) {
+      alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
+      return;
+    }
+    setIsOpenForBetting(false);
+    const eth = drizzle.web3.utils.toWei(value, 'ether');
+    const overBalance = Number(value) > balance ? Number(value) - balance : 0;
+    const over = drizzle.web3.utils.toWei(`${overBalance}`, 'ether');
+    contract.methods['placeBet'].cacheSend(eth, direction, {
+      from: ethAccount,
+      value: over,
+    });
+  };
+
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
       <Loading />
@@ -222,7 +272,12 @@ export const Dashboard = () => {
                 timeout={2000}
                 classNames="transition"
               >
-                <Bet {...bet} betSession={index} />
+                <Bet
+                  {...bet}
+                  betSession={index}
+                  onBet={onBetHandler}
+                  isOpenForBetting={isOpenForBetting}
+                />
               </CSSTransition>
             ))}
           </TransitionGroup>

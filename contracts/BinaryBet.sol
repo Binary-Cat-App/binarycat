@@ -12,10 +12,10 @@ contract BinaryBet {
     uint fee;
 
     address payable owner;
-    mapping(uint => int) ethPrice;
+    mapping(uint => int) public  price;
 
 
-    enum BetSide {down, up} 
+    enum BetSide {down, up}
     enum BetResult {down, up, tie}
 
     struct Pool {
@@ -30,19 +30,19 @@ contract BinaryBet {
     Pool firstWindow;
     uint windowDuration; //in blocks
 
-    mapping (uint => Pool) pools; //windowNumber => Pool
+    mapping (uint => Pool) public pools; //windowNumber => Pool
 
- 
+
 
     struct Stake {
         uint upStake;
         uint downStake;
     }
-    
 
 
-    mapping (address => uint) balance;
-    mapping (address => mapping(uint => Stake)) userStake;
+
+    mapping (address => uint) public balance;
+    mapping (address => mapping(uint => Stake)) public  userStake;
     mapping (address => mapping(uint => bool)) userBetted;
 
     mapping (address => uint[]) userWindows;
@@ -50,7 +50,7 @@ contract BinaryBet {
     event newDeposit(uint value, address user);
     event newWithdraw(uint value, address user);
     event betSettled(uint gain, uint windowNumber, address user);
-    
+
     bool stakingSet = false;
     address payable stakingAddress;
     function setStakingAddress(address stakingContract) external {
@@ -59,24 +59,24 @@ contract BinaryBet {
         stakingSet = true;
     }
 
-    
+
     constructor(uint _firstWindowBlock, uint _windowDuration, uint _fee) public {
         require(_fee <= 100);
         //
-        //                  |-------------betting window-----------|--------------settlement period-----------|  
+        //                  |-------------betting window-----------|--------------settlement period-----------|
         //         firstWindowBlock                      starting block                         starting block
 
 
 
-        //                                                         +                                          +            
-        //                                                     window size                               2*window size 
-        //                                                         =                                          = 
+        //                                                         +                                          +
+        //                                                     window size                               2*window size
+        //                                                         =                                          =
         //                                                  referenceBlock                          settlementBlock
 
         firstWindow = Pool(_firstWindowBlock, _firstWindowBlock.add(_windowDuration), _firstWindowBlock.add(_windowDuration.mul(2)), 0,0);
         windowDuration = _windowDuration;
         pools[0] = firstWindow;
-        
+
         fee = _fee;
         owner = msg.sender;
 
@@ -98,11 +98,11 @@ contract BinaryBet {
         require(value <= balance[msg.sender], "not enough funds");
         balance[msg.sender] = balance[msg.sender].sub(value);
         msg.sender.transfer(value);
-        
+
         emit newWithdraw(value, msg.sender);
 
     }
-    
+
     function placeBet (uint betValue, uint8 side) payable external {
         updatePrice();
         uint windowNumber = getBlockWindow(block.number);
@@ -115,9 +115,9 @@ contract BinaryBet {
         //betValue <= balance + msg.value
         //0 <= balance + msg.value - betValue
         balance[msg.sender] = balance[msg.sender].add(msg.value).sub(betValue);
-        uint betFee = computeFee(betValue, fee); 
-        
-        BinaryStaking staking = BinaryStaking(stakingAddress); 
+        uint betFee = computeFee(betValue, fee);
+
+        BinaryStaking staking = BinaryStaking(stakingAddress);
         staking.receiveFunds.value(betFee)();
 
         uint value = betValue.sub(betFee);
@@ -127,7 +127,7 @@ contract BinaryBet {
         updateStake(msg.sender, uint8(side), windowNumber, value);
         userBetted[msg.sender][windowNumber] = true;
         emit newBet(value, side, msg.sender, windowNumber);
-    }       
+    }
 
     function updateBalance(address user) public returns(uint){
         uint totalGain = 0;
@@ -142,8 +142,8 @@ contract BinaryBet {
                 continue;
             }
 
-            int referencePrice =  ethPrice[pool.referenceBlock];
-            int settlementPrice = ethPrice[pool.settlementBlock];
+            int referencePrice =  price[pool.referenceBlock];
+            int settlementPrice = price[pool.settlementBlock];
             Stake storage stake = userStake[user][window];
             uint8 result = betResult(referencePrice, settlementPrice);
             uint windowGain = settleBet(stake.upStake, stake.downStake, pool.downValue, pool.upValue, result);
@@ -165,7 +165,7 @@ contract BinaryBet {
         uint gain = 0;
         if (result == BetResult.up && poolUp != 0) {
             gain = (upStake.mul(poolTotal)).div(poolUp);
-        } 
+        }
         else if (result == BetResult.down && poolDown != 0) {
             gain = (downStake.mul(poolTotal)).div(poolDown);
         }
@@ -176,35 +176,35 @@ contract BinaryBet {
             //Define what happens when the winning pool is empty.
             gain = 0;
         }
-        
+
         return gain;
     }
 
-   function betResult(int referencePrice, int settlementPrice) public pure returns(uint8){            
+   function betResult(int referencePrice, int settlementPrice) public pure returns(uint8){
         if(settlementPrice < referencePrice) {
             return 0;
-        }   
+        }
         else if(settlementPrice > referencePrice) {
             return 1;
-        } 
+        }
         else {
             return 2;
         }
     }
- 
-    
+
+
     //Internal but set as public for testing
     function updateStake(address user, uint8 side, uint windowNumber, uint value) public{
         BetSide betSide = BetSide(side);
         if (betSide == BetSide.down) {
-            Stake storage stake = userStake[user][windowNumber]; 
-            stake.downStake = stake.downStake.add(value); 
+            Stake storage stake = userStake[user][windowNumber];
+            stake.downStake = stake.downStake.add(value);
         }
         if (betSide == BetSide.up) {
-            Stake storage stake = userStake[user][windowNumber]; 
+            Stake storage stake = userStake[user][windowNumber];
             stake.upStake = stake.upStake.add(value);
         }
-        
+
     }
 
     //Internal but set as public for testing
@@ -212,32 +212,32 @@ contract BinaryBet {
         uint startingBlock = getWindowStartingBlock(windowNumber);
         if (pools[windowNumber].settlementBlock == 0) {
             //
-            //                  |-------------betting window-----------|--------------settlement period-----------|  
+            //                  |-------------betting window-----------|--------------settlement period-----------|
             //          starting block                      starting block                         starting block
             //                                                         +                                          +
-            //                                                     window size                               2*window size          
-            
+            //                                                     window size                               2*window size
+
             pools[windowNumber].referenceBlock = startingBlock.add(windowDuration);
             pools[windowNumber].settlementBlock = startingBlock.add(windowDuration.mul(2));
-             
+
         }
 
         BetSide side = BetSide(betSide);
         if (side == BetSide.down) { //down
               pools[windowNumber].downValue = pools[windowNumber].downValue.add(value);
         }
-        
+
         if (side == BetSide.up) {
               pools[windowNumber].upValue = pools[windowNumber].upValue.add(value);
         }
-        
 
-    }  
+
+    }
 
     //Internal but set as public for testing
     function getBlockWindow (uint currentBlock) public view returns (uint windowNumber) {
         //n = floor((beg block - first_block)/window_size  + 1)
-        windowNumber = ((currentBlock.sub(pools[0].startingBlock)).div(windowDuration)).add(1); //integer division => floor    
+        windowNumber = ((currentBlock.sub(pools[0].startingBlock)).div(windowDuration)).add(1); //integer division => floor
     }
 
     //Internal but set as public for testing
@@ -247,19 +247,19 @@ contract BinaryBet {
     }
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
-        betFee = (value.mul(_fee)).div(100); 
+        betFee = (value.mul(_fee)).div(100);
 
     }
 
 
     function updatePrice() public  returns (bool){
-        if(ethPrice[block.number] == 0) {
-            ethPrice[block.number] = priceOracle();
+        if(price[block.number] == 0) {
+            price[block.number] = priceOracle();
             return true;
         }
         return false;
     }
-    
+
     //TODO Implement price API
     function priceOracle() internal returns (int currentPrice){
         currentPrice =  int(uint(keccak256(abi.encodePacked(now)))%250 + 10);
@@ -275,11 +275,15 @@ contract BinaryBet {
         Stake  memory stake  = userStake[user][windowNumber];
         return (stake.downStake, stake.upStake);
     }
+
     function getBalance(address user) public view returns(uint) {
         return balance[user];
     }
-    
+
+    function getPrice(uint blockNumber) public view returns(int) {
+        return price[blockNumber];
+    }
+
 
 
 }
-

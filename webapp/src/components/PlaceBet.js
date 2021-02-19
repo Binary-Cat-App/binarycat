@@ -10,6 +10,7 @@ export const PlaceBet = ({
   betDirection,
   handleBetAmount,
   handleBetDirection,
+  isOpenForBetting,
 }) => {
   const { ethAccount } = useMetaMask();
 
@@ -22,7 +23,7 @@ export const PlaceBet = ({
         handleClick={() => {
           handleBetDirection('up');
         }}
-        isDisabled={!ethAccount}
+        isDisabled={!ethAccount || !isOpenForBetting}
       >
         <IconUp className="icon w-16 h-auto" />
       </Button>
@@ -38,7 +39,7 @@ export const PlaceBet = ({
           fixedDecimalScale="2"
           allowNegative="false"
           className="form-control font-digits text-xl xl:text-2xl border-0 bg-transparent text-center "
-          disabled={!ethAccount}
+          disabled={!ethAccount || !isOpenForBetting}
         />
 
         <label htmlFor="betAmount" className="ml-2 text-lg flex-shrink-0">
@@ -52,7 +53,7 @@ export const PlaceBet = ({
         handleClick={() => {
           handleBetDirection('down');
         }}
-        isDisabled={!ethAccount}
+        isDisabled={!ethAccount || !isOpenForBetting}
       >
         <IconDown className="icon w-16 h-auto" />
       </Button>

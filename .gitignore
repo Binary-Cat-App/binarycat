@@ -3,5 +3,7 @@ node_modules
 #Buidler files
 cache
 artifacts
-build/
+build/contracts/
+*.swp
+*.swo
 .DS_Store
