@@ -65,11 +65,18 @@ export const Dashboard = () => {
   }, [currentBlock]);
 
   useEffect(() => {
+    if (!currentBlock) return;
     const betsArr = bets.slice(0);
     const current = betsArr.find((el) => el.status === 'open');
     const finalized = betsArr.find((el) => el.status === 'finalized');
+    const windowNumber = Math.floor(
+      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+    );
+    const windowFinalizedBlock = Math.floor(
+      FIRST_BLOCK + (windowNumber - 2) * WINDOW_DURATION - 1
+    );
     if (finalized) {
-      finalized.blockSize = currentBlock.number - 2;
+      finalized.blockSize = windowFinalizedBlock;
     }
     if (current) {
       current.blockSize = currentBlock.number;
@@ -83,10 +90,10 @@ export const Dashboard = () => {
         (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
       );
       const windowEndingBlock = Math.floor(
-        FIRST_BLOCK + windowNumber * WINDOW_DURATION - 1
+        FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION - 1
       );
       const windowFinalizedBlock = Math.floor(
-        (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+        FIRST_BLOCK + (windowNumber - 2) * WINDOW_DURATION - 1
       );
       if (isFirstLoad) {
         setBets((prev) => [
@@ -109,7 +116,7 @@ export const Dashboard = () => {
             finalPrice: '0.00',
             initialPrice: '0.00',
             status: 'finalized',
-            blockSize: currentBlock.number - 2,
+            blockSize: windowFinalizedBlock,
             id: uuid(),
           },
           {
@@ -133,7 +140,7 @@ export const Dashboard = () => {
         opened.initialPrice = '0.00';
         opened.finalPrice = '?';
         ongoing.status = 'finalized';
-        ongoing.blockSize = currentBlock.number - 2;
+        ongoing.blockSize = windowFinalizedBlock;
         ongoing.finalPrice = '0.00';
         ongoing.finalPrice = '0.00';
 
