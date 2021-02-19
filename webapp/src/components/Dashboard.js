@@ -59,6 +59,7 @@ export const Dashboard = () => {
           winKey
         ];
       if (windowData) {
+        console.log('WINDOW DATA:::', windowData.value);
         setCurrentWindowValue(windowData.value);
       }
     }
@@ -174,6 +175,18 @@ export const Dashboard = () => {
         current.poolTotalUp = Number(upValue).toFixed(2);
         current.poolTotalDown = Number(downValue).toFixed(2);
         current.poolSize = (Number(upValue) + Number(downValue)).toFixed(2);
+        console.log(
+          'Up value Wei:',
+          currentWindowValue['2'],
+          ' ETH: ',
+          drizzle.web3.utils.fromWei(currentWindowValue['2'], 'ether')
+        );
+        console.log(
+          'Down value Wei:',
+          currentWindowValue['1'],
+          'ETH: ',
+          drizzle.web3.utils.fromWei(currentWindowValue['1'], 'ether')
+        );
         setBets(updateBets);
       }
     }
