@@ -30,7 +30,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
       {showModal && (
         <Modal title="Withdraw" handleModalToggle={handleModalToggle}>
           <div className="mb-4 pb-2">
-            Your Current Balance is <strong>{balance} ETH</strong>
+            Your Current Balance is <strong>{balance} {global.config.currencyName}</strong>
           </div>
           {error && <Alert color="red">Not enough balance!</Alert>}
           <div className="min-w-0 flex items-center mb-4 py-2 px-4 bg-gray-100 rounded">
