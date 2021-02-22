@@ -111,7 +111,9 @@ export const Bet = ({
               <span className="font-digits text-xl xl:text-2xl text-green-500">
                 {poolTotalUp}
               </span>
-              <span className="text-xxs text-gray-300 ml-2">ETH</span>
+              <span className="text-xxs text-gray-300 ml-2">
+                {global.config.currencyName}
+              </span>
             </div>
             <div className="flex items-center">
               <span className="flex-shrink-0 mr-2">
@@ -120,7 +122,9 @@ export const Bet = ({
               <span className="font-digits text-xl xl:text-2xl text-pink-500">
                 {poolTotalDown}
               </span>
-              <span className="text-xxs text-gray-300 ml-2">ETH</span>
+              <span className="text-xxs text-gray-300 ml-2">
+                {global.config.currencyName}
+              </span>
             </div>
           </div>
           <div className="px-2 flex-shrink-0">

@@ -5,6 +5,7 @@ import App from './components/App';
 import WebFontLoader from 'webfontloader';
 import { Drizzle, generateStore } from '@drizzle/store';
 import BinaryBet from './contracts/BinaryBet.json';
+import './config/globals';
 
 const options = {
   contracts: [BinaryBet],

@@ -49,7 +49,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
             />
 
             <label htmlFor="betAmount" className="ml-2 text-lg flex-shrink-0">
-              ETH
+              {global.config.currencyName}
             </label>
           </div>
           <div className="flex items-center -mx-2">

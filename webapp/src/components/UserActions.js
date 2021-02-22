@@ -9,7 +9,12 @@ import { Button } from './Button';
 
 export const UserActions = () => {
   const { ethAccount } = useMetaMask();
-  const { drizzleReadinessState, drizzle, currentBlock } = useDrizzle();
+  const {
+    drizzleReadinessState,
+    drizzle,
+    currentBlock,
+    balance,
+  } = useDrizzle();
 
   // React.useEffect(() => {
   //   console.log(currentBlock);
@@ -20,46 +25,24 @@ export const UserActions = () => {
   }, [drizzle.contracts]);
 
   const handleDeposit = (value) => {
-    const eth = parseInt(drizzle.web3.utils.toWei(value, 'ether'));
+    const eth = parseInt(
+      drizzle.web3.utils.toWei(value, global.config.currencyRequestValue)
+    );
     contract.methods['deposit'].cacheSend({
       from: ethAccount,
       value: eth,
     });
   };
   const handleWithdraw = (value) => {
-    const eth = drizzle.web3.utils.toWei(value, 'ether');
+    const eth = drizzle.web3.utils.toWei(
+      value,
+      global.config.currencyRequestValue
+    );
     contract.methods['withdraw'].cacheSend(eth, {
       from: ethAccount,
     });
   };
 
-  const balance = React.useMemo(() => {
-    if (
-      drizzleReadinessState.loading === false &&
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
-    ) {
-      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
-      const bal =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
-          balKey
-        ];
-      if (bal) {
-        if (bal.value) {
-          const ethBal =
-            Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
-            100;
-          return ethBal;
-        }
-      }
-    }
-    return 0;
-  }, [
-    contract.methods,
-    drizzleReadinessState.loading,
-    drizzleReadinessState.drizzleState.contracts.BinaryBet,
-    drizzle.web3.utils,
-    ethAccount,
-  ]);
   return (
     <div className="px-4 ml-auto">
       <div className="flex items-center mb-1">

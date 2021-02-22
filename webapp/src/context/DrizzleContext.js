@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useMetaMask } from '../context/MataMaskContext';
 
 const DrizzleContext = createContext();
 
@@ -11,8 +12,42 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleState: null,
     loading: true,
   });
+  const [balance, setBalance] = useState(0);
+  const [balKey, setBalKey] = useState(null);
+  const { ethAccount } = useMetaMask();
 
   const [currentBlock, setCurrentBlock] = useState(null);
+
+  useEffect(() => {
+    if (
+      drizzleReadinessState.loading === false &&
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
+    ) {
+      const contract = drizzle.contracts.BinaryBet;
+      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
+      const bal =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
+          balKey
+        ];
+      if (bal) {
+        if (bal.value) {
+          const ethBal =
+            Math.round(
+              drizzle.web3.utils.fromWei(
+                bal.value,
+                global.config.currencyRequestValue
+              ) * 100
+            ) / 100;
+          setBalance(ethBal);
+          console.log('CHANGE BALANCE', ethBal);
+        }
+      }
+    }
+  }, [
+    drizzleReadinessState.loading,
+    drizzle.web3,
+    drizzleReadinessState.drizzleState,
+  ]);
 
   useEffect(() => {
     const unsubscribe = drizzle.store.subscribe(() => {
@@ -39,11 +74,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         contract.abi,
         contract.address
       );
-      setInterval(() => {
-        yourContractWeb3.getPastEvents('allEvents', {}).then((data) => {
-          console.log('\n\n----\ngetPastEvents:::', data, '\n\n----\n\n');
-        });
-      }, 3000);
+      // setInterval(() => {
+      //   yourContractWeb3.getPastEvents('allEvents', {}).then((data) => {
+      //     console.log('\n\n----\ngetPastEvents:::', data, '\n\n----\n\n');
+      //   });
+      // }, 3000);
     }
   }, [drizzleReadinessState.loading, drizzle.web3]);
 
@@ -80,6 +115,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzle,
     drizzleReadinessState,
     currentBlock,
+    balance,
   };
 
   return (

@@ -12,12 +12,12 @@ import { useMetaMask } from '../context/MataMaskContext';
 const MIN_BET_AMOUNT = 0;
 
 const exampleData = {
-  blockSize: '11,029,235',
+  blockSize: '#1',
   poolTotalUp: '0.00',
   poolTotalDown: '0.00',
-  poolSize: '33.47',
-  accounts: '100',
-  price: '370',
+  poolSize: '0.00',
+  accounts: '0',
+  price: '0',
 };
 
 const betSessionPeriod = 10;
@@ -30,7 +30,12 @@ export const Dashboard = () => {
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const [counter, setCounter] = useState(betSessionPeriod);
-  const { drizzle, drizzleReadinessState, currentBlock } = useDrizzle();
+  const {
+    drizzle,
+    drizzleReadinessState,
+    currentBlock,
+    balance,
+  } = useDrizzle();
   const [startBlock, setStartBlock] = useState(0);
   const [progressValue, setProgressValue] = useState(100);
   const [currentWindow, setCurrentWindow] = useState(null);
@@ -43,34 +48,6 @@ export const Dashboard = () => {
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
   }, [drizzle.contracts]);
-
-  const balance = React.useMemo(() => {
-    if (
-      drizzleReadinessState.loading === false &&
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
-    ) {
-      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
-      const bal =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
-          balKey
-        ];
-      if (bal) {
-        if (bal.value) {
-          const ethBal =
-            Math.round(drizzle.web3.utils.fromWei(bal.value, 'ether') * 100) /
-            100;
-          return ethBal;
-        }
-      }
-    }
-    return 0;
-  }, [
-    contract.methods,
-    drizzleReadinessState.loading,
-    drizzleReadinessState.drizzleState.contracts.BinaryBet,
-    drizzle.web3.utils,
-    ethAccount,
-  ]);
 
   useEffect(() => {
     if (currentBlock) {
@@ -201,11 +178,17 @@ export const Dashboard = () => {
       if (current) {
         const upValue =
           Math.round(
-            drizzle.web3.utils.fromWei(currentWindowValue['2'], 'ether') * 100
+            drizzle.web3.utils.fromWei(
+              currentWindowValue['2'],
+              global.config.currencyRequestValue
+            ) * 100
           ) / 100;
         const downValue =
           Math.round(
-            drizzle.web3.utils.fromWei(currentWindowValue['1'], 'ether') * 100
+            drizzle.web3.utils.fromWei(
+              currentWindowValue['1'],
+              global.config.currencyRequestValue
+            ) * 100
           ) / 100;
         current.poolTotalUp = Number(upValue).toFixed(2);
         current.poolTotalDown = Number(downValue).toFixed(2);
@@ -214,13 +197,19 @@ export const Dashboard = () => {
           'Up value Wei:',
           currentWindowValue['2'],
           ' ETH: ',
-          drizzle.web3.utils.fromWei(currentWindowValue['2'], 'ether')
+          drizzle.web3.utils.fromWei(
+            currentWindowValue['2'],
+            global.config.currencyRequestValue
+          )
         );
         console.log(
           'Down value Wei:',
           currentWindowValue['1'],
           'ETH: ',
-          drizzle.web3.utils.fromWei(currentWindowValue['1'], 'ether')
+          drizzle.web3.utils.fromWei(
+            currentWindowValue['1'],
+            global.config.currencyRequestValue
+          )
         );
         setBets(updateBets);
       }
@@ -241,9 +230,15 @@ export const Dashboard = () => {
       return;
     }
     setIsOpenForBetting(false);
-    const eth = drizzle.web3.utils.toWei(value, 'ether');
+    const eth = drizzle.web3.utils.toWei(
+      value,
+      global.config.currencyRequestValue
+    );
     const overBalance = Number(value) > balance ? Number(value) - balance : 0;
-    const over = drizzle.web3.utils.toWei(`${overBalance}`, 'ether');
+    const over = drizzle.web3.utils.toWei(
+      `${overBalance}`,
+      global.config.currencyRequestValue
+    );
     contract.methods['placeBet'].cacheSend(eth, direction, {
       from: ethAccount,
       value: over,

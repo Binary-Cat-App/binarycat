@@ -43,7 +43,7 @@ export const PlaceBet = ({
         />
 
         <label htmlFor="betAmount" className="ml-2 text-lg flex-shrink-0">
-          ETH
+          {global.config.currencyName}
         </label>
       </div>
       <Button
