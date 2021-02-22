@@ -40,8 +40,18 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         contract.address
       );
       setInterval(() => {
-        yourContractWeb3.getPastEvents('allEvents', {}).then((data) => {
-          console.log('\n\n----\ngetPastEvents:::', data, '\n\n----\n\n');
+        yourContractWeb3.events.allEvents({ fromBlock: 0, toBlock: 'latest' }, function(error, event){ console.log(event); })
+        .on("connected", function(subscriptionId){
+            console.log(subscriptionId);
+        })
+        .on('data', function(event){
+            console.log(event); // same results as the optional callback above
+        })
+        .on('changed', function(event){
+            // remove event from local database
+        })
+        .on('error', function(error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+            //
         });
       }, 3000);
     }
