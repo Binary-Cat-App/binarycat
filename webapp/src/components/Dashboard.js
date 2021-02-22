@@ -11,7 +11,7 @@ import { useMetaMask } from '../context/MataMaskContext';
 
 const MIN_BET_AMOUNT = 0;
 
-const exampleData = {
+const defaultData = {
   blockSize: '#1',
   poolTotalUp: '0.00',
   poolTotalDown: '0.00',
@@ -110,13 +110,13 @@ export const Dashboard = () => {
       if (isFirstLoad) {
         setBets((prev) => [
           {
-            ...exampleData,
+            ...defaultData,
             status: 'open',
             blockSize: currentBlock.number,
             id: uuid(),
           },
           {
-            ...exampleData,
+            ...defaultData,
             initialPrice: '0.00',
             finalPrice: '',
             status: 'ongoing',
@@ -124,7 +124,7 @@ export const Dashboard = () => {
             id: uuid(),
           },
           {
-            ...exampleData,
+            ...defaultData,
             finalPrice: '0.00',
             initialPrice: '0.00',
             status: 'finalized',
@@ -132,7 +132,7 @@ export const Dashboard = () => {
             id: uuid(),
           },
           {
-            ...exampleData,
+            ...defaultData,
             finalPrice: '0.00',
             initialPrice: '0.00',
             status: 'finalized',
@@ -157,7 +157,7 @@ export const Dashboard = () => {
         ongoing.finalPrice = '0.00';
 
         prevBets.unshift({
-          ...exampleData,
+          ...defaultData,
           status: 'open',
           blockSize: currentBlock.number,
           id: uuid(),
