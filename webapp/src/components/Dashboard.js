@@ -13,9 +13,9 @@ const MIN_BET_AMOUNT = 0;
 
 const exampleData = {
   blockSize: '#1',
-  poolTotalUp: '0.00',
-  poolTotalDown: '0.00',
-  poolSize: '0.00',
+  poolTotalUp: '1.00',
+  poolTotalDown: '1.00',
+  poolSize: '2.00',
   accounts: '0',
   price: '0',
 };
@@ -44,6 +44,7 @@ export const Dashboard = () => {
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
+  const [firstFetch, setFirstFetch] = useState(true);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
@@ -56,10 +57,10 @@ export const Dashboard = () => {
       );
       setCurrentWindow(windowNumber);
       const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
-      console.log('---');
-      console.log('BettingWindow', windowNumber);
-      console.log('WindowFirstBlock', start);
-      console.log('CurrentBlock', currentBlock.number);
+      // console.log('---');
+      // console.log('BettingWindow', windowNumber);
+      // console.log('WindowFirstBlock', start);
+      // console.log('CurrentBlock', currentBlock.number);
       const progress =
         100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
       setProgressValue(progress);
@@ -70,8 +71,9 @@ export const Dashboard = () => {
           winKey
         ];
       if (windowData) {
-        console.log('WINDOW DATA:::', windowData.value);
+        // console.log('WINDOW DATA:::', windowData.value);
         setCurrentWindowValue(windowData.value);
+        setFirstFetch(false);
       }
     }
   }, [currentBlock]);
@@ -193,28 +195,124 @@ export const Dashboard = () => {
         current.poolTotalUp = Number(upValue).toFixed(2);
         current.poolTotalDown = Number(downValue).toFixed(2);
         current.poolSize = (Number(upValue) + Number(downValue)).toFixed(2);
-        console.log(
-          'Up value Wei:',
-          currentWindowValue['2'],
-          ' ETH: ',
-          drizzle.web3.utils.fromWei(
-            currentWindowValue['2'],
-            global.config.currencyRequestValue
-          )
-        );
-        console.log(
-          'Down value Wei:',
-          currentWindowValue['1'],
-          'ETH: ',
-          drizzle.web3.utils.fromWei(
-            currentWindowValue['1'],
-            global.config.currencyRequestValue
-          )
-        );
+        // console.log(
+        //   'Up value Wei:',
+        //   currentWindowValue['2'],
+        //   ' ETH: ',
+        //   drizzle.web3.utils.fromWei(
+        //     currentWindowValue['2'],
+        //     global.config.currencyRequestValue
+        //   )
+        // );
+        // console.log(
+        //   'Down value Wei:',
+        //   currentWindowValue['1'],
+        //   'ETH: ',
+        //   drizzle.web3.utils.fromWei(
+        //     currentWindowValue['1'],
+        //     global.config.currencyRequestValue
+        //   )
+        // );
         setBets(updateBets);
       }
     }
   }, [currentWindowValue]);
+
+  React.useEffect(() => {
+    if (!currentWindow || !currentBlock) return;
+    const windowNumber = Math.floor(
+      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+    );
+    const windowEndingBlock = Math.floor(
+      FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION - 1
+    );
+    const windowFinalizedBlock = Math.floor(
+      FIRST_BLOCK + (windowNumber - 2) * WINDOW_DURATION - 1
+    );
+    console.log('CALL FOR BLOCKS', windowEndingBlock, windowFinalizedBlock);
+    const onGoindDataKey = contract.methods['getPoolValues'].cacheCall(
+      windowEndingBlock
+    );
+    const onGoindData =
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+        onGoindDataKey
+      ];
+    const finalizedDataKey = contract.methods['getPoolValues'].cacheCall(
+      windowFinalizedBlock
+    );
+    const finalizedData =
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+        finalizedDataKey
+      ];
+    console.log('\n\n\n---DATA', onGoindData, finalizedData);
+    if (onGoindData) {
+      getValuesFromWei(windowEndingBlock, onGoindData.value);
+      getPriceForBlock(onGoindData.value['0'], 'initial', 'ongoing');
+      getPriceForBlock(onGoindData.value['3'], 'final', 'ongoing');
+    }
+    if (finalizedData) {
+      getValuesFromWei(windowFinalizedBlock, finalizedData.value);
+      getPriceForBlock(finalizedData.value['0'], 'initial', 'finalized');
+      getPriceForBlock(finalizedData.value['3'], 'final', 'finalized');
+    }
+  }, [betSession, currentBlock]);
+
+  const getPriceForBlock = (blockNumber, type, blockType) => {
+    const winKey = contract.methods['getPrice'].cacheCall(blockNumber);
+    const windowData =
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPrice[winKey];
+    console.log('GETTING DATA FOR BLOCK', blockNumber);
+    if (windowData) {
+      console.log(
+        'DATA FOR BLOCK',
+        blockType,
+        blockNumber,
+        type,
+        'PRICE:',
+        windowData.value
+      );
+    }
+  };
+
+  // -----
+
+  React.useEffect(() => {
+    if (!firstFetch) return;
+    if (!currentWindow || !currentBlock) return;
+    const windowNumber = Math.floor(
+      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+    );
+    const windowEndingBlock = Math.floor(
+      FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION - 1
+    );
+    const windowFinalizedBlock = Math.floor(
+      FIRST_BLOCK + (windowNumber - 2) * WINDOW_DURATION - 1
+    );
+    console.log('CALL FOR BLOCKS', windowEndingBlock, windowFinalizedBlock);
+    const onGoindDataKey = contract.methods['getPoolValues'].cacheCall(
+      windowEndingBlock
+    );
+    const onGoindData =
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+        onGoindDataKey
+      ];
+    const finalizedDataKey = contract.methods['getPoolValues'].cacheCall(
+      windowFinalizedBlock
+    );
+    const finalizedData =
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+        finalizedDataKey
+      ];
+    console.log('\n\n\n---DATA', onGoindData, finalizedData);
+    if (onGoindData) {
+      getValuesFromWei(windowEndingBlock, onGoindData.value);
+    }
+    if (finalizedData) {
+      getValuesFromWei(windowFinalizedBlock, finalizedData.value);
+    }
+  }, [betSession, currentBlock, firstFetch]);
+
+  // -----
 
   useEffect(() => {
     const betDivWidth =
@@ -243,6 +341,30 @@ export const Dashboard = () => {
       from: ethAccount,
       value: over,
     });
+  };
+
+  const getValuesFromWei = (blockNumber, values) => {
+    console.log('\n\nUPDATE BLOCK', blockNumber, values);
+    const updateBets = bets.slice(0);
+    const current = updateBets.find((el) => el.blockSize === blockNumber);
+    const upValue =
+      Math.round(
+        drizzle.web3.utils.fromWei(
+          values['2'],
+          global.config.currencyRequestValue
+        ) * 100
+      ) / 100;
+    const downValue =
+      Math.round(
+        drizzle.web3.utils.fromWei(
+          values['1'],
+          global.config.currencyRequestValue
+        ) * 100
+      ) / 100;
+    current.poolTotalUp = Number(upValue).toFixed(2);
+    current.poolTotalDown = Number(downValue).toFixed(2);
+    current.poolSize = (Number(upValue) + Number(downValue)).toFixed(2);
+    setBets(updateBets);
   };
 
   return isLoading ? (

@@ -39,7 +39,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
               ) * 100
             ) / 100;
           setBalance(ethBal);
-          console.log('CHANGE BALANCE', ethBal);
+          // console.log('CHANGE BALANCE', ethBal);
         }
       }
     }
@@ -80,13 +80,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             error,
             event
           ) {
-            console.log(event);
+            // console.log(event);
           })
           .on('connected', function (subscriptionId) {
-            console.log(subscriptionId);
+            // console.log(subscriptionId);
           })
           .on('data', function (event) {
-            console.log(event); // same results as the optional callback above
+            // console.log(event); // same results as the optional callback above
           })
           .on('changed', function (event) {
             // remove event from local database
