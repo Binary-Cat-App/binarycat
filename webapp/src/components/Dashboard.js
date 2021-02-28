@@ -321,11 +321,11 @@ export const Dashboard = () => {
   // -----
 
   useEffect(() => {
-    
+
     const betDivWidth =
       betScrollDiv.current && betScrollDiv.current.offsetWidth;
-    
-    const pixelsToMove = (betDivWidth / 3);
+
+    const pixelsToMove = betDivWidth / 3;
 
     setTransformAnimation(`
       @keyframes train-animation {
