@@ -10,6 +10,7 @@ import { useDrizzle } from '../context/DrizzleContext';
 import { useMetaMask } from '../context/MataMaskContext';
 
 const MIN_BET_AMOUNT = 0;
+const MAX_CARDS = 4;
 
 const defaultData = {
   blockSize: '#1',
@@ -45,6 +46,8 @@ export const Dashboard = () => {
   const [bets, setBets] = useState([]);
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [firstFetch, setFirstFetch] = useState(true);
+  const [transformMove, setTransformMove] = useState(null);
+  const [transformAnimation, setTransformAnimation] = useState(null);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
@@ -100,6 +103,9 @@ export const Dashboard = () => {
 
   React.useEffect(() => {
     if (currentBlock) {
+
+      setTransformMove({});
+
       const windowNumber = Math.floor(
         (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
       );
@@ -315,11 +321,25 @@ export const Dashboard = () => {
   // -----
 
   useEffect(() => {
+    
     const betDivWidth =
       betScrollDiv.current && betScrollDiv.current.offsetWidth;
-    const pixelsToMove = betSession * (betDivWidth / 3);
+    
+    const pixelsToMove = (betDivWidth / 3);
 
-    betScrollDiv.current.style.transform = `translateX(${-pixelsToMove}px)`;
+    setTransformAnimation(`
+      @keyframes train-animation {
+        0% { transform: translate(0px); }
+        1% { transform: translate(${pixelsToMove}px); }
+        35% { transform: translate(${pixelsToMove}px); }
+        100% { transform: translate(0px); }
+      }
+    `);
+
+    setTransformMove({ animation: `train-animation 1.5s` });
+
+    setBets(bets.slice(0,MAX_CARDS));
+
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
@@ -378,11 +398,12 @@ export const Dashboard = () => {
       <BetProgressBar completed={progressValue} />
 
       <div className="-mx-4 overflow-x-hidden">
+        <style children={transformAnimation} />
         <div
           className="transition-all duration-1000 ease-in-out"
-          ref={betScrollDiv}
+          ref={betScrollDiv} style={transformMove}
         >
-          <TransitionGroup className="flex justify-end flex-row-reverse">
+          <TransitionGroup className="flex flex-row-reverse">
             {bets.map((bet, index) => (
               <CSSTransition
                 key={`${bet.id}`}
