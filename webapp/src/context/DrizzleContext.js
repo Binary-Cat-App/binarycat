@@ -107,7 +107,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       var subscription = drizzle.web3.eth
         .subscribe('newBlockHeaders')
         .on('connected', function (subscriptionId) {
-          console.log(subscriptionId);
+          //console.log(subscriptionId);
         })
         .on('data', function (blockHeader) {
           setCurrentBlock({

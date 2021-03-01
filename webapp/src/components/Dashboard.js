@@ -55,55 +55,49 @@ export const Dashboard = () => {
 
   useEffect(() => {
     if (currentBlock) {
+
+      // Open For Betting Window
       const windowNumber = Math.floor(
         (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
       );
       setCurrentWindow(windowNumber);
+
+      // Progress Bar
       const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
-      // console.log('---');
-      // console.log('BettingWindow', windowNumber);
-      // console.log('WindowFirstBlock', start);
-      // console.log('CurrentBlock', currentBlock.number);
       const progress =
         100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
       setProgressValue(progress);
 
+      // Open For Betting Window Pool Values
       const winKey = contract.methods['getPoolValues'].cacheCall(windowNumber);
       const windowData =
         drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
           winKey
         ];
+      
       if (windowData) {
-        // console.log('WINDOW DATA:::', windowData.value);
         setCurrentWindowValue(windowData.value);
         setFirstFetch(false);
       }
+
+      // Open For Betting Window Current Block
+      const betsArr = bets.slice(0);
+      const current = betsArr.find((el) => el.status === 'open');
+      
+      if (current) {
+        current.blockSize = currentBlock.number;
+      }
+      
+      setBets(betsArr);
+
     }
   }, [currentBlock]);
 
-  useEffect(() => {
-    if (!currentBlock) return;
-    const betsArr = bets.slice(0);
-    const current = betsArr.find((el) => el.status === 'open');
-    const finalized = betsArr.find((el) => el.status === 'finalized');
-    const windowNumber = Math.floor(
-      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
-    );
-    const windowFinalizedBlock = Math.floor(
-      FIRST_BLOCK + (windowNumber - 2) * WINDOW_DURATION - 1
-    );
-    if (finalized) {
-      finalized.blockSize = windowFinalizedBlock;
-    }
-    if (current) {
-      current.blockSize = currentBlock.number;
-    }
-    setBets(betsArr);
-  }, [currentBlock]);
 
   React.useEffect(() => {
     if (currentBlock) {
 
+      // Reset Cards Train Animation
       setTransformMove({});
 
       const windowNumber = Math.floor(
@@ -115,7 +109,10 @@ export const Dashboard = () => {
       const windowFinalizedBlock = Math.floor(
         FIRST_BLOCK + (windowNumber - 2) * WINDOW_DURATION - 1
       );
+
       if (isFirstLoad) {
+
+        // Initialize Cards
         setBets((prev) => [
           {
             ...defaultData,
@@ -148,22 +145,28 @@ export const Dashboard = () => {
             id: uuid(),
           },
         ]);
-        setBetSession((prev) => prev + 1);
-        setCounter(betSessionPeriod);
+        
         setIsFirstLoad(false);
+      
       } else {
+
         const prevBets = bets.slice(0);
-        const opened = prevBets.find((el) => el.status === 'open');
+        const opened = prevBets.find((el) => el.status === 'open'); 
         const ongoing = prevBets.find((el) => el.status === 'ongoing');
+        
+        // Transforms Current Open For Betting to Ongoing
         opened.status = 'ongoing';
         opened.blockSize = windowEndingBlock;
         opened.initialPrice = '0.00';
         opened.finalPrice = '?';
+        
+        // Transforms Current Ongoing to Finalized
         ongoing.status = 'finalized';
         ongoing.blockSize = windowFinalizedBlock;
         ongoing.finalPrice = '0.00';
         ongoing.finalPrice = '0.00';
 
+        // Adds New Open For Betting
         prevBets.unshift({
           ...defaultData,
           status: 'open',
@@ -172,12 +175,16 @@ export const Dashboard = () => {
         });
 
         setBets(prevBets);
-        setBetSession((prev) => prev + 1);
-        setCounter(betSessionPeriod);
       }
+
+      // Betting Cycles Counter
+      setBetSession((prev) => prev + 1);
+      setCounter(betSessionPeriod);
       setIsOpenForBetting(true);
+
     }
   }, [currentWindow]);
+
 
   React.useEffect(() => {
     if (currentWindowValue) {
@@ -224,6 +231,7 @@ export const Dashboard = () => {
     }
   }, [currentWindowValue]);
 
+/*
   React.useEffect(() => {
     if (!currentWindow || !currentBlock) return;
     const windowNumber = Math.floor(
@@ -319,14 +327,18 @@ export const Dashboard = () => {
   }, [betSession, currentBlock, firstFetch]);
 
   // -----
+*/
 
   useEffect(() => {
 
+    // Betting Cards Container Width
     const betDivWidth =
       betScrollDiv.current && betScrollDiv.current.offsetWidth;
 
+    // Betting Card Width
     const pixelsToMove = betDivWidth / 3;
 
+    // Train Aninmation Keyframes
     setTransformAnimation(`
       @keyframes train-animation {
         0% { transform: translate(0px); }
@@ -336,8 +348,10 @@ export const Dashboard = () => {
       }
     `);
 
+    // Train Aninmation
     setTransformMove({ animation: `train-animation 1.5s` });
 
+    // Trim Betting Cards up to MAX_CARDS
     setBets(bets.slice(0,MAX_CARDS));
 
   }, [betSession]);
@@ -363,6 +377,7 @@ export const Dashboard = () => {
     });
   };
 
+/*
   const getValuesFromWei = (blockNumber, values) => {
     console.log('\n\nUPDATE BLOCK', blockNumber, values);
     const updateBets = bets.slice(0);
@@ -386,6 +401,7 @@ export const Dashboard = () => {
     current.poolSize = (Number(upValue) + Number(downValue)).toFixed(2);
     setBets(updateBets);
   };
+*/
 
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
