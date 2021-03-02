@@ -1,42 +1,84 @@
 const { expect } = require("chai");
+const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 
-describe("BinaryBets Windows", function () {
+describe("BinaryBets Windows",function () {
     it("Should find the correct starting block for the window", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
         let bet = await BinaryBet.deploy(10, 30, 1);
         await bet.deployed();
-        expect(await bet.getWindowStartingBlock(12)).to.equal(340);
-        expect(await bet.getWindowStartingBlock(10)).to.equal(280);
-        expect(await bet.getWindowStartingBlock(21)).to.equal(610);
+
+        let windowDuration = 30;
+        let firstBlock = 10;
+        
+        expect(await bet.getWindowStartingBlock(12, windowDuration, firstBlock, 0)).to.equal(340);
+        expect(await bet.getWindowStartingBlock(10, windowDuration, firstBlock,0)).to.equal(280);
+        expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
+        expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
 
         bet = await BinaryBet.deploy(5, 12, 1);
         await bet.deployed();
-        expect(await bet.getWindowStartingBlock(12)).to.equal(137);
-        expect(await bet.getWindowStartingBlock(10)).to.equal(113);
-        expect(await bet.getWindowStartingBlock(35)).to.equal(413);
-
-
-
+        windowDuration = 12
+        firstBlock = 5
+        expect(await bet.getWindowStartingBlock(12, windowDuration, firstBlock,0)).to.equal(137);
+        expect(await bet.getWindowStartingBlock(10, windowDuration, firstBlock, 0)).to.equal(113);
+        expect(await bet.getWindowStartingBlock(35, windowDuration, firstBlock, 0)).to.equal(413);
     });
 
+    it("Should find the correct starting block for the window with offset", async function () {
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+
+        let bet = await BinaryBet.deploy(10, 30, 1);
+        await bet.deployed();
+
+        let windowDuration = 50;
+        let firstBlock = 100;
+        
+        expect(await bet.getWindowStartingBlock(4, windowDuration, firstBlock, 3)).to.equal(100);
+        expect(await bet.getWindowStartingBlock(5, windowDuration, firstBlock, 3)).to.equal(150);
+        expect(await bet.getWindowStartingBlock(6, windowDuration,firstBlock, 3)).to.equal(200);
+
+    });
 
     it("Should find the correct window number for block", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
         let bet = await BinaryBet.deploy(10, 30, 1);
         await bet.deployed();
-        expect(await bet.getBlockWindow(168)).to.equal(6);
-        expect(await bet.getBlockWindow(330)).to.equal(11);
-        expect(await bet.getBlockWindow(749)).to.equal(25);
+
+        let windowDuration = 30;
+        let firstBlock = 10;
+        expect(await bet.getBlockWindow(10, windowDuration, firstBlock, 0, 1)).to.equal(1);
+        expect(await bet.getBlockWindow(10, windowDuration, firstBlock, 0, 1)).to.equal(1);
+        expect(await bet.getBlockWindow(168, windowDuration, firstBlock, 0, 1)).to.equal(6);
+        expect(await bet.getBlockWindow(330, windowDuration, firstBlock, 0, 1)).to.equal(11);
+        expect(await bet.getBlockWindow(749, windowDuration, firstBlock, 0, 1)).to.equal(25);
 
         bet = await BinaryBet.deploy(5, 12, 1);
         await bet.deployed();
-        expect(await bet.getBlockWindow(162)).to.equal(14);
-        expect(await bet.getBlockWindow(235)).to.equal(20);
-        expect(await bet.getBlockWindow(779)).to.equal(65);
+        windowDuration = 12;
+        firstBlock = 5;
+        expect(await bet.getBlockWindow(5, windowDuration, firstBlock, 0, 1)).to.equal(1);
+        expect(await bet.getBlockWindow(4, windowDuration, firstBlock, 0, 1)).to.equal(1);
+        expect(await bet.getBlockWindow(162, windowDuration, firstBlock, 0, 1)).to.equal(14);
+        expect(await bet.getBlockWindow(235, windowDuration, firstBlock, 0, 1)).to.equal(20);
+        expect(await bet.getBlockWindow(779, windowDuration, firstBlock, 0, 1)).to.equal(65);
+    });
 
+    it("Should find the correct window number for block with offset", async function () {
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
+        let bet = await BinaryBet.deploy(100, 50, 1);
+        await bet.deployed();
+
+        let windowDuration = 50;
+        let firstBlock = 100;
+        expect(await bet.getBlockWindow(125, windowDuration, firstBlock, 3, 3)).to.equal(4);
+        expect(await bet.getBlockWindow(149, windowDuration, firstBlock, 3, 3)).to.equal(4);
+        expect(await bet.getBlockWindow(150, windowDuration, firstBlock, 3, 3)).to.equal(5);
+        expect(await bet.getBlockWindow(180, windowDuration, firstBlock, 3, 3)).to.equal(5);
+        expect(await bet.getBlockWindow(200, windowDuration, firstBlock, 3, 3)).to.equal(6);
+        expect(await bet.getBlockWindow(249, windowDuration, firstBlock, 3, 3)).to.equal(6);
     });
 
 });
