@@ -2,64 +2,234 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Bet } from './Bet';
 import { Loading } from './Loading';
 import { UserArea } from './UserArea';
-import useInterval from '@use-it/interval';
 import { BetChart } from './Chart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
+import { BetProgressBar } from './BetProgressBar';
+import { useDrizzle } from '../context/DrizzleContext';
+import { useMetaMask } from '../context/MataMaskContext';
 
-const exampleData = {
-  blockSize: '11,029,235',
-  poolTotalUp: '22.46',
-  poolTotalDown: '11.01',
-  poolSize: '33.47',
-  accounts: '100',
-  price: '370',
+const MIN_BET_AMOUNT = 0;
+const MAX_CARDS = 4;
+
+const defaultData = {
+  blockSize: '#1',
+  poolTotalUp: '0.00',
+  poolTotalDown: '0.00',
+  poolSize: '0.00',
+  accounts: '0',
+  price: '0',
 };
 
 export const Dashboard = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const { ethAccount } = useMetaMask();
+
+  const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
-
+  const {
+    drizzle,
+    currentBlock,
+    balance,
+    progress,
+    windowNumber,
+    windowOngoingNumber,
+    windowOngoingEndingBlock,
+    windowFinalizedNumber,
+    windowFinalizedEndingBlock,
+    currentData,
+    ongoingData,
+    finalizedData,
+  } = useDrizzle();
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
+  const [bets, setBets] = useState([]);
+  const [isOpenForBetting, setIsOpenForBetting] = useState(true);
+  const [transformMove, setTransformMove] = useState(null);
+  const [transformAnimation, setTransformAnimation] = useState(null);
 
-  const [bets, setBets] = useState([
-    {
-      ...exampleData,
-      finalPrice: '384.02',
-      initialPrice: '370',
-      status: 'finalized',
-      id: uuid(),
-    },
-    {
-      ...exampleData,
-      initialPrice: '370',
-      finalPrice: '',
-      status: 'ongoing',
-      id: uuid(),
-    },
+  const contract = React.useMemo(() => {
+    return drizzle.contracts.BinaryBet;
+  }, [drizzle.contracts]);
 
-    {
-      ...exampleData,
-      status: 'open',
-      id: uuid(),
-    },
-  ]);
+  // Betting Cards Initialisation
+  React.useEffect(() => {
+    if (currentBlock) {
 
+      if (isFirstLoad) {
+        // Initialize Cards
+        setBets((prev) => [
+          {
+            ...defaultData,
+            status: 'open',
+            blockSize: currentBlock.number,
+            id: uuid(),
+          },
+          {
+            ...defaultData,
+            initialPrice: '0.00',
+            finalPrice: '',
+            status: 'ongoing',
+            blockSize: windowOngoingEndingBlock,
+            id: uuid(),
+          },
+          {
+            ...defaultData,
+            finalPrice: '0.00',
+            initialPrice: '0.00',
+            status: 'finalized',
+            blockSize: windowFinalizedEndingBlock,
+            id: uuid(),
+          },
+          {
+            ...defaultData,
+            finalPrice: '0.00',
+            initialPrice: '0.00',
+            status: 'finalized',
+            blockSize: windowFinalizedEndingBlock,
+            id: uuid(),
+          },
+        ]);
+
+        setIsFirstLoad(false);
+      } else {
+        const updateBets = bets.slice(0);
+        const opened = updateBets.find((el) => el.status === 'open');
+        const ongoing = updateBets.find((el) => el.status === 'ongoing');
+
+        // Transforms Current Open For Betting Card to Ongoing Card
+        if (opened) {
+          opened.status = 'ongoing';
+          opened.blockSize = windowOngoingEndingBlock;
+          opened.initialPrice = '0.00';
+          opened.finalPrice = '?';
+        }
+
+        // Transforms Current Ongoing Card to Finalized Card
+        if (ongoing) {
+          ongoing.status = 'finalized';
+          ongoing.blockSize = windowFinalizedEndingBlock;
+          ongoing.finalPrice = '0.00';
+          ongoing.finalPrice = '0.00';
+        }
+
+        // Adds New Open For Betting Card
+        updateBets.unshift({
+          ...defaultData,
+          status: 'open',
+          blockSize: currentBlock.number,
+          id: uuid(),
+        });
+        setBets(updateBets);
+      }
+
+      // Reset Cards Train Animation
+      setTransformMove({});
+
+      // Betting Cycles Counter
+      setBetSession((prev) => prev + 1);
+      
+      setIsOpenForBetting(true);
+    }
+  }, [windowNumber]);
+
+  // Opened for betting window (Card): Update Block# on every new blockchain block
+  React.useEffect(() => {
+    const updateBets = bets.slice(0);
+    const selected = updateBets.find(
+      (el) => el.status === 'open'
+    );
+    if (!selected) return;
+    selected.blockSize = currentBlock.number;
+    setBets(updateBets);
+  }, [currentBlock]);
+
+  // Opened for betting window (Card): Update data from contract
+  React.useEffect(() => {
+    const updateBets = bets.slice(0);
+    const selected = updateBets.find(
+      (el) => el.status === 'open'
+    );
+    if (!selected) return;
+    selected.poolTotalUp = currentData.poolTotalUp;
+    selected.poolTotalDown = currentData.poolTotalDown;
+    selected.poolSize = currentData.poolSize;
+  }, [currentData, windowNumber]);
+
+  // Ongoing window (Card): Update data from contract
+  React.useEffect(() => {
+    const updateBets = bets.slice(0);
+    const selected = updateBets.find(
+      (el) => el.status === 'ongoing'
+    );
+    if (!selected) return;
+    selected.poolTotalUp = ongoingData.poolTotalUp;
+    selected.poolTotalDown = ongoingData.poolTotalDown;
+    selected.poolSize = ongoingData.poolSize;
+    selected.initialPrice = ongoingData.initialPrice;
+  }, [ongoingData, windowOngoingNumber]);
+
+  // Finalized window (Card): Update data from contract
+  React.useEffect(() => {
+    const updateBets = bets.slice(0);
+    const selected = updateBets.find(
+      (el) => el.status === 'finalized'
+    );
+    if (!selected) return;
+    selected.poolTotalUp = finalizedData.poolTotalUp;
+    selected.poolTotalDown = finalizedData.poolTotalDown;
+    selected.poolSize = finalizedData.poolSize;
+    selected.initialPrice = finalizedData.initialPrice;
+    selected.finalPrice = finalizedData.finalPrice;
+  }, [finalizedData, windowFinalizedNumber]);
+
+  // Train animation on every new betting window
   useEffect(() => {
+    // Betting Cards Container Width
     const betDivWidth =
       betScrollDiv.current && betScrollDiv.current.offsetWidth;
-    const pixelsToMove = betSession * (betDivWidth / 3);
 
-    betScrollDiv.current.style.transform = `translateX(${-pixelsToMove}px)`;
+    // Betting Card Width
+    const pixelsToMove = betDivWidth / 3;
+
+    // Train Aninmation Keyframes
+    setTransformAnimation(`
+      @keyframes train-animation {
+        0% { transform: translate(0px); }
+        1% { transform: translate(${pixelsToMove}px); }
+        35% { transform: translate(${pixelsToMove}px); }
+        100% { transform: translate(0px); }
+      }
+    `);
+
+    // Train Aninmation execution
+    setTransformMove({ animation: `train-animation 1.5s` });
+
+    // Trim Betting Cards up to MAX_CARDS
+    setBets(bets.slice(0, MAX_CARDS));
+
+    //console.log("Bets: ", bets);
   }, [betSession]);
 
-  useInterval(() => {
-    setBets((prev) => [
-      { ...exampleData, status: 'open', id: uuid() },
-      ...prev,
-    ]);
-    setBetSession((prev) => prev + 1);
-  }, 10000);
+  const onBetHandler = ({ value, direction }) => {
+    if (Number(value) <= MIN_BET_AMOUNT) {
+      alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
+      return;
+    }
+    setIsOpenForBetting(false);
+    const eth = drizzle.web3.utils.toWei(
+      value,
+      global.config.currencyRequestValue
+    );
+    const overBalance = Number(value) > balance ? Number(value) - balance : 0;
+    const over = drizzle.web3.utils.toWei(
+      `${overBalance}`,
+      global.config.currencyRequestValue
+    );
+    contract.methods['placeBet'].cacheSend(eth, direction, {
+      from: ethAccount,
+      value: over,
+    });
+  };
 
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
@@ -69,19 +239,28 @@ export const Dashboard = () => {
     <>
       <UserArea />
 
+      <BetProgressBar completed={progress} />
+
       <div className="-mx-4 overflow-x-hidden">
+        <style children={transformAnimation} />
         <div
           className="transition-all duration-1000 ease-in-out"
           ref={betScrollDiv}
+          style={transformMove}
         >
-          <TransitionGroup className="flex justify-end flex-row-reverse">
+          <TransitionGroup className="flex flex-row-reverse">
             {bets.map((bet, index) => (
               <CSSTransition
                 key={`${bet.id}`}
                 timeout={2000}
                 classNames="transition"
               >
-                <Bet {...bet} betSession={index} />
+                <Bet
+                  {...bet}
+                  betSession={index}
+                  onBet={onBetHandler}
+                  isOpenForBetting={isOpenForBetting}
+                />
               </CSSTransition>
             ))}
           </TransitionGroup>
@@ -94,3 +273,5 @@ export const Dashboard = () => {
     </>
   );
 };
+
+export default Dashboard;

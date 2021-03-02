@@ -6,3 +6,4 @@ artifacts
 build/contracts/
 *.swp
 *.swo
+.DS_Store

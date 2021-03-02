@@ -29,5 +29,6 @@
 @import './components/_loading';
 @import './components/_icon';
 @import './components/_transition';
+@import './components/_progress-bar';
 
 @tailwind utilities;

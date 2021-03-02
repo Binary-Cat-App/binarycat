@@ -1,8 +1,44 @@
 import React from 'react';
-import { Button } from './Button';
+
 import MetaMaskLogo from '../assets/images/metamask.svg';
+import { ModalDeposit } from './ModalDeposit';
+import { ModalWithdraw } from './ModalWithdraw';
+import { useDrizzle } from '../context/DrizzleContext';
+import { useMetaMask } from '../context/MataMaskContext';
+import { Button } from './Button';
 
 export const UserActions = () => {
+  const { ethAccount } = useMetaMask();
+  const {
+    drizzleReadinessState,
+    drizzle,
+    currentBlock,
+    balance,
+  } = useDrizzle();
+
+  const contract = React.useMemo(() => {
+    return drizzle.contracts.BinaryBet;
+  }, [drizzle.contracts]);
+
+  const handleDeposit = (value) => {
+    const eth = parseInt(
+      drizzle.web3.utils.toWei(value, global.config.currencyRequestValue)
+    );
+    contract.methods['deposit'].cacheSend({
+      from: ethAccount,
+      value: eth,
+    });
+  };
+  const handleWithdraw = (value) => {
+    const eth = drizzle.web3.utils.toWei(
+      value,
+      global.config.currencyRequestValue
+    );
+    contract.methods['withdraw'].cacheSend(eth, {
+      from: ethAccount,
+    });
+  };
+
   return (
     <div className="px-4 ml-auto">
       <div className="flex items-center mb-1">
@@ -12,17 +48,17 @@ export const UserActions = () => {
         </span>
       </div>
       <div className="flex">
-        <Button variant="default" handleClick={() => console.log('Deposit')}>
-          Deposit
-        </Button>
-        <Button
-          variant="default"
-          outline
-          className="ml-4"
-          handleClick={() => console.log('Withdraw')}
-        >
-          Withdraw
-        </Button>
+        <ModalDeposit
+          onDeposit={(value) => {
+            handleDeposit(value);
+          }}
+        />
+        <ModalWithdraw
+          balance={balance}
+          onWithdraw={(value) => {
+            handleWithdraw(value);
+          }}
+        />
       </div>
     </div>
   );

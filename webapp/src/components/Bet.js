@@ -3,7 +3,7 @@ import { ReactComponent as IconDown } from '../assets/images/icon-down.svg';
 import { BetPlaced } from './BetPlaced';
 import { PlaceBet } from './PlaceBet';
 import { BetChart } from './Chart';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 export const Bet = ({
   blockSize,
@@ -14,57 +14,47 @@ export const Bet = ({
   poolSize,
   accounts,
   betSession,
+  status,
+  id,
+  onBet,
+  isOpenForBetting,
 }) => {
-  const [betStatus, setBetStatus] = useState('open');
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
 
-  const [betInitialPrice, setBetIntialPrice] = useState(initialPrice);
-  const [betFinalPrice, setbetFinalPrice] = useState(finalPrice);
-
-  useEffect(() => {
-    betSession === 1 && setBetStatus('ongoing');
-    betSession === 1 && setBetIntialPrice('365.5');
-
-    betSession === 2 && setBetStatus('finalized');
-    betSession === 2 && setBetIntialPrice('365.5');
-    betSession === 2 && setbetFinalPrice('654,80');
-
-    betSession > 3 && setBetStatus('');
-  }, [betSession]);
-
-  function handleBetAmount(event) {
-    setBetAmount(event.target.value);
+  function handleBetAmount(value) {
+    setBetAmount(value);
   }
 
   function handleBetDirection(direction) {
     setBetDirection(direction);
+    if (status === 'open' && isOpenForBetting) {
+      onBet &&
+        onBet({ value: betAmount, direction: direction === 'up' ? 1 : 0 });
+    }
   }
-
-  // useEffect(() => {
-  //   console.log('from bet');
-  // }, []);
 
   return (
     <div className="w-1/3 px-4 flex-shrink-0">
-      <div className="bg-white p-4 sm:p-6 h-full flex flex-col">
+      <div className="bg-white p-4 sm:p-6 h-full flex flex-col relative">
         <div className="mb-2">
           <h2 className="text-center text-2xl font-medium">
-            {betStatus === 'finalized' && 'Finalized'}
-            {betStatus === 'ongoing' && 'Ongoing'}
-            {betStatus === 'open' && 'Open for betting'}
+            {status === 'finalized' && 'Finalized'}
+            {status === 'ongoing' && 'Ongoing'}
+            {status === 'open' && 'Open for betting'}
           </h2>
           <p className="text-xxs text-gray-300 text-center">
-            Block# {blockSize}
+            Last Block# {blockSize}
           </p>
         </div>
 
         <div className="-mx-2 flex-grow ">
-          {betStatus === 'open' ? (
+          {status === 'open' ? (
             <PlaceBet
               betAmount={betAmount}
               handleBetAmount={handleBetAmount}
               handleBetDirection={handleBetDirection}
+              isOpenForBetting={isOpenForBetting}
             />
           ) : (
             <BetChart classAlt="h-48" />
@@ -77,17 +67,17 @@ export const Bet = ({
               <div className="flex flex-col items-center border-r">
                 <span
                   className={`px-2 rounded-full text-white text-xxs ${
-                    betInitialPrice ? 'bg-blue-500' : 'bg-gray-200'
+                    initialPrice ? 'bg-blue-500' : 'bg-gray-200'
                   }`}
                 >
                   Initial Price
                 </span>
                 <span
                   className={`font-digits text-xl xl:text-2xl ${
-                    !betInitialPrice && 'text-gray-300'
+                    !initialPrice && 'text-gray-300'
                   }`}
                 >
-                  {betInitialPrice ? betInitialPrice : '?'}
+                  {initialPrice ? initialPrice : '?'}
                 </span>
               </div>
             </div>
@@ -95,17 +85,17 @@ export const Bet = ({
               <div className="flex flex-col items-center">
                 <span
                   className={`px-2 rounded-full text-white text-xxs ${
-                    betFinalPrice ? 'bg-blue-500' : 'bg-gray-200'
+                    finalPrice ? 'bg-blue-500' : 'bg-gray-200'
                   }`}
                 >
                   Final Price
                 </span>
                 <span
                   className={`font-digits text-xl xl:text-2xl ${
-                    !betFinalPrice && 'text-gray-300'
+                    !finalPrice && 'text-gray-300'
                   }`}
                 >
-                  {betFinalPrice ? betFinalPrice : '?'}
+                  {finalPrice ? finalPrice : '?'}
                 </span>
               </div>
             </div>
@@ -121,7 +111,9 @@ export const Bet = ({
               <span className="font-digits text-xl xl:text-2xl text-green-500">
                 {poolTotalUp}
               </span>
-              <span className="text-xxs text-gray-300 ml-2">ETH</span>
+              <span className="text-xxs text-gray-300 ml-2">
+                {global.config.currencyName}
+              </span>
             </div>
             <div className="flex items-center">
               <span className="flex-shrink-0 mr-2">
@@ -130,7 +122,9 @@ export const Bet = ({
               <span className="font-digits text-xl xl:text-2xl text-pink-500">
                 {poolTotalDown}
               </span>
-              <span className="text-xxs text-gray-300 ml-2">ETH</span>
+              <span className="text-xxs text-gray-300 ml-2">
+                {global.config.currencyName}
+              </span>
             </div>
           </div>
           <div className="px-2 flex-shrink-0">
@@ -138,20 +132,20 @@ export const Bet = ({
               betAmount={betAmount}
               betDirection={betDirection}
               isWon={
-                (betStatus === 'finalized' &&
+                (status === 'finalized' &&
                   betDirection === 'up' &&
-                  betFinalPrice > betInitialPrice) ||
-                (betStatus === 'finalized' &&
+                  finalPrice > initialPrice) ||
+                (status === 'finalized' &&
                   betDirection === 'down' &&
-                  betFinalPrice < betInitialPrice)
+                  finalPrice < initialPrice)
               }
               isLost={
-                (betStatus === 'finalized' &&
+                (status === 'finalized' &&
                   betDirection === 'up' &&
-                  betFinalPrice < betInitialPrice) ||
-                (betStatus === 'finalized' &&
+                  finalPrice < initialPrice) ||
+                (status === 'finalized' &&
                   betDirection === 'down' &&
-                  betFinalPrice > betInitialPrice)
+                  finalPrice > initialPrice)
               }
             />
           </div>
@@ -163,7 +157,7 @@ export const Bet = ({
           <span className="text-xxs text-gray-300 w-1/4">Pool Size</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{poolSize}</span>
-            <span className="text-xxs text-gray-300 ml-2">ETH</span>
+            <span className="text-xxs text-gray-300 ml-2">{global.config.currencyName}</span>
           </div>
         </div>
 

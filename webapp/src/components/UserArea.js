@@ -2,12 +2,12 @@ import React from 'react';
 import { UserSummary } from './UserSummary';
 import { UserActions } from './UserActions';
 import { UserGuest } from './UserGuest';
-import { useAuth } from '../context/AuthContext';
+import { useMetaMask } from '../context/MataMaskContext';
 
 export const UserArea = () => {
-  const { currentUser } = useAuth();
+  const { ethAccount } = useMetaMask();
 
-  return currentUser ? (
+  return ethAccount ? (
     <div className="flex -mx-4 justify-between items-end mb-8">
       <UserSummary />
       <UserActions />
