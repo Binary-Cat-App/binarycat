@@ -224,8 +224,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         ];
       if (winOngoingData) {
         const values = calcValues(winOngoingData.value);
-        const prices = getPricesForWindow(windowOngoingNumber);
-        setOngoingData({ ...values, ...prices });
+        const initialPrice = getPriceForBlock(winOngoingData.value['0']);
+        setOngoingData({ ...values, initialPrice });
       }
     }
 
@@ -238,28 +238,24 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         ];
       if (winFinalizedData) {
         const values = calcValues(winFinalizedData.value);
-        const prices = getPricesForWindow(windowFinalizedNumber);
-        setFinalizedData({ ...values, ...prices });
+        const initialPrice = getPriceForBlock(winFinalizedData.value['0']);
+        const finalPrice = getPriceForBlock(winFinalizedData.value['3']);
+        setFinalizedData({ ...values, initialPrice, finalPrice });
       }
     }
   }, [currentBlock]);
 
   // initialPrice , finalPrice
-  const getPricesForWindow = (windowNumber) => {
+  const getPriceForBlock = (blockNumber) => {
     if (!drizzle.contracts.BinaryBet) return;
     const contract = drizzle.contracts.BinaryBet;
-    const winKey = contract.methods['getWindowBetPrices'].cacheCall(windowNumber);
+    const winKey = contract.methods['getPrice'].cacheCall(blockNumber);
     const windowData =
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getWindowBetPrices[winKey];
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPrice[winKey];
     if (windowData) {
-      console.log("Window Number: ", windowNumber);
-      console.log("Window prices: ", windowData);
-
-      const initialPrice = Number(windowData.value[0]).toFixed(2);
-      const finalPrice = Number(windowData.value[1]).toFixed(2);
-      return { initialPrice, finalPrice };
+      return Number(windowData.value).toFixed(2);
     }
-    return;
+    return '0.00';
   };
 
   const calcValues = (values) => {
