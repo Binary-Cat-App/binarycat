@@ -21,25 +21,34 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   const [currentBlock, setCurrentBlock] = useState(null);
   const [windowNumber, setWindowNumber] = useState(null);
-  const [windowEndingNumber, setWindowEndingNumber] = useState(null);
+  const [windowOngoingNumber, setWindowOngoingNumber] = useState(null);
+  const [windowOngoingEndingBlock, setwindowOngoingEndingBlock] = useState(null);
   const [windowFinalizedNumber, setWindowFinalizedNumber] = useState(null);
+  const [windowFinalizedEndingBlock, setWindowFinalizedEndingBlock] = useState(null);
   const [progress, setProgress] = useState(100);
+  
+  // Open for betting window data
   const [currentData, setCurrentData] = useState({
-    poolTotalUp: '1.00',
-    poolTotalDown: '1.00',
-    poolSize: '2.00',
-  });
-  const [endingData, setEndingData] = useState({
-    poolTotalUp: '1.00',
-    poolTotalDown: '1.00',
-    poolSize: '2.00',
-  });
-  const [finalizedData, setFinalizedData] = useState({
-    poolTotalUp: '1.00',
-    poolTotalDown: '1.00',
-    poolSize: '2.00',
+    poolTotalUp: '0.00',
+    poolTotalDown: '0.00',
+    poolSize: '0.00',
   });
 
+  // Ongoing window data
+  const [ongoingData, setOngoingData] = useState({
+    poolTotalUp: '0.00',
+    poolTotalDown: '0.00',
+    poolSize: '0.00',
+  });
+
+  // Finalized window data
+  const [finalizedData, setFinalizedData] = useState({
+    poolTotalUp: '0.00',
+    poolTotalDown: '0.00',
+    poolSize: '0.00',
+  });
+
+  // Balance Data
   useEffect(() => {
     if (
       drizzleReadinessState.loading === false &&
@@ -70,6 +79,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState.drizzleState,
   ]);
 
+  // Drizzle Readiness State
   useEffect(() => {
     const unsubscribe = drizzle.store.subscribe(() => {
       // every time the store updates, grab the state from drizzle
@@ -87,6 +97,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     };
   }, [drizzle.store, drizzleReadinessState]);
 
+  /*
   useEffect(() => {
     if (drizzleReadinessState.loading === false) {
       const contract = drizzle.contracts.BinaryBet;
@@ -107,19 +118,20 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             // console.log(subscriptionId);
           })
           .on('data', function (event) {
-            // console.log(event); // same results as the optional callback above
+            // same results as the optional callback above
           })
           .on('changed', function (event) {
             // remove event from local database
           })
           .on('error', function (error, receipt) {
             // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-            //
           });
       }, 3000);
     }
   }, [drizzleReadinessState.loading, drizzle.web3]);
+  */
 
+  // Gets Current Blockchain Block
   useEffect(() => {
     if (drizzleReadinessState.loading === false) {
       drizzle.web3.eth.getBlock('latest').then((data) => {
@@ -149,28 +161,37 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     }
   }, [drizzleReadinessState.loading]);
 
+  // Calculates Window Numbers (Open for betting, Ongoing and Finalized)
+  // Calculates Ending Blocks for Ongoing and Finalized betting windows
   useEffect(() => {
     if (!currentBlock) return;
     const current = Math.floor(
       (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
     );
-    const ending = Math.floor(
+
+    const ongoing = current - 1;
+    const finallized = current - 2;
+
+    const ongoingEndingBlock = Math.floor(
       FIRST_BLOCK + (current - 1) * WINDOW_DURATION - 1
     );
-    const finallized = Math.floor(
+    const finallizedEndingBlock = Math.floor(
       FIRST_BLOCK + (current - 2) * WINDOW_DURATION - 1
     );
+
     setWindowNumber(current);
-    setWindowEndingNumber(ending);
+    
+    setWindowOngoingNumber(ongoing);
+    setwindowOngoingEndingBlock(ongoingEndingBlock);
+    
     setWindowFinalizedNumber(finallized);
+    setWindowFinalizedEndingBlock(finallizedEndingBlock);
   }, [currentBlock]);
 
+  // Progress Bar
   useEffect(() => {
     if (!currentBlock) return;
-    const current = Math.floor(
-      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
-    );
-    const start = FIRST_BLOCK + (current - 1) * WINDOW_DURATION;
+    const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
     const _progress =
       100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
     setProgress(_progress);
@@ -180,43 +201,47 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
     const contract = drizzle.contracts.BinaryBet;
-    const wn = Math.floor(
-      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
-    );
-    const winKey = contract.methods['getPoolValues'].cacheCall(wn);
-    const windowData =
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-        winKey
-      ];
-    if (windowData) {
-      const values = calcValues(windowData.value);
-      setCurrentData(values);
+    
+    // Opened for betting window Pool Data
+    if (windowNumber) {
+      const winKey = contract.methods['getPoolValues'].cacheCall(windowNumber);
+      const windowData =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+          winKey
+        ];
+      if (windowData) {
+        const values = calcValues(windowData.value);
+        setCurrentData(values);
+      }
     }
 
-    const ending = Math.floor(FIRST_BLOCK + (wn - 1) * WINDOW_DURATION - 1);
-    const winEndingKey = contract.methods['getPoolValues'].cacheCall(ending);
-    const winEndingData =
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-        winEndingKey
-      ];
-    if (winEndingData) {
-      const values = calcValues(winEndingData.value);
-      const initialPrice = getPriceForBlock(winEndingData.value['0']);
-      setEndingData({ ...values, initialPrice });
+    // Ongoing window Pool Data
+    if (windowOngoingNumber) {
+      const winOngoingKey = contract.methods['getPoolValues'].cacheCall(windowOngoingNumber);
+      const winOngoingData =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+          winOngoingKey
+        ];
+      if (winOngoingData) {
+        const values = calcValues(winOngoingData.value);
+        const initialPrice = getPriceForBlock(winOngoingData.value['0']);
+        setOngoingData({ ...values, initialPrice });
+      }
     }
 
-    const finallized = Math.floor(FIRST_BLOCK + (wn - 2) * WINDOW_DURATION - 1);
-    const winFinalizedKey = contract.methods['getPoolValues'].cacheCall(ending);
-    const winFinalizedData =
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-        winFinalizedKey
-      ];
-    if (winFinalizedData) {
-      const values = calcValues(winFinalizedData.value);
-      const initialPrice = getPriceForBlock(winFinalizedData.value['0']);
-      const finalPrice = getPriceForBlock(winFinalizedData.value['3']);
-      console.log({ initialPrice, finalPrice });
-      setFinalizedData({ ...values, initialPrice, finalPrice });
+    // Finalized window Pool Data
+    if (windowFinalizedNumber) {
+      const winFinalizedKey = contract.methods['getPoolValues'].cacheCall(windowFinalizedNumber);
+      const winFinalizedData =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+          winFinalizedKey
+        ];
+      if (winFinalizedData) {
+        const values = calcValues(winFinalizedData.value);
+        const initialPrice = getPriceForBlock(winFinalizedData.value['0']);
+        const finalPrice = getPriceForBlock(winFinalizedData.value['3']);
+        setFinalizedData({ ...values, initialPrice, finalPrice });
+      }
     }
   }, [currentBlock]);
 
@@ -261,10 +286,12 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     balance,
     progress,
     windowNumber,
-    windowEndingNumber,
+    windowOngoingNumber,
+    windowOngoingEndingBlock,
     windowFinalizedNumber,
+    windowFinalizedEndingBlock,
     currentData,
-    endingData,
+    ongoingData,
     finalizedData,
   };
 

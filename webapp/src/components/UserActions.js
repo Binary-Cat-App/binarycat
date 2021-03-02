@@ -16,10 +16,6 @@ export const UserActions = () => {
     balance,
   } = useDrizzle();
 
-  // React.useEffect(() => {
-  //   console.log(currentBlock);
-  // }, [currentBlock]);
-
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
   }, [drizzle.contracts]);
@@ -52,17 +48,6 @@ export const UserActions = () => {
         </span>
       </div>
       <div className="flex">
-        {/*<Button variant="default" handleClick={handleDeposit}>
-          Deposit
-        </Button>
-        <Button
-          variant="default"
-          outline
-          className="ml-4"
-          handleClick={handleWithdraw}
-        >
-          Withdraw
-        </Button>*/}
         <ModalDeposit
           onDeposit={(value) => {
             handleDeposit(value);
