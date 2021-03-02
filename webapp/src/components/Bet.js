@@ -44,7 +44,7 @@ export const Bet = ({
             {status === 'open' && 'Open for betting'}
           </h2>
           <p className="text-xxs text-gray-300 text-center">
-            Block# {blockSize}
+            Last Block# {blockSize}
           </p>
         </div>
 
