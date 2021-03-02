@@ -302,6 +302,3 @@ if(accumulatedFees > 0) {
     }
     
 }
-
-
-}
