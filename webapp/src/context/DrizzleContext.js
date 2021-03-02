@@ -252,9 +252,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     const windowData =
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getWindowBetPrices[winKey];
     if (windowData) {
-      console.log("Window Number: ", windowNumber);
-      console.log("Window prices: ", windowData);
-
       const initialPrice = Number(windowData.value[0]).toFixed(2);
       const finalPrice = Number(windowData.value[1]).toFixed(2);
       return { initialPrice, finalPrice };
