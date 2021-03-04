@@ -204,17 +204,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: currentBlock.number,
     });
 
-    // Opened for betting window Pool Data
-    if (openedWindow) {
-      const userBet = getUserStakeForWindow(openedWindow);
-      const poolData = getPoolValuesForWindow(openedWindow)
+    const userBet = getUserStakeForWindow(openedWindow);
+    const poolData = getPoolValuesForWindow(openedWindow)
 
-      setOpenedPoolData({
-        ...openedPoolData,
-        ...poolData,
-        ...userBet,
-      });
-    }
+    setOpenedPoolData({
+      ...openedPoolData,
+      ...poolData,
+      ...userBet,
+    });
 
     contractWeb3.getPastEvents(
       'newBet', 
@@ -254,19 +251,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: ongoingWindowEndingBlock,
     });
 
-    // Ongoing window Pool Data
-    if (ongoingWindow) {
-      const userBet = getUserStakeForWindow(ongoingWindow);
-      const prices = getPricesForWindow(ongoingWindow);
-      const poolData = getPoolValuesForWindow(ongoingWindow);
+    const userBet = getUserStakeForWindow(ongoingWindow);
+    const prices = getPricesForWindow(ongoingWindow);
+    const poolData = getPoolValuesForWindow(ongoingWindow);
 
-      setOngoingPoolData({
-        ...ongoingPoolData,
-        ...prices,
-        ...poolData,
-        ...userBet,
-      });
-    }
+    setOngoingPoolData({
+      ...ongoingPoolData,
+      ...prices,
+      ...poolData,
+      ...userBet,
+    });
 
     contractWeb3.getPastEvents(
       'newBet', 
@@ -306,19 +300,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
-    // Finalized window Pool Data
-    if (finalizedWindow) {
-      const userBet = getUserStakeForWindow(finalizedWindow);
-      const prices = getPricesForWindow(finalizedWindow);
-      const poolData = getPoolValuesForWindow(finalizedWindow);
+    const userBet = getUserStakeForWindow(finalizedWindow);
+    const prices = getPricesForWindow(finalizedWindow);
+    const poolData = getPoolValuesForWindow(finalizedWindow);
 
-      setFinalizedPoolData({
-        ...finalizedPoolData,
-        ...prices,
-        ...poolData,
-        ...userBet,
-      });
-    }
+    setFinalizedPoolData({
+      ...finalizedPoolData,
+      ...prices,
+      ...poolData,
+      ...userBet,
+    });
 
     contractWeb3.getPastEvents(
       'newBet', 
