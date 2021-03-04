@@ -46,7 +46,7 @@ export const UserSummary = () => {
           <dl>
             <dt className="leading-none">Balance</dt>
             <dd className="text-2xl font-black text-gray-900">
-              {balance.toFixed(2)} {global.config.currencyName}
+              {balance} {global.config.currencyName}
             </dd>
           </dl>
         </div>

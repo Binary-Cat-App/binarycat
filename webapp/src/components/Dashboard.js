@@ -142,6 +142,8 @@ export const Dashboard = () => {
     );
     if (!selected) return;
     selected.blockSize = openedWindowData.endingBlock;
+    selected.betDirectionContract = openedPoolData.betDirection;
+    selected.betAmountContract = openedPoolData.betAmount;
     selected.poolTotalUp = openedPoolData.poolTotalUp;
     selected.poolTotalDown = openedPoolData.poolTotalDown;
     selected.poolSize = openedPoolData.poolSize;
@@ -156,6 +158,8 @@ export const Dashboard = () => {
     );
     if (!selected) return;
     selected.blockSize = ongoingWindowData.endingBlock;
+    selected.betDirectionContract = ongoingPoolData.betDirection;
+    selected.betAmountContract = ongoingPoolData.betAmount;
     selected.initialPrice = ongoingPoolData.initialPrice;
     selected.poolTotalUp = ongoingPoolData.poolTotalUp;
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
@@ -171,6 +175,8 @@ export const Dashboard = () => {
     );
     if (!selected) return;
     selected.blockSize = finalizedWindowData.endingBlock;
+    selected.betDirectionContract = finalizedPoolData.betDirection;
+    selected.betAmountContract = finalizedPoolData.betAmount;
     selected.initialPrice = finalizedPoolData.initialPrice;
     selected.finalPrice = finalizedPoolData.finalPrice;
     selected.poolTotalUp = finalizedPoolData.poolTotalUp;
@@ -203,8 +209,7 @@ export const Dashboard = () => {
 
     // Trim Betting Cards up to MAX_CARDS
     setBets(bets.slice(0, MAX_CARDS));
-
-    //console.log("Bets: ", bets);
+    
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {

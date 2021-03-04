@@ -29,6 +29,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     endingBlock: 0,
   });
   const [openedPoolData, setOpenedPoolData] = useState({
+    betAmount: '0.00',
+    betDirection: '',
     initialPrice: '', 
     finalPrice: '',
     poolTotalUp: '0.00',
@@ -85,13 +87,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         ];
       if (bal) {
         if (bal.value) {
-          const ethBal =
-            Math.round(
-              drizzle.web3.utils.fromWei(
-                bal.value,
-                global.config.currencyRequestValue
-              ) * 100
-            ) / 100;
+          const ethBal = weiToCurrency(bal.value);
           setBalance(ethBal);
         }
       }
@@ -210,18 +206,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
     // Opened for betting window Pool Data
     if (openedWindow) {
-      const winKey = contract.methods['getPoolValues'].cacheCall(openedWindow);
-      const windowData =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-          winKey
-        ];
-      if (windowData) {
-        const values = calcValues(windowData.value);
-        setOpenedPoolData({
-          ...openedPoolData,
-          ...values,
-        })
-      }
+      const userBet = getUserStakeForWindow(openedWindow);
+      const poolData = getPoolValuesForWindow(openedWindow)
+
+      setOpenedPoolData({
+        ...openedPoolData,
+        ...poolData,
+        ...userBet,
+      });
     }
 
     contractWeb3.getPastEvents(
@@ -264,20 +256,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
     // Ongoing window Pool Data
     if (ongoingWindow) {
-      const winOngoingKey = contract.methods['getPoolValues'].cacheCall(ongoingWindow);
-      const winOngoingData =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-          winOngoingKey
-        ];
-      if (winOngoingData) {
-        const prices = getPricesForWindow(ongoingWindow);
-        const values = calcValues(winOngoingData.value);
-        setOngoingPoolData({
-          ...ongoingPoolData,
-          ...prices,
-          ...values,
-        });
-      }
+      const userBet = getUserStakeForWindow(ongoingWindow);
+      const prices = getPricesForWindow(ongoingWindow);
+      const poolData = getPoolValuesForWindow(ongoingWindow);
+
+      setOngoingPoolData({
+        ...ongoingPoolData,
+        ...prices,
+        ...poolData,
+        ...userBet,
+      });
     }
 
     contractWeb3.getPastEvents(
@@ -320,20 +308,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
     // Finalized window Pool Data
     if (finalizedWindow) {
-      const winFinalizedKey = contract.methods['getPoolValues'].cacheCall(finalizedWindow);
-      const winFinalizedData =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-          winFinalizedKey
-        ];
-      if (winFinalizedData) {
-        const prices = getPricesForWindow(finalizedWindow);
-        const values = calcValues(winFinalizedData.value);
-        setFinalizedPoolData({
-          ...finalizedPoolData,
-          ...prices,
-          ...values,
-        });
-      }
+      const userBet = getUserStakeForWindow(finalizedWindow);
+      const prices = getPricesForWindow(finalizedWindow);
+      const poolData = getPoolValuesForWindow(finalizedWindow);
+
+      setFinalizedPoolData({
+        ...finalizedPoolData,
+        ...prices,
+        ...poolData,
+        ...userBet,
+      });
     }
 
     contractWeb3.getPastEvents(
@@ -373,25 +357,66 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     return;
   };
 
-  const calcValues = (values) => {
-    const upValue =
-      Math.round(
-        drizzle.web3.utils.fromWei(
-          values['2'],
-          global.config.currencyRequestValue
-        ) * 100
-      ) / 100;
-    const downValue =
-      Math.round(
-        drizzle.web3.utils.fromWei(
-          values['1'],
-          global.config.currencyRequestValue
-        ) * 100
-      ) / 100;
-    const poolTotalUp = Number(upValue).toFixed(2);
-    const poolTotalDown = Number(downValue).toFixed(2);
-    const poolSize = (Number(upValue) + Number(downValue)).toFixed(2);
-    return { poolTotalUp, poolTotalDown, poolSize };
+  const getUserStakeForWindow = (windowNumber) => {
+    if (!drizzle.contracts.BinaryBet) return;
+    const contract = drizzle.contracts.BinaryBet;
+    
+    const _userStake = {
+      betDirection: '',
+      betAmount: '0.00'
+    }
+
+    if (ethAccount) {
+      const stakeKey = contract.methods['getUserStake'].cacheCall(windowNumber, ethAccount);
+      const stakeData =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.getUserStake[
+          stakeKey
+        ];
+
+      if( stakeData ) {
+        if (stakeData.value[0] != 0) {
+          _userStake.betDirection = 'down';
+          _userStake.betAmount = weiToCurrency(stakeData.value[0]);
+        } 
+        else if (stakeData.value[1] != 0) {
+          _userStake.betDirection = 'up';
+          _userStake.betAmount = weiToCurrency(stakeData.value[1]);
+        }
+      }
+    }
+
+    return _userStake;
+  };
+
+  const getPoolValuesForWindow = (windowNumber) => {
+    if (!drizzle.contracts.BinaryBet) return;
+    const contract = drizzle.contracts.BinaryBet;
+
+    const poolKey = contract.methods['getPoolValues'].cacheCall(windowNumber);
+    const poolData =
+      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+        poolKey
+      ];
+    if (poolData) {
+      const poolTotalUp = weiToCurrency(poolData.value['2']);
+      const poolTotalDown = weiToCurrency(poolData.value['1']);
+      const poolSize = (Number(poolTotalUp) + Number(poolTotalDown)).toFixed(2);
+      
+      return { poolTotalUp, poolTotalDown, poolSize };
+    }
+    return;
+  };
+
+  const weiToCurrency = (value) => {
+    if (!value) return;
+    const valueInCurrency = Math.round(
+      drizzle.web3.utils.fromWei(
+        value,
+        global.config.currencyRequestValue
+      ) * 100
+    ) / 100;
+
+    return Number(valueInCurrency).toFixed(2);
   };
 
   const value = {

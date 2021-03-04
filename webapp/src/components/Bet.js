@@ -9,6 +9,8 @@ export const Bet = ({
   blockSize,
   initialPrice,
   finalPrice,
+  betDirectionContract,
+  betAmountContract,
   poolTotalUp,
   poolTotalDown,
   poolSize,
@@ -21,6 +23,13 @@ export const Bet = ({
 }) => {
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
+
+  React.useEffect(() => {
+    if (betDirectionContract !== '') {
+      setBetDirection(betDirectionContract);
+      setBetAmount(betAmountContract);
+    }
+  }, [betDirectionContract]);
 
   function handleBetAmount(value) {
     setBetAmount(value);
