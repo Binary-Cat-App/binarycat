@@ -32,13 +32,15 @@ export const Dashboard = () => {
     balance,
     progress,
     windowNumber,
-    windowOngoingNumber,
-    windowOngoingEndingBlock,
-    windowFinalizedNumber,
-    windowFinalizedEndingBlock,
-    currentData,
-    ongoingData,
-    finalizedData,
+    openedWindowData,
+    openedPoolData,
+    openedAccountsData, 
+    ongoingWindowData,
+    ongoingPoolData,
+    ongoingAccountsData,
+    finalizedWindowData,
+    finalizedPoolData,
+    finalizedAccountsData,
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
@@ -61,7 +63,7 @@ export const Dashboard = () => {
           {
             ...defaultData,
             status: 'open',
-            blockSize: currentBlock.number,
+            blockSize: openedWindowData.endingBlock,
             id: uuid(),
           },
           {
@@ -69,7 +71,7 @@ export const Dashboard = () => {
             initialPrice: '0.00',
             finalPrice: '',
             status: 'ongoing',
-            blockSize: windowOngoingEndingBlock,
+            blockSize: ongoingWindowData.endingBlock,
             id: uuid(),
           },
           {
@@ -77,7 +79,7 @@ export const Dashboard = () => {
             finalPrice: '0.00',
             initialPrice: '0.00',
             status: 'finalized',
-            blockSize: windowFinalizedEndingBlock,
+            blockSize: finalizedWindowData.endingBlock,
             id: uuid(),
           },
           {
@@ -85,7 +87,7 @@ export const Dashboard = () => {
             finalPrice: '0.00',
             initialPrice: '0.00',
             status: 'finalized',
-            blockSize: windowFinalizedEndingBlock,
+            blockSize: finalizedWindowData.endingBlock,
             id: uuid(),
           },
         ]);
@@ -99,7 +101,7 @@ export const Dashboard = () => {
         // Transforms Current Open For Betting Card to Ongoing Card
         if (opened) {
           opened.status = 'ongoing';
-          opened.blockSize = windowOngoingEndingBlock;
+          opened.blockSize = ongoingWindowData.endingBlock;
           opened.initialPrice = '0.00';
           opened.finalPrice = '?';
         }
@@ -107,7 +109,7 @@ export const Dashboard = () => {
         // Transforms Current Ongoing Card to Finalized Card
         if (ongoing) {
           ongoing.status = 'finalized';
-          ongoing.blockSize = windowFinalizedEndingBlock;
+          ongoing.blockSize = finalizedWindowData.endingBlock;
           ongoing.finalPrice = '0.00';
           ongoing.finalPrice = '0.00';
         }
@@ -116,7 +118,7 @@ export const Dashboard = () => {
         updateBets.unshift({
           ...defaultData,
           status: 'open',
-          blockSize: currentBlock.number,
+          blockSize: openedWindowData.endingBlock,
           id: uuid(),
         });
         setBets(updateBets);
@@ -132,55 +134,50 @@ export const Dashboard = () => {
     }
   }, [windowNumber]);
 
-  // Opened for betting window (Card): Update Block# on every new blockchain block
+  // Opened for betting window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
     const selected = updateBets.find(
       (el) => el.status === 'open'
     );
     if (!selected) return;
-    selected.blockSize = currentBlock.number;
-    setBets(updateBets);
-  }, [currentBlock]);
+    selected.blockSize = openedWindowData.endingBlock;
+    selected.poolTotalUp = openedPoolData.poolTotalUp;
+    selected.poolTotalDown = openedPoolData.poolTotalDown;
+    selected.poolSize = openedPoolData.poolSize;
+    selected.accounts = openedAccountsData;
+  }, [currentBlock, openedWindowData, openedPoolData, openedAccountsData]);
 
-  // Opened for betting window (Card): Update data from contract
-  React.useEffect(() => {
-    const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'open'
-    );
-    if (!selected) return;
-    selected.poolTotalUp = currentData.poolTotalUp;
-    selected.poolTotalDown = currentData.poolTotalDown;
-    selected.poolSize = currentData.poolSize;
-  }, [currentData, windowNumber]);
-
-  // Ongoing window (Card): Update data from contract
+  // Ongoing window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
     const selected = updateBets.find(
       (el) => el.status === 'ongoing'
     );
     if (!selected) return;
-    selected.poolTotalUp = ongoingData.poolTotalUp;
-    selected.poolTotalDown = ongoingData.poolTotalDown;
-    selected.poolSize = ongoingData.poolSize;
-    selected.initialPrice = ongoingData.initialPrice;
-  }, [ongoingData, windowOngoingNumber]);
+    selected.blockSize = ongoingWindowData.endingBlock;
+    selected.initialPrice = ongoingPoolData.initialPrice;
+    selected.poolTotalUp = ongoingPoolData.poolTotalUp;
+    selected.poolTotalDown = ongoingPoolData.poolTotalDown;
+    selected.poolSize = ongoingPoolData.poolSize;
+    selected.accounts = ongoingAccountsData;
+  }, [openedWindowData, ongoingPoolData, ongoingAccountsData, windowNumber]);
 
-  // Finalized window (Card): Update data from contract
+  // Finalized window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
     const selected = updateBets.find(
       (el) => el.status === 'finalized'
     );
     if (!selected) return;
-    selected.poolTotalUp = finalizedData.poolTotalUp;
-    selected.poolTotalDown = finalizedData.poolTotalDown;
-    selected.poolSize = finalizedData.poolSize;
-    selected.initialPrice = finalizedData.initialPrice;
-    selected.finalPrice = finalizedData.finalPrice;
-  }, [finalizedData, windowFinalizedNumber]);
+    selected.blockSize = finalizedWindowData.endingBlock;
+    selected.initialPrice = finalizedPoolData.initialPrice;
+    selected.finalPrice = finalizedPoolData.finalPrice;
+    selected.poolTotalUp = finalizedPoolData.poolTotalUp;
+    selected.poolTotalDown = finalizedPoolData.poolTotalDown;
+    selected.poolSize = finalizedPoolData.poolSize;
+    selected.accounts = finalizedAccountsData;
+  }, [finalizedWindowData, finalizedPoolData, finalizedAccountsData, windowNumber]);
 
   // Train animation on every new betting window
   useEffect(() => {
