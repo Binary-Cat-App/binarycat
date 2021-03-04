@@ -16,6 +16,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     loading: true,
   });
   const [balance, setBalance] = useState(0);
+  const [totalWinnings, setTotalWinnings] = useState(0);
+  const [winningPercentage, setWinningPercentage] = useState(0);
   const [balKey, setBalKey] = useState(null);
   const { ethAccount } = useMetaMask();
   const [currentBlock, setCurrentBlock] = useState(null);
@@ -116,39 +118,36 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     };
   }, [drizzle.store, drizzleReadinessState]);
 
-  /*
+  // Calculate Totals
   useEffect(() => {
     if (drizzleReadinessState.loading === false) {
       const contract = drizzle.contracts.BinaryBet;
       const web3 = drizzle.web3;
-      const yourContractWeb3 = new web3.eth.Contract(
+      const contractWeb3 = new web3.eth.Contract(
         contract.abi,
         contract.address
       );
-      setInterval(() => {
-        yourContractWeb3.events
-          .allEvents({ fromBlock: 0, toBlock: 'latest' }, function (
-            error,
-            event
-          ) {
-            // console.log(event);
-          })
-          .on('connected', function (subscriptionId) {
-            // console.log(subscriptionId);
-          })
-          .on('data', function (event) {
-            // same results as the optional callback above
-          })
-          .on('changed', function (event) {
-            // remove event from local database
-          })
-          .on('error', function (error, receipt) {
-            // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-          });
-      }, 3000);
+      contractWeb3.getPastEvents(
+        'betSettled', 
+        {
+          fromBlock: 0,
+          toBlock: 'latest'
+        }
+      )
+      .then(function(events){
+        const result = events.filter(key => key.returnValues.user.toLowerCase() == ethAccount.toLowerCase());
+
+        var totalGain = 0;
+        result.forEach(element => totalGain += Number.parseInt(element.returnValues.gain));
+        const _totalWinnings = weiToCurrency(totalGain.toString());
+        setTotalWinnings(_totalWinnings);
+
+        const wins = result.filter(key => Number.parseInt(key.returnValues.gain) > 0);
+        const _winningPercentage = Number((wins.length / events.length) * 100).toFixed(2);
+        setWinningPercentage(_winningPercentage);
+      });
     }
-  }, [drizzleReadinessState.loading, drizzle.web3]);
-  */
+  }, [drizzleReadinessState.loading, drizzle.web3, drizzleReadinessState.drizzleState]);
 
   // Gets Current Blockchain Block
   useEffect(() => {
@@ -415,6 +414,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState,
     currentBlock,
     balance,
+    totalWinnings,
+    winningPercentage,
     progress,
     windowNumber,
     openedWindowData,

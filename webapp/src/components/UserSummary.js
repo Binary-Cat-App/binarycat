@@ -7,7 +7,13 @@ import { useDrizzle } from '../context/DrizzleContext';
 
 export const UserSummary = () => {
   const { ethAccount } = useMetaMask();
-  const { drizzleReadinessState, drizzle, balance } = useDrizzle();
+  const { 
+    drizzleReadinessState, 
+    drizzle,
+    totalWinnings,
+    winningPercentage,
+    balance,
+  } = useDrizzle();
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
   }, [drizzle.contracts]);
@@ -21,7 +27,9 @@ export const UserSummary = () => {
           </span>
           <dl>
             <dt className="leading-none">Winning percentage</dt>
-            <dd className="text-2xl font-black text-gray-900">53 %</dd>
+            <dd className="text-2xl font-black text-gray-900">
+              {winningPercentage} %
+            </dd>
           </dl>
         </div>
       </div>
@@ -33,7 +41,7 @@ export const UserSummary = () => {
           <dl>
             <dt className="leading-none">Total Winnings</dt>
             <dd className="text-2xl font-black text-gray-900">
-              2 {global.config.currencyName}
+              {totalWinnings} {global.config.currencyName}
             </dd>
           </dl>
         </div>
