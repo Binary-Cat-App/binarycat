@@ -205,7 +205,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     });
 
     const userBet = getUserStakeForWindow(openedWindow);
-    const poolData = getPoolValuesForWindow(openedWindow)
+    const poolData = getPoolValuesForWindow(openedWindow);
 
     setOpenedPoolData({
       ...openedPoolData,
