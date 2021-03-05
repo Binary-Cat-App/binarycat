@@ -168,9 +168,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           const _winningPercentage = Number((wins.length / events.length) * 100).toFixed(2);
           setWinningPercentage(_winningPercentage);  
         }
-        else {
-          setWinningPercentage(0);
-        }        
       });
     }
   }, [drizzleReadinessState.loading, drizzle.web3, drizzleReadinessState.drizzleState]);
