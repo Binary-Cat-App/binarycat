@@ -39,7 +39,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     poolTotalDown: '0.00',
     poolSize: '0.00',
   });
-  const [openedAccountsData, setOpenedAccountsData] = useState(0);
+  const [openedAccountsData, setOpenedAccountsData] = useState({
+    accounts: 0,
+  });
 
   // Ongoing data
   const [ongoingWindowData, setOngoingWindowData] = useState({
@@ -56,7 +58,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     poolTotalDown: '0.00',
     poolSize: '0.00',
   });
-  const [ongoingAccountsData, setOngoingAccountsData] = useState(0);
+  const [ongoingAccountsData, setOngoingAccountsData] = useState({
+    accounts: 0,
+  });
 
   // Finalized data
   const [finalizedWindowData, setFinalizedWindowData] = useState({
@@ -73,7 +77,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     poolTotalDown: '0.00',
     poolSize: '0.00',
   });
-  const [finalizedAccountsData, setFinalizedAccountsData] = useState(0);
+  const [finalizedAccountsData, setFinalizedAccountsData] = useState({
+    accounts: 0,
+  });
 
   // Balance Data
   useEffect(() => {
@@ -220,7 +226,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       }
     )
     .then(function(events){
-      setOpenedAccountsData(events.length);
+      setOpenedAccountsData({accounts: events.length});
     });
 
   }, [currentBlock]);
@@ -269,7 +275,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       }
     )
     .then(function(events){
-      setOngoingAccountsData(events.length);
+      setOngoingAccountsData({accounts: events.length});
     });
 
   }, [currentBlock]);
@@ -318,7 +324,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       }
     )
     .then(function(events){
-      setFinalizedAccountsData(events.length);
+      setFinalizedAccountsData({accounts: events.length});
     });
 
   }, [currentBlock]);

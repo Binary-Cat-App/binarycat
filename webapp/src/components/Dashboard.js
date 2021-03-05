@@ -12,15 +12,6 @@ import { useMetaMask } from '../context/MataMaskContext';
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
 
-const defaultData = {
-  blockSize: '#1',
-  poolTotalUp: '0.00',
-  poolTotalDown: '0.00',
-  poolSize: '0.00',
-  accounts: '0',
-  price: '0',
-};
-
 export const Dashboard = () => {
   const { ethAccount } = useMetaMask();
 
@@ -61,33 +52,31 @@ export const Dashboard = () => {
         // Initialize Cards
         setBets((prev) => [
           {
-            ...defaultData,
+            ...openedWindowData,
+            ...openedPoolData,
+            ...openedAccountsData,
             status: 'open',
-            blockSize: openedWindowData.endingBlock,
             id: uuid(),
           },
           {
-            ...defaultData,
-            initialPrice: '0.00',
-            finalPrice: '',
+            ...ongoingWindowData,
+            ...ongoingPoolData,
+            ...ongoingAccountsData,
             status: 'ongoing',
-            blockSize: ongoingWindowData.endingBlock,
             id: uuid(),
           },
           {
-            ...defaultData,
-            finalPrice: '0.00',
-            initialPrice: '0.00',
+            ...finalizedWindowData,
+            ...finalizedPoolData,
+            ...finalizedAccountsData,
             status: 'finalized',
-            blockSize: finalizedWindowData.endingBlock,
             id: uuid(),
           },
           {
-            ...defaultData,
-            finalPrice: '0.00',
-            initialPrice: '0.00',
+            ...finalizedWindowData,
+            ...finalizedPoolData,
+            ...finalizedAccountsData,
             status: 'finalized',
-            blockSize: finalizedWindowData.endingBlock,
             id: uuid(),
           },
         ]);
@@ -101,26 +90,24 @@ export const Dashboard = () => {
         // Transforms Current Open For Betting Card to Ongoing Card
         if (opened) {
           opened.status = 'ongoing';
-          opened.blockSize = ongoingWindowData.endingBlock;
-          opened.initialPrice = '0.00';
-          opened.finalPrice = '?';
+          opened.endingBlock = ongoingWindowData.endingBlock;
         }
 
         // Transforms Current Ongoing Card to Finalized Card
         if (ongoing) {
           ongoing.status = 'finalized';
-          ongoing.blockSize = finalizedWindowData.endingBlock;
-          ongoing.finalPrice = '0.00';
-          ongoing.finalPrice = '0.00';
+          ongoing.endingBlock = finalizedWindowData.endingBlock;
         }
 
         // Adds New Open For Betting Card
         updateBets.unshift({
-          ...defaultData,
+          ...openedWindowData,
+          ...openedPoolData,
+          ...openedAccountsData,
           status: 'open',
-          blockSize: openedWindowData.endingBlock,
           id: uuid(),
         });
+
         setBets(updateBets);
       }
 
@@ -144,13 +131,13 @@ export const Dashboard = () => {
     if (openedPoolData.betDirection !== '') {
       setIsOpenForBetting(false);
     }
-    selected.blockSize = openedWindowData.endingBlock;
+    selected.endingBlock = openedWindowData.endingBlock;
     selected.betDirectionContract = openedPoolData.betDirection;
     selected.betAmountContract = openedPoolData.betAmount;
     selected.poolTotalUp = openedPoolData.poolTotalUp;
     selected.poolTotalDown = openedPoolData.poolTotalDown;
     selected.poolSize = openedPoolData.poolSize;
-    selected.accounts = openedAccountsData;
+    selected.accounts = openedAccountsData.accounts;
   }, [currentBlock, openedWindowData, openedPoolData, openedAccountsData]);
 
   // Ongoing window (Card): Update data
@@ -160,14 +147,14 @@ export const Dashboard = () => {
       (el) => el.status === 'ongoing'
     );
     if (!selected) return;
-    selected.blockSize = ongoingWindowData.endingBlock;
+    selected.endingBlock = ongoingWindowData.endingBlock;
     selected.betDirectionContract = ongoingPoolData.betDirection;
     selected.betAmountContract = ongoingPoolData.betAmount;
     selected.initialPrice = ongoingPoolData.initialPrice;
     selected.poolTotalUp = ongoingPoolData.poolTotalUp;
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
-    selected.accounts = ongoingAccountsData;
+    selected.accounts = ongoingAccountsData.accounts;
   }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
 
   // Finalized window (Card): Update data
@@ -177,7 +164,7 @@ export const Dashboard = () => {
       (el) => el.status === 'finalized'
     );
     if (!selected) return;
-    selected.blockSize = finalizedWindowData.endingBlock;
+    selected.endingBlock = finalizedWindowData.endingBlock;
     selected.betDirectionContract = finalizedPoolData.betDirection;
     selected.betAmountContract = finalizedPoolData.betAmount;
     selected.initialPrice = finalizedPoolData.initialPrice;
@@ -185,7 +172,7 @@ export const Dashboard = () => {
     selected.poolTotalUp = finalizedPoolData.poolTotalUp;
     selected.poolTotalDown = finalizedPoolData.poolTotalDown;
     selected.poolSize = finalizedPoolData.poolSize;
-    selected.accounts = finalizedAccountsData;
+    selected.accounts = finalizedAccountsData.accounts;
   }, [windowNumber, finalizedWindowData, finalizedPoolData, finalizedAccountsData]);
 
   // Train animation on every new betting window

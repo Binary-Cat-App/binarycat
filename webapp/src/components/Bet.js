@@ -6,7 +6,7 @@ import { BetChart } from './Chart';
 import React, { useState } from 'react';
 
 export const Bet = ({
-  blockSize,
+  endingBlock,
   initialPrice,
   finalPrice,
   betDirectionContract,
@@ -53,7 +53,7 @@ export const Bet = ({
             {status === 'open' && 'Open for betting'}
           </h2>
           <p className="text-xxs text-gray-300 text-center">
-            Last Block# {blockSize}
+            Last Block# {endingBlock}
           </p>
         </div>
 
