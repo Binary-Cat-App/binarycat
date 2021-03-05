@@ -141,6 +141,9 @@ export const Dashboard = () => {
       (el) => el.status === 'open'
     );
     if (!selected) return;
+    if (openedPoolData.betDirection !== '') {
+      setIsOpenForBetting(false);
+    }
     selected.blockSize = openedWindowData.endingBlock;
     selected.betDirectionContract = openedPoolData.betDirection;
     selected.betAmountContract = openedPoolData.betAmount;
@@ -165,7 +168,7 @@ export const Dashboard = () => {
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
     selected.accounts = ongoingAccountsData;
-  }, [openedWindowData, ongoingPoolData, ongoingAccountsData, windowNumber]);
+  }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
 
   // Finalized window (Card): Update data
   React.useEffect(() => {
@@ -183,7 +186,7 @@ export const Dashboard = () => {
     selected.poolTotalDown = finalizedPoolData.poolTotalDown;
     selected.poolSize = finalizedPoolData.poolSize;
     selected.accounts = finalizedAccountsData;
-  }, [finalizedWindowData, finalizedPoolData, finalizedAccountsData, windowNumber]);
+  }, [windowNumber, finalizedWindowData, finalizedPoolData, finalizedAccountsData]);
 
   // Train animation on every new betting window
   useEffect(() => {
@@ -209,7 +212,7 @@ export const Dashboard = () => {
 
     // Trim Betting Cards up to MAX_CARDS
     setBets(bets.slice(0, MAX_CARDS));
-    
+
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
