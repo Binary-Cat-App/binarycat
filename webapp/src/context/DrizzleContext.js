@@ -81,6 +81,20 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     accounts: 0,
   });
 
+  // Resets
+  const initPoolData = {
+    betAmount: '0.00',
+    betDirection: '',
+    initialPrice: '', 
+    finalPrice: '',
+    poolTotalUp: '0.00',
+    poolTotalDown: '0.00',
+    poolSize: '0.00',
+  }
+  const initAccountsData = {
+    accounts: 0,
+  }
+
   // Balance Data
   useEffect(() => {
     if (
@@ -229,6 +243,12 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       setOpenedAccountsData({accounts: events.length});
     });
 
+    // Reset data
+    if ( openedWindowStartingBlock === currentBlock.number) {
+      setOpenedPoolData(initPoolData);
+      setOpenedAccountsData(initAccountsData);
+    }
+
   }, [currentBlock]);
 
   // Updates Ongoing Data
@@ -339,10 +359,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   }, [currentBlock, windowNumber]);
 
   // initialPrice , finalPrice
-  const getPricesForWindow = (windowNumber) => {
+  const getPricesForWindow = (_windowNumber) => {
     if (!drizzle.contracts.BinaryBet) return;
     const contract = drizzle.contracts.BinaryBet;
-    const winKey = contract.methods['getWindowBetPrices'].cacheCall(windowNumber);
+    const winKey = contract.methods['getWindowBetPrices'].cacheCall(_windowNumber);
     const windowData =
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getWindowBetPrices[winKey];
     if (windowData) {
@@ -353,7 +373,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     return;
   };
 
-  const getUserStakeForWindow = (windowNumber) => {
+  const getUserStakeForWindow = (_windowNumber) => {
     if (!drizzle.contracts.BinaryBet) return;
     const contract = drizzle.contracts.BinaryBet;
     
@@ -363,7 +383,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     }
 
     if (ethAccount) {
-      const stakeKey = contract.methods['getUserStake'].cacheCall(windowNumber, ethAccount);
+      const stakeKey = contract.methods['getUserStake'].cacheCall(_windowNumber, ethAccount);
       const stakeData =
         drizzleReadinessState.drizzleState.contracts.BinaryBet.getUserStake[
           stakeKey
@@ -384,11 +404,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     return _userStake;
   };
 
-  const getPoolValuesForWindow = (windowNumber) => {
+  const getPoolValuesForWindow = (_windowNumber) => {
     if (!drizzle.contracts.BinaryBet) return;
     const contract = drizzle.contracts.BinaryBet;
 
-    const poolKey = contract.methods['getPoolValues'].cacheCall(windowNumber);
+    const poolKey = contract.methods['getPoolValues'].cacheCall(_windowNumber);
     const poolData =
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
         poolKey
@@ -397,7 +417,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       const poolTotalUp = weiToCurrency(poolData.value['2']);
       const poolTotalDown = weiToCurrency(poolData.value['1']);
       const poolSize = (Number(poolTotalUp) + Number(poolTotalDown)).toFixed(2);
-      
+
       return { poolTotalUp, poolTotalDown, poolSize };
     }
     return;
