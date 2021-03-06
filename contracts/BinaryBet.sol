@@ -49,10 +49,11 @@ contract BinaryBet {
     mapping (address => uint) lastBet;
 
     //EVENTS
-    event newBet(uint value, uint8 side, address user, uint windowNumber);
-    event newDeposit(uint value, address user);
-    event newWithdraw(uint value, address user);
-    event betSettled(uint gain, uint windowNumber, address user);
+    event newBet(uint value, uint8 side, address indexed user, uint indexed windowNumber);
+    event newDeposit(uint value, address indexed user);
+    event newWithdraw(uint value, address indexed user);
+    event betSettled(uint gain, uint indexed windowNumber, address indexed user);
+    event priceUpdated(uint indexed windowNumber, int price);
 
     
     modifier onlyGovernance() {
@@ -152,7 +153,7 @@ contract BinaryBet {
             return 0;
         }
 
-if(accumulatedFees > 0) {
+        if(accumulatedFees > 0) {
             staking.receiveFunds.value(accumulatedFees)();
             accumulatedFees = 0;
 
@@ -270,6 +271,8 @@ if(accumulatedFees > 0) {
         uint window = getBlockWindow(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         if(windowPrice[window] == 0) {
             windowPrice[window] = priceOracle();
+        emit priceUpdated(window, windowPrice[window]);
+            
         }
     }
 
