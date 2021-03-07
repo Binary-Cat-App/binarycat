@@ -49,10 +49,10 @@ contract BinaryBet {
     mapping (address => uint) lastBet;
 
     //EVENTS
-    event newBet(uint value, uint8 side, address indexed user, uint indexed windowNumber);
-    event newDeposit(uint value, address indexed user);
-    event newWithdraw(uint value, address indexed user);
-    event betSettled(uint gain, uint indexed windowNumber, address indexed user);
+    event newBet(address indexed user, uint indexed windowNumber, uint value, uint8 side);
+    event newDeposit(address indexed user, uint value);
+    event newWithdraw(address indexed user, uint value);
+    event betSettled(uint indexed windowNumber, address indexed user, uint gain);
     event priceUpdated(uint indexed windowNumber, int price);
 
     
@@ -99,7 +99,7 @@ contract BinaryBet {
     function deposit() payable external {
         updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);
-        emit newDeposit(msg.value, msg.sender);
+        emit newDeposit(msg.sender, msg.value);
     }
 
     function withdraw(uint value) external {
@@ -111,7 +111,7 @@ contract BinaryBet {
         balance[msg.sender] = balance[msg.sender].sub(value);
         msg.sender.transfer(value);
 
-        emit newWithdraw(value, msg.sender);
+        emit newWithdraw(msg.sender, value);
 
     }
 
@@ -138,7 +138,7 @@ contract BinaryBet {
         updatePool (windowNumber, value, uint8(side));
         updateStake(msg.sender, uint8(side), windowNumber, value);
         userBetted[msg.sender][windowNumber] = true;
-        emit newBet(value, side, msg.sender, windowNumber);
+        emit newBet(msg.sender, windowNumber, value, side);
     }
 
     function updateBalance(address user) public returns(uint){
@@ -166,7 +166,7 @@ contract BinaryBet {
 
         stake.downStake = 0;
         stake.upStake = 0;
-        emit betSettled(windowGain, window, user);
+        emit betSettled(window, user, windowGain);
 
         return windowGain;
     }
