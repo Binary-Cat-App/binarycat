@@ -156,17 +156,18 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       )
       .then(function(events){
         const result = events.filter(key => key.returnValues.user.toLowerCase() == ethAccount.toLowerCase());
+        if (result.length > 0){
+          var totalGain = 0;
+          result.forEach(element => totalGain += Number.parseInt(element.returnValues.gain));
+          const _totalWinnings = weiToCurrency(totalGain.toString());
+          setTotalWinnings(_totalWinnings);
 
-        var totalGain = 0;
-        result.forEach(element => totalGain += Number.parseInt(element.returnValues.gain));
-        const _totalWinnings = weiToCurrency(totalGain.toString());
-        setTotalWinnings(_totalWinnings);
+          const wins = result.filter(key => Number.parseInt(key.returnValues.gain) > 0);
 
-        const wins = result.filter(key => Number.parseInt(key.returnValues.gain) > 0);
-
-        if (wins.length !== 0 && events.length !== 0) {
-          const _winningPercentage = Number((wins.length / events.length) * 100).toFixed(2);
-          setWinningPercentage(_winningPercentage);  
+          if (wins.length > 0) {
+            const _winningPercentage = Number((wins.length / result.length) * 100).toFixed(2);
+            setWinningPercentage(_winningPercentage);  
+          }
         }
       });
     }
@@ -393,11 +394,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         ];
 
       if( stakeData ) {
-        if (stakeData.value[0] != 0) {
+        if (stakeData.value[0] !== '0') {
           _userStake.betDirection = 'down';
           _userStake.betAmount = weiToCurrency(stakeData.value[0]);
         } 
-        else if (stakeData.value[1] != 0) {
+        else if (stakeData.value[1] !== '0') {
           _userStake.betDirection = 'up';
           _userStake.betAmount = weiToCurrency(stakeData.value[1]);
         }
