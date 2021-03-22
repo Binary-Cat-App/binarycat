@@ -25,11 +25,9 @@ export const Bet = ({
   const [betDirection, setBetDirection] = useState('');
 
   React.useEffect(() => {
-    if (betDirectionContract !== '') {
       setBetDirection(betDirectionContract);
       setBetAmount(betAmountContract);
-    }
-  }, [betDirectionContract]);
+  }, [betDirectionContract, betAmountContract]);
 
   function handleBetAmount(value) {
     setBetAmount(value);
@@ -39,7 +37,10 @@ export const Bet = ({
     setBetDirection(direction);
     if (status === 'open' && isOpenForBetting) {
       onBet &&
-        onBet({ value: betAmount, direction: direction === 'up' ? 1 : 0 });
+        onBet({ 
+          value: betAmount, 
+          direction: direction === 'up' ? 1 : 0 
+        });
     }
   }
 
@@ -138,22 +139,22 @@ export const Bet = ({
           </div>
           <div className="px-2 flex-shrink-0">
             <BetPlaced
-              betAmount={betAmount}
-              betDirection={betDirection}
+              betAmountContract={betAmountContract}
+              betDirectionContract={betDirectionContract}
               isWon={
                 (status === 'finalized' &&
-                  betDirection === 'up' &&
+                  betDirectionContract === 'up' &&
                   finalPrice > initialPrice) ||
                 (status === 'finalized' &&
-                  betDirection === 'down' &&
+                  betDirectionContract === 'down' &&
                   finalPrice < initialPrice)
               }
               isLost={
                 (status === 'finalized' &&
-                  betDirection === 'up' &&
+                  betDirectionContract === 'up' &&
                   finalPrice < initialPrice) ||
                 (status === 'finalized' &&
-                  betDirection === 'down' &&
+                  betDirectionContract === 'down' &&
                   finalPrice > initialPrice)
               }
             />

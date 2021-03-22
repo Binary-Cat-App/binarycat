@@ -1,27 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import './assets/css/app.css';
-import App from './components/App';
-import WebFontLoader from 'webfontloader';
-import { Drizzle, generateStore } from '@drizzle/store';
-import BinaryBet from './contracts/BinaryBet.json';
 import './config/globals';
 
-const options = {
-  contracts: [BinaryBet],
-  events: {
-    BinaryBet: ['newBet', 'newDeposit', 'newWithdraw', 'betSettled'],
-  },
+import App from './components/App';
+import WebFontLoader from 'webfontloader';
 
-  web3: {
-    fallback: {
-      type: 'ws',
-      url: 'ws://127.0.0.1:9545',
-    },
-  },
-};
+import { Drizzle, generateStore } from '@drizzle/store';
+import drizzleOptions from './drizzleOptions.js';
 
-const drizzle = new Drizzle(options);
+const drizzle = new Drizzle(drizzleOptions);
 
 WebFontLoader.load({
   google: {

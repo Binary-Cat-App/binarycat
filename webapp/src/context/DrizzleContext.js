@@ -30,11 +30,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlock: 0,
     endingBlock: 0,
   });
+  const [openedPricesData, setOpenedPricesData] = useState ({
+    initialPrice: '', 
+    finalPrice: '',
+  });
   const [openedPoolData, setOpenedPoolData] = useState({
     betAmount: '0.00',
     betDirection: '',
-    initialPrice: '', 
-    finalPrice: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
@@ -49,11 +51,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlock: 0,
     endingBlock: 0,
   });
+  const [ongoingPricesData, setOngoingPricesData] = useState({
+    initialPrice: '0.00',
+    finalPrice: '',
+  });
   const [ongoingPoolData, setOngoingPoolData] = useState({
     betAmount: '0.00',
     betDirection: '',
-    initialPrice: '0.00',
-    finalPrice: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
@@ -68,11 +72,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlock: 0,
     endingBlock: 0,
   });
+  const [finalizedPricesData, setFinalizedPricesData] = useState({
+    initialPrice: '0.00',
+    finalPrice: '0.00',
+  });
   const [finalizedPoolData, setFinalizedPoolData] = useState({
     betAmount: '0.00',
     betDirection: '',
-    initialPrice: '0.00',
-    finalPrice: '0.00',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
@@ -94,6 +100,24 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const initAccountsData = {
     accounts: 0,
   }
+
+  // Drizzle Readiness State
+  useEffect(() => {
+    const unsubscribe = drizzle.store.subscribe(() => {
+      // every time the store updates, grab the state from drizzle
+      const drizzleState = drizzle.store.getState();
+      // check to see if it's ready, if so, update local component state
+      if (drizzleState.drizzleStatus.initialized) {
+        setDrizzleReadinessState({
+          drizzleState: drizzleState,
+          loading: false,
+        });
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [drizzle.store, drizzleReadinessState]);
 
   // Balance Data
   useEffect(() => {
@@ -117,26 +141,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   }, [
     drizzleReadinessState.loading,
     drizzle.web3,
-    drizzleReadinessState.drizzleState,
+    drizzleReadinessState.drizzleState
   ]);
-
-  // Drizzle Readiness State
-  useEffect(() => {
-    const unsubscribe = drizzle.store.subscribe(() => {
-      // every time the store updates, grab the state from drizzle
-      const drizzleState = drizzle.store.getState();
-      // check to see if it's ready, if so, update local component state
-      if (drizzleState.drizzleStatus.initialized) {
-        setDrizzleReadinessState({
-          drizzleState: drizzleState,
-          loading: false,
-        });
-      }
-    });
-    return () => {
-      unsubscribe();
-    };
-  }, [drizzle.store, drizzleReadinessState]);
 
   // Calculate Totals
   useEffect(() => {
@@ -150,28 +156,71 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       contractWeb3.getPastEvents(
         'betSettled', 
         {
+          filter: {user: ethAccount},
           fromBlock: 0,
           toBlock: 'latest'
         }
       )
-      .then(function(events){
-        const result = events.filter(key => key.returnValues.user.toLowerCase() == ethAccount.toLowerCase());
-        if (result.length > 0){
+      .then(function(result){
+        if (result.length > 0) {
           var totalGain = 0;
-          result.forEach(element => totalGain += Number.parseInt(element.returnValues.gain));
-          const _totalWinnings = weiToCurrency(totalGain.toString());
-          setTotalWinnings(_totalWinnings);
+          
+          result.forEach(
+            element => 
+              totalGain += Number.parseInt(element.returnValues.gain)
+          );
+          
+          setTotalWinnings(
+            weiToCurrency(totalGain.toString())
+          );
 
-          const wins = result.filter(key => Number.parseInt(key.returnValues.gain) > 0);
+          const wins = result.filter(
+            key => 
+              Number.parseInt(key.returnValues.gain) > 0
+          );
 
           if (wins.length > 0) {
-            const _winningPercentage = Number((wins.length / result.length) * 100).toFixed(2);
-            setWinningPercentage(_winningPercentage);  
+            setWinningPercentage(
+              Number((wins.length / result.length) * 100).toFixed(2)
+            );
           }
         }
       });
     }
-  }, [drizzleReadinessState.loading, drizzle.web3, drizzleReadinessState.drizzleState]);
+  }, [
+    drizzleReadinessState.loading, 
+    drizzle.web3, 
+    drizzleReadinessState.drizzleState
+  ]);
+
+  // Deposit update
+  useEffect(() => {
+    if (drizzleReadinessState.loading === false) {
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+      contractWeb3.events.newDeposit(
+        {
+          filter: {user: ethAccount},
+          fromBlock: 'latest'
+        }
+      )
+      .on("connected", function(subscriptionId){
+        //console.log(subscriptionId);
+      })
+      .on('data', function(event){
+        console.log(event); // same results as the optional callback above
+      })
+      .on('error', console.error);
+    }
+  }, [
+    drizzleReadinessState.loading, 
+    drizzle.web3, 
+    drizzleReadinessState.drizzleState
+  ]);
 
   // Gets Current Blockchain Block
   useEffect(() => {
@@ -219,6 +268,12 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     );
     const openedWindowStartingBlock = FIRST_BLOCK + (openedWindow - 1) * WINDOW_DURATION;
 
+    // Reset data
+    if ( openedWindowStartingBlock === currentBlock.number) {
+      setOpenedPoolData(initPoolData);
+    }
+
+    // Current Window Number
     setWindowNumber(openedWindow);
 
     setOpenedWindowData({
@@ -227,32 +282,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: currentBlock.number,
     });
 
-    const userBet = getUserStakeForWindow(openedWindow);
-    const poolData = getPoolValuesForWindow(openedWindow);
-
-    setOpenedPoolData({
-      ...openedPoolData,
-      ...poolData,
-      ...userBet,
-    });
-
-    contractWeb3.getPastEvents(
-      'newBet', 
-      {
-        fromBlock: openedWindowStartingBlock,
-        toBlock: currentBlock.number
-      }
-    )
-    .then(function(events){
-      setOpenedAccountsData({accounts: events.length});
-    });
-
-    // Reset data
-    if ( openedWindowStartingBlock === currentBlock.number) {
-      setOpenedPoolData(initPoolData);
-      setOpenedAccountsData(initAccountsData);
-    }
-
+    updatePoolValuesForWindow('Opened', openedWindowStartingBlock, currentBlock.number);
   }, [currentBlock]);
 
   // Updates Ongoing Data
@@ -279,29 +309,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       startingBlock: ongoingWindowStartingBlock,
       endingBlock: ongoingWindowEndingBlock,
     });
-
-    const userBet = getUserStakeForWindow(ongoingWindow);
-    const prices = getPricesForWindow(ongoingWindow);
-    const poolData = getPoolValuesForWindow(ongoingWindow);
-
-    setOngoingPoolData({
-      ...ongoingPoolData,
-      ...prices,
-      ...poolData,
-      ...userBet,
-    });
-
-    contractWeb3.getPastEvents(
-      'newBet', 
-      {
-        fromBlock: ongoingWindowStartingBlock,
-        toBlock: ongoingWindowEndingBlock
-      }
-    )
-    .then(function(events){
-      setOngoingAccountsData({accounts: events.length});
-    });
-
+    
+    updatePricesForWindow('Ongoing', ongoingWindow);
+    updatePoolValuesForWindow('Ongoing', ongoingWindowStartingBlock, ongoingWindowEndingBlock);
   }, [currentBlock]);
 
   // Updates Finalized Data
@@ -329,28 +339,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
-    const userBet = getUserStakeForWindow(finalizedWindow);
-    const prices = getPricesForWindow(finalizedWindow);
-    const poolData = getPoolValuesForWindow(finalizedWindow);
-
-    setFinalizedPoolData({
-      ...finalizedPoolData,
-      ...prices,
-      ...poolData,
-      ...userBet,
-    });
-
-    contractWeb3.getPastEvents(
-      'newBet', 
-      {
-        fromBlock: finalizedWindowStartingBlock,
-        toBlock: finalizedWindowEndingBlock
-      }
-    )
-    .then(function(events){
-      setFinalizedAccountsData({accounts: events.length});
-    });
-
+    updatePricesForWindow('Finalized', finalizedWindow);
+    updatePoolValuesForWindow('Finalized', finalizedWindowStartingBlock, finalizedWindowEndingBlock);
   }, [currentBlock]);
 
   // Progress Bar
@@ -363,68 +353,133 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   }, [currentBlock, windowNumber]);
 
   // initialPrice , finalPrice
-  const getPricesForWindow = (_windowNumber) => {
-    if (!drizzle.contracts.BinaryBet) return;
-    const contract = drizzle.contracts.BinaryBet;
-    const winKey = contract.methods['getWindowBetPrices'].cacheCall(_windowNumber);
-    const windowData =
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getWindowBetPrices[winKey];
-    if (windowData) {
-      const initialPrice = Number(windowData.value[0]).toFixed(2);
-      const finalPrice = Number(windowData.value[1]).toFixed(2);
-      return { initialPrice, finalPrice };
-    }
-    return;
-  };
-
-  const getUserStakeForWindow = (_windowNumber) => {
-    if (!drizzle.contracts.BinaryBet) return;
-    const contract = drizzle.contracts.BinaryBet;
-    
-    const _userStake = {
-      betDirection: '',
-      betAmount: '0.00'
-    }
-
-    if (ethAccount) {
-      const stakeKey = contract.methods['getUserStake'].cacheCall(_windowNumber, ethAccount);
-      const stakeData =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getUserStake[
-          stakeKey
-        ];
-
-      if( stakeData ) {
-        if (stakeData.value[0] !== '0') {
-          _userStake.betDirection = 'down';
-          _userStake.betAmount = weiToCurrency(stakeData.value[0]);
-        } 
-        else if (stakeData.value[1] !== '0') {
-          _userStake.betDirection = 'up';
-          _userStake.betAmount = weiToCurrency(stakeData.value[1]);
+  const updatePricesForWindow = (where, _windowNumber) => {
+    if (drizzleReadinessState.loading === false) {
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+      contractWeb3.getPastEvents(
+        'priceUpdated', 
+        {
+          filter: {windowNumber: [_windowNumber+1, _windowNumber+2]},
+          fromBlock: 0,
+          toBlock: 'latest'
         }
-      }
+      )
+      .then(function(result){
+        if (where === 'Ongoing') {
+          const initialPrice = (result.length > 0) ? Number(result[0].returnValues.price).toFixed(2) : '0.00';
+          const finalPrice = '0.00';
+          setOngoingPricesData({initialPrice, finalPrice});
+        }
+        else if (where === 'Finalized') {
+          const initialPrice = (result.length > 0) ? Number(result[0].returnValues.price).toFixed(2) : '0.00';
+          const finalPrice = (result.length > 1) ? Number(result[1].returnValues.price).toFixed(2) : '0.00';
+          setFinalizedPricesData({initialPrice, finalPrice});
+        }
+      });
     }
-
-    return _userStake;
   };
 
-  const getPoolValuesForWindow = (_windowNumber) => {
-    if (!drizzle.contracts.BinaryBet) return;
-    const contract = drizzle.contracts.BinaryBet;
+  const updatePoolValuesForWindow = (where, startingBlock, endingBlock) => {
+    if (drizzleReadinessState.loading === false) {
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+      contractWeb3.getPastEvents(
+        'newBet', 
+        {
+          fromBlock: startingBlock,
+          toBlock: endingBlock
+        }
+      )
+      .then(function(result){
 
-    const poolKey = contract.methods['getPoolValues'].cacheCall(_windowNumber);
-    const poolData =
-      drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
-        poolKey
-      ];
-    if (poolData) {
-      const poolTotalUp = weiToCurrency(poolData.value['2']);
-      const poolTotalDown = weiToCurrency(poolData.value['1']);
-      const poolSize = (Number(poolTotalUp) + Number(poolTotalDown)).toFixed(2);
+        if (result.length > 0) {
+          // poolSize
+          var _poolSize = 0;
+          result.forEach(element => _poolSize += Number.parseInt(element.returnValues.value));
 
-      return { poolTotalUp, poolTotalDown, poolSize };
+          // poolTotalUp
+          const up = result.filter(key => Number.parseInt(key.returnValues.side) === 1);
+          var _poolTotalUp = 0;
+          if (up.length > 0) {
+            up.forEach(element => _poolTotalUp += Number.parseInt(element.returnValues.value));
+          }
+
+          // poolTotalDown
+          const down = result.filter(key => Number.parseInt(key.returnValues.side) === 0);
+          var _poolTotalDown = 0;
+          if (down.length > 0) {
+            down.forEach(element => _poolTotalDown += Number.parseInt(element.returnValues.value));
+          }
+
+          // user bet amount and direction
+          const currentUser = result.filter(key => key.returnValues.user.toLowerCase() === ethAccount.toLowerCase()); 
+          var _betAmount = 0;
+          var _betDirection = '';
+          if (currentUser.length > 0) {
+            _betAmount = currentUser[0].returnValues.value;
+            _betDirection = (Number.parseInt(currentUser[0].returnValues.side) === 1) ? 'up' : 'down';
+          }
+        }
+
+        if (where === 'Opened') {
+          setOpenedPoolData(
+            (result.length > 0) ?
+              {
+                betAmount: weiToCurrency(_betAmount.toString()),
+                betDirection: _betDirection,
+                poolTotalUp: weiToCurrency(_poolTotalUp.toString()),
+                poolTotalDown: weiToCurrency(_poolTotalDown.toString()),
+                poolSize: weiToCurrency(_poolSize.toString())
+              }
+            : initPoolData
+          );
+          setOpenedAccountsData({
+            accounts: result.length
+          });
+        }
+        else if (where === 'Ongoing') {
+          setOngoingPoolData(
+            (result.length > 0) ?
+              {
+                betAmount: weiToCurrency(_betAmount.toString()),
+                betDirection: _betDirection,
+                poolTotalUp: weiToCurrency(_poolTotalUp.toString()),
+                poolTotalDown: weiToCurrency(_poolTotalDown.toString()),
+                poolSize: weiToCurrency(_poolSize.toString())
+              }
+            : initPoolData
+          );
+          setOngoingAccountsData({
+            accounts: result.length
+          });
+        }
+        else if (where === 'Finalized') {
+          setFinalizedPoolData(
+            (result.length > 0) ?
+              {
+                betAmount: weiToCurrency(_betAmount.toString()),
+                betDirection: _betDirection,
+                poolTotalUp: weiToCurrency(_poolTotalUp.toString()),
+                poolTotalDown: weiToCurrency(_poolTotalDown.toString()),
+                poolSize: weiToCurrency(_poolSize.toString())
+              }
+            : initPoolData
+          );
+          setFinalizedAccountsData({
+            accounts: result.length
+          });
+        }
+      });
     }
-    return;
   };
 
   const weiToCurrency = (value) => {
@@ -449,12 +504,15 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     progress,
     windowNumber,
     openedWindowData,
+    openedPricesData,
     openedPoolData,
     openedAccountsData,
     ongoingWindowData,
+    ongoingPricesData,
     ongoingPoolData,
     ongoingAccountsData,
     finalizedWindowData,
+    finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
   };

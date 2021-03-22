@@ -24,19 +24,22 @@ export const Dashboard = () => {
     progress,
     windowNumber,
     openedWindowData,
+    openedPricesData,
     openedPoolData,
     openedAccountsData, 
     ongoingWindowData,
+    ongoingPricesData,
     ongoingPoolData,
     ongoingAccountsData,
     finalizedWindowData,
+    finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
-  const [isOpenForBetting, setIsOpenForBetting] = useState(true);
+  const [isOpenForBetting, setIsOpenForBetting] = useState(false);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
 
@@ -53,6 +56,7 @@ export const Dashboard = () => {
         setBets((prev) => [
           {
             ...openedWindowData,
+            ...openedPricesData,
             ...openedPoolData,
             ...openedAccountsData,
             status: 'open',
@@ -60,6 +64,7 @@ export const Dashboard = () => {
           },
           {
             ...ongoingWindowData,
+            ...ongoingPricesData,
             ...ongoingPoolData,
             ...ongoingAccountsData,
             status: 'ongoing',
@@ -67,6 +72,7 @@ export const Dashboard = () => {
           },
           {
             ...finalizedWindowData,
+            ...finalizedPricesData,
             ...finalizedPoolData,
             ...finalizedAccountsData,
             status: 'finalized',
@@ -74,6 +80,7 @@ export const Dashboard = () => {
           },
           {
             ...finalizedWindowData,
+            ...finalizedPricesData,
             ...finalizedPoolData,
             ...finalizedAccountsData,
             status: 'finalized',
@@ -82,6 +89,10 @@ export const Dashboard = () => {
         ]);
 
         setIsFirstLoad(false);
+
+        setIsOpenForBetting(
+          (openedPoolData.betDirection !== '') ? false : true
+        );
       } else {
         const updateBets = bets.slice(0);
         const opened = updateBets.find((el) => el.status === 'open');
@@ -101,14 +112,17 @@ export const Dashboard = () => {
 
         // Adds New Open For Betting Card
         updateBets.unshift({
-          ...openedWindowData,
-          ...openedPoolData,
-          ...openedAccountsData,
+          openedWindowData,
+          openedPricesData,
+          openedPoolData,
+          openedAccountsData,
           status: 'open',
           id: uuid(),
         });
 
         setBets(updateBets);
+
+        setIsOpenForBetting(true);
       }
 
       // Reset Cards Train Animation
@@ -116,8 +130,6 @@ export const Dashboard = () => {
 
       // Betting Cycles Counter
       setBetSession((prev) => prev + 1);
-      
-      setIsOpenForBetting(true);
     }
   }, [windowNumber]);
 
@@ -128,9 +140,6 @@ export const Dashboard = () => {
       (el) => el.status === 'open'
     );
     if (!selected) return;
-    if (openedPoolData.betDirection !== '') {
-      setIsOpenForBetting(false);
-    }
     selected.endingBlock = openedWindowData.endingBlock;
     selected.betDirectionContract = openedPoolData.betDirection;
     selected.betAmountContract = openedPoolData.betAmount;
@@ -148,12 +157,13 @@ export const Dashboard = () => {
     );
     if (!selected) return;
     selected.endingBlock = ongoingWindowData.endingBlock;
+    selected.initialPrice = ongoingPricesData.initialPrice;
     selected.betDirectionContract = ongoingPoolData.betDirection;
     selected.betAmountContract = ongoingPoolData.betAmount;
-    selected.initialPrice = ongoingPoolData.initialPrice;
     selected.poolTotalUp = ongoingPoolData.poolTotalUp;
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
+    
     selected.accounts = ongoingAccountsData.accounts;
   }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
 
@@ -165,10 +175,10 @@ export const Dashboard = () => {
     );
     if (!selected) return;
     selected.endingBlock = finalizedWindowData.endingBlock;
+    selected.initialPrice = finalizedPricesData.initialPrice;
+    selected.finalPrice = finalizedPricesData.finalPrice;
     selected.betDirectionContract = finalizedPoolData.betDirection;
     selected.betAmountContract = finalizedPoolData.betAmount;
-    selected.initialPrice = finalizedPoolData.initialPrice;
-    selected.finalPrice = finalizedPoolData.finalPrice;
     selected.poolTotalUp = finalizedPoolData.poolTotalUp;
     selected.poolTotalDown = finalizedPoolData.poolTotalDown;
     selected.poolSize = finalizedPoolData.poolSize;
