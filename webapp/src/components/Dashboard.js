@@ -22,6 +22,10 @@ export const Dashboard = () => {
     currentBlock,
     balance,
     progress,
+    isOpenForBetting, 
+    setIsOpenForBetting,
+    isBetPlaced,
+    setIsBetPlaced,
     windowNumber,
     openedWindowData,
     openedPricesData,
@@ -39,7 +43,6 @@ export const Dashboard = () => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
-  const [isOpenForBetting, setIsOpenForBetting] = useState(false);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
 
@@ -89,10 +92,6 @@ export const Dashboard = () => {
         ]);
 
         setIsFirstLoad(false);
-
-        setIsOpenForBetting(
-          (openedPoolData.betDirection !== '') ? false : true
-        );
       } else {
         const updateBets = bets.slice(0);
         const opened = updateBets.find((el) => el.status === 'open');
@@ -121,8 +120,6 @@ export const Dashboard = () => {
         });
 
         setBets(updateBets);
-
-        setIsOpenForBetting(true);
       }
 
       // Reset Cards Train Animation
@@ -163,7 +160,6 @@ export const Dashboard = () => {
     selected.poolTotalUp = ongoingPoolData.poolTotalUp;
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
-    
     selected.accounts = ongoingAccountsData.accounts;
   }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
 
@@ -213,24 +209,33 @@ export const Dashboard = () => {
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
+
     if (Number(value) <= MIN_BET_AMOUNT) {
       alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
       return;
     }
-    setIsOpenForBetting(false);
+    
     const eth = drizzle.web3.utils.toWei(
       value,
       global.config.currencyRequestValue
     );
+    
     const overBalance = Number(value) > balance ? Number(value) - balance : 0;
+    
     const over = drizzle.web3.utils.toWei(
       `${overBalance}`,
       global.config.currencyRequestValue
     );
-    contract.methods['placeBet'].cacheSend(eth, direction, {
+    
+    contract.methods.placeBet(eth, direction).send({
       from: ethAccount,
       value: over,
+    })
+    .on('transactionHash', function(hash){
+      setIsOpenForBetting(false);
+      setIsBetPlaced(true);
     });
+
   };
 
   return isLoading ? (

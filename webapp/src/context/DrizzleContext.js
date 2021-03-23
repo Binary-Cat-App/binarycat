@@ -23,6 +23,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [currentBlock, setCurrentBlock] = useState(null);
   const [windowNumber, setWindowNumber] = useState(null);
   const [progress, setProgress] = useState(100);
+  const [isOpenForBetting, setIsOpenForBetting] = useState(true);
+  const [isBetPlaced, setIsBetPlaced] = useState(false);
   
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -271,6 +273,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     // Reset data
     if ( openedWindowStartingBlock === currentBlock.number) {
       setOpenedPoolData(initPoolData);
+      setIsOpenForBetting(true);
+      setIsBetPlaced(false);
     }
 
     // Current Window Number
@@ -312,7 +316,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     
     updatePricesForWindow('Ongoing', ongoingWindow);
     updatePoolValuesForWindow('Ongoing', ongoingWindowStartingBlock, ongoingWindowEndingBlock);
-  }, [currentBlock]);
+  }, [currentBlock, windowNumber]);
 
   // Updates Finalized Data
   useEffect(() => {
@@ -341,7 +345,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
     updatePricesForWindow('Finalized', finalizedWindow);
     updatePoolValuesForWindow('Finalized', finalizedWindowStartingBlock, finalizedWindowEndingBlock);
-  }, [currentBlock]);
+  }, [currentBlock, windowNumber]);
 
   // Progress Bar
   useEffect(() => {
@@ -351,6 +355,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
     setProgress(_progress);
   }, [currentBlock, windowNumber]);
+
+  // Open for betting
+  useEffect(() => {
+    setIsOpenForBetting(
+      (openedPoolData.betDirection !== '' || isBetPlaced === true) ? 
+      false : true
+    );
+  }, [currentBlock, windowNumber, openedPoolData]);
 
   // initialPrice , finalPrice
   const updatePricesForWindow = (where, _windowNumber) => {
@@ -401,29 +413,30 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       )
       .then(function(result){
 
+        var _betAmount = 0;
+        var _betDirection = '';
+        var _poolSize = 0;
+        var _poolTotalUp = 0;
+        var _poolTotalDown = 0;
+
         if (result.length > 0) {
-          // poolSize
-          var _poolSize = 0;
+          // poolSize          
           result.forEach(element => _poolSize += Number.parseInt(element.returnValues.value));
 
           // poolTotalUp
           const up = result.filter(key => Number.parseInt(key.returnValues.side) === 1);
-          var _poolTotalUp = 0;
           if (up.length > 0) {
             up.forEach(element => _poolTotalUp += Number.parseInt(element.returnValues.value));
           }
 
           // poolTotalDown
           const down = result.filter(key => Number.parseInt(key.returnValues.side) === 0);
-          var _poolTotalDown = 0;
           if (down.length > 0) {
             down.forEach(element => _poolTotalDown += Number.parseInt(element.returnValues.value));
           }
 
           // user bet amount and direction
-          const currentUser = result.filter(key => key.returnValues.user.toLowerCase() === ethAccount.toLowerCase()); 
-          var _betAmount = 0;
-          var _betDirection = '';
+          const currentUser = result.filter(key => key.returnValues.user.toLowerCase() === ethAccount.toLowerCase());           
           if (currentUser.length > 0) {
             _betAmount = currentUser[0].returnValues.value;
             _betDirection = (Number.parseInt(currentUser[0].returnValues.side) === 1) ? 'up' : 'down';
@@ -502,6 +515,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     totalWinnings,
     winningPercentage,
     progress,
+    isOpenForBetting, 
+    setIsOpenForBetting,
+    isBetPlaced, 
+    setIsBetPlaced,
     windowNumber,
     openedWindowData,
     openedPricesData,
