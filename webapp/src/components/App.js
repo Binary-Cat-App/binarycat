@@ -7,7 +7,6 @@ import { Faq } from './Faq';
 import Dashboard from './Dashboard';
 import { Container } from './Container';
 
-import { AuthProvider } from '../context/AuthContext';
 import { MetaMaskProvider } from '../context/MataMaskContext';
 import { DrizzleProvider, useDrizzle } from '../context/DrizzleContext';
 
@@ -43,13 +42,11 @@ const ConnectedRoutesComponent = RoutesComponent;
 
 export const App = (props) => {
   return (
-    <AuthProvider>
-      <MetaMaskProvider>
-        <DrizzleProvider drizzle={props.drizzle}>
-          <ConnectedRoutesComponent />
-        </DrizzleProvider>
-      </MetaMaskProvider>
-    </AuthProvider>
+    <MetaMaskProvider>
+      <DrizzleProvider drizzle={props.drizzle}>
+        <ConnectedRoutesComponent />
+      </DrizzleProvider>
+    </MetaMaskProvider>
   );
 };
 
