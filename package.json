@@ -14,7 +14,10 @@
     "truffle": "^5.1.60"
   },
   "dependencies": {
+    "@bandprotocol/bandchain.js": "^1.2.1",
     "@openzeppelin/contracts": "^3.3.0",
-    "openzeppelin-solidity": "^3.3.0"
+    "mongodb": "^3.6.5",
+    "openzeppelin-solidity": "^3.3.0",
+    "web3": "^1.3.4"
   }
 }
