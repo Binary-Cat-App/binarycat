@@ -22,7 +22,7 @@ export const Dashboard = () => {
     currentBlock,
     balance,
     progress,
-    isOpenForBetting, 
+    isOpenForBetting,
     setIsOpenForBetting,
     isBetPlaced,
     setIsBetPlaced,
@@ -30,7 +30,7 @@ export const Dashboard = () => {
     openedWindowData,
     openedPricesData,
     openedPoolData,
-    openedAccountsData, 
+    openedAccountsData,
     ongoingWindowData,
     ongoingPricesData,
     ongoingPoolData,
@@ -53,7 +53,6 @@ export const Dashboard = () => {
   // Betting Cards Initialisation
   React.useEffect(() => {
     if (currentBlock) {
-
       if (isFirstLoad) {
         // Initialize Cards
         setBets((prev) => [
@@ -133,9 +132,7 @@ export const Dashboard = () => {
   // Opened for betting window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'open'
-    );
+    const selected = updateBets.find((el) => el.status === 'open');
     if (!selected) return;
     selected.endingBlock = openedWindowData.endingBlock;
     selected.betDirectionContract = openedPoolData.betDirection;
@@ -149,9 +146,7 @@ export const Dashboard = () => {
   // Ongoing window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'ongoing'
-    );
+    const selected = updateBets.find((el) => el.status === 'ongoing');
     if (!selected) return;
     selected.endingBlock = ongoingWindowData.endingBlock;
     selected.initialPrice = ongoingPricesData.initialPrice;
@@ -166,9 +161,7 @@ export const Dashboard = () => {
   // Finalized window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'finalized'
-    );
+    const selected = updateBets.find((el) => el.status === 'finalized');
     if (!selected) return;
     selected.endingBlock = finalizedWindowData.endingBlock;
     selected.initialPrice = finalizedPricesData.initialPrice;
@@ -179,7 +172,12 @@ export const Dashboard = () => {
     selected.poolTotalDown = finalizedPoolData.poolTotalDown;
     selected.poolSize = finalizedPoolData.poolSize;
     selected.accounts = finalizedAccountsData.accounts;
-  }, [windowNumber, finalizedWindowData, finalizedPoolData, finalizedAccountsData]);
+  }, [
+    windowNumber,
+    finalizedWindowData,
+    finalizedPoolData,
+    finalizedAccountsData,
+  ]);
 
   // Train animation on every new betting window
   useEffect(() => {
@@ -205,37 +203,36 @@ export const Dashboard = () => {
 
     // Trim Betting Cards up to MAX_CARDS
     setBets(bets.slice(0, MAX_CARDS));
-
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
-
     if (Number(value) <= MIN_BET_AMOUNT) {
       alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
       return;
     }
-    
+
     const eth = drizzle.web3.utils.toWei(
       value,
       global.config.currencyRequestValue
     );
-    
+
     const overBalance = Number(value) > balance ? Number(value) - balance : 0;
-    
+
     const over = drizzle.web3.utils.toWei(
       `${overBalance}`,
       global.config.currencyRequestValue
     );
-    
-    contract.methods.placeBet(eth, direction).send({
-      from: ethAccount,
-      value: over,
-    })
-    .on('transactionHash', function(hash){
-      setIsOpenForBetting(false);
-      setIsBetPlaced(true);
-    });
 
+    contract.methods
+      .placeBet(eth, direction)
+      .send({
+        from: ethAccount,
+        value: over,
+      })
+      .on('transactionHash', function (hash) {
+        setIsOpenForBetting(false);
+        setIsBetPlaced(true);
+      });
   };
 
   return isLoading ? (
