@@ -389,7 +389,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
               .then(response => response.timestamp);
           
           if(current)
-            _endingBlockTimestamp = current
+            _endingBlockTimestamp = current;
           else
             _endingBlockTimestamp = await drizzle.web3.eth
               .getBlock(openedWindowData.endingBlock)
