@@ -288,12 +288,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: currentBlock.number,
     });
 
-    updateTimestampsForWindow('Opened', currentBlock.timestamp);
-
     updatePoolValuesForWindow(
       'Opened',
       openedWindowStartingBlock,
       currentBlock.number
+    );
+    updateTimestampsForWindow(
+      'Opened', 
+      currentBlock.timestamp
     );
   }, [currentBlock]);
 
@@ -320,12 +322,17 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: ongoingWindowEndingBlock,
     });
 
-    updateTimestampsForWindow('Ongoing', null);
-    updatePricesForWindow('Ongoing', ongoingWindow);
+    updatePricesForWindow(
+      'Ongoing', 
+      ongoingWindow);
     updatePoolValuesForWindow(
       'Ongoing',
       ongoingWindowStartingBlock,
       ongoingWindowEndingBlock
+    );
+    updateTimestampsForWindow(
+      'Ongoing', 
+      null
     );
   }, [currentBlock, windowNumber]);
 
@@ -352,12 +359,18 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
-    updateTimestampsForWindow('Finalized', null);    
-    updatePricesForWindow('Finalized', finalizedWindow);
+    updatePricesForWindow(
+      'Finalized', 
+      finalizedWindow
+    );
     updatePoolValuesForWindow(
       'Finalized',
       finalizedWindowStartingBlock,
       finalizedWindowEndingBlock
+    );
+    updateTimestampsForWindow(
+      'Finalized', 
+      null
     );
   }, [currentBlock, windowNumber]);
 
