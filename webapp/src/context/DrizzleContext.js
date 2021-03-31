@@ -288,7 +288,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: currentBlock.number,
     });
 
-    updateWindowTimestamps('Opened', currentBlock.timestamp);
+    updateTimestampsForWindow('Opened', currentBlock.timestamp);
 
     updatePoolValuesForWindow(
       'Opened',
@@ -320,7 +320,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: ongoingWindowEndingBlock,
     });
 
-    updateWindowTimestamps('Ongoing', null);
+    updateTimestampsForWindow('Ongoing', null);
     updatePricesForWindow('Ongoing', ongoingWindow);
     updatePoolValuesForWindow(
       'Ongoing',
@@ -352,7 +352,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
-    updateWindowTimestamps('Finalized', null);    
+    updateTimestampsForWindow('Finalized', null);    
     updatePricesForWindow('Finalized', finalizedWindow);
     updatePoolValuesForWindow(
       'Finalized',
@@ -378,7 +378,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   }, [currentBlock, windowNumber, openedPoolData]);
 
   // Retrieve block data
-  const updateWindowTimestamps = async (where, current) => {
+  const updateTimestampsForWindow = async (where, current) => {
     if (drizzleReadinessState.loading === false) {
       var _startingBlockTimestamp = 0;
       var _endingBlockTimestamp = 0;
