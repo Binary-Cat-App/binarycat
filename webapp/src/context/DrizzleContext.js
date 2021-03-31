@@ -30,8 +30,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [openedWindowData, setOpenedWindowData] = useState({
     windowNumber: 0,
     startingBlock: 0,
-    startingBlockTimestamp: 0,
     endingBlock: 0,
+  });
+  const [openedWindowTimestamps, setOpenedWindowTimestamps] = useState({
+    startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
   const [openedPricesData, setOpenedPricesData] = useState({
@@ -53,8 +55,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [ongoingWindowData, setOngoingWindowData] = useState({
     windowNumber: 0,
     startingBlock: 0,
-    startingBlockTimestamp: 0,
     endingBlock: 0,
+  });
+  const [ongoingWindowTimestamps, setOngoingWindowTimestamps] = useState({
+    startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
   const [ongoingPricesData, setOngoingPricesData] = useState({
@@ -76,8 +80,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [finalizedWindowData, setFinalizedWindowData] = useState({
     windowNumber: 0,
     startingBlock: 0,
-    startingBlockTimestamp: 0,
     endingBlock: 0,
+  });
+  const [finalizedWindowTimestamps, setFinalizedWindowTimestamps] = useState({
+    startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
   const [finalizedPricesData, setFinalizedPricesData] = useState({
@@ -280,13 +286,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       windowNumber: openedWindow,
       startingBlock: openedWindowStartingBlock,
       endingBlock: currentBlock.number,
-      endingBlockTimestamp: currentBlock.timestamp,
     });
 
-    // ToDo: pass "openedWindowData" object and "startingBlockTimestamp" prop to update
-    updateBlockTimestamp(
-      openedWindowStartingBlock
-    );
+    updateWindowTimestamps('Opened', currentBlock.timestamp);
 
     updatePoolValuesForWindow(
       'Opened',
@@ -318,16 +320,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: ongoingWindowEndingBlock,
     });
 
-    // ToDo: pass "ongoingWindowData" window object and "startingBlockTimestamp" prop to update
-    updateBlockTimestamp(
-      ongoingWindowStartingBlock
-    );
-
-    // ToDo: pass "ongoingWindowData" window object and "endingBlockTimestamp" prop to update
-    updateBlockTimestamp(
-      ongoingWindowEndingBlock
-    );
-
+    updateWindowTimestamps('Ongoing', null);
     updatePricesForWindow('Ongoing', ongoingWindow);
     updatePoolValuesForWindow(
       'Ongoing',
@@ -359,16 +352,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
-    // ToDo: pass "finalizedWindowData" window object and "startingBlockTimestamp" prop to update
-    updateBlockTimestamp(
-      finalizedWindowStartingBlock
-    );
-
-    // ToDo: pass "finalizedWindowData" window object and "endingBlockTimestamp" prop to update
-    updateBlockTimestamp(
-      finalizedWindowEndingBlock
-    );
-
+    updateWindowTimestamps('Finalized', null);    
     updatePricesForWindow('Finalized', finalizedWindow);
     updatePoolValuesForWindow(
       'Finalized',
@@ -394,14 +378,59 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   }, [currentBlock, windowNumber, openedPoolData]);
 
   // Retrieve block data
-  // ToDo - pass window objects and props to update
-  const updateBlockTimestamp = (blockNumber) => {
+  const updateWindowTimestamps = async (where, current) => {
     if (drizzleReadinessState.loading === false) {
-      drizzle.web3.eth.getBlock(blockNumber)
-      .then(result => {
-        // ToDo - update window object starting or ending timestamp prop
-        console.log(result.timestamp);
-      });
+      var _startingBlockTimestamp = 0;
+      var _endingBlockTimestamp = 0;
+      switch (where) {
+        case 'Opened':
+          _startingBlockTimestamp = await drizzle.web3.eth
+            .getBlock(openedWindowData.startingBlock)
+              .then(response => response.timestamp);
+          
+          if(current)
+            _endingBlockTimestamp = current
+          else
+            _endingBlockTimestamp = await drizzle.web3.eth
+              .getBlock(openedWindowData.endingBlock)
+                .then(response => response.timestamp);
+
+          setOpenedWindowTimestamps({
+            startingBlockTimestamp: _startingBlockTimestamp,
+            endingBlockTimestamp: _endingBlockTimestamp,
+          });
+          break;
+        case 'Ongoing':
+          _startingBlockTimestamp = await drizzle.web3.eth
+            .getBlock(ongoingWindowData.startingBlock)
+              .then(response => response.timestamp);
+          
+          _endingBlockTimestamp = await drizzle.web3.eth
+            .getBlock(ongoingWindowData.endingBlock)
+              .then(response => response.timestamp);
+          
+          setOngoingWindowTimestamps({
+            startingBlockTimestamp: _startingBlockTimestamp,
+            endingBlockTimestamp: _endingBlockTimestamp,
+          });
+          break;
+        case 'Finalized':
+          _startingBlockTimestamp = await drizzle.web3.eth
+            .getBlock(finalizedWindowData.startingBlock)
+              .then(response => response.timestamp);
+
+          _endingBlockTimestamp = await drizzle.web3.eth
+            .getBlock(finalizedWindowData.endingBlock)
+              .then(response => response.timestamp);
+          
+          setFinalizedWindowTimestamps({
+            startingBlockTimestamp: _startingBlockTimestamp,
+            endingBlockTimestamp: _endingBlockTimestamp,
+          });
+          break;
+        default:
+      }
+
     }
   };
 
