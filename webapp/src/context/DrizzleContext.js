@@ -30,7 +30,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [openedWindowData, setOpenedWindowData] = useState({
     windowNumber: 0,
     startingBlock: 0,
+    startingBlockTimestamp: 0,
     endingBlock: 0,
+    endingBlockTimestamp: 0,
   });
   const [openedPricesData, setOpenedPricesData] = useState({
     initialPrice: '',
@@ -51,7 +53,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [ongoingWindowData, setOngoingWindowData] = useState({
     windowNumber: 0,
     startingBlock: 0,
+    startingBlockTimestamp: 0,
     endingBlock: 0,
+    endingBlockTimestamp: 0,
   });
   const [ongoingPricesData, setOngoingPricesData] = useState({
     initialPrice: '0.00',
@@ -72,7 +76,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [finalizedWindowData, setFinalizedWindowData] = useState({
     windowNumber: 0,
     startingBlock: 0,
+    startingBlockTimestamp: 0,
     endingBlock: 0,
+    endingBlockTimestamp: 0,
   });
   const [finalizedPricesData, setFinalizedPricesData] = useState({
     initialPrice: '0.00',
@@ -230,6 +236,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setCurrentBlock({
             number: blockHeader.number,
             hash: blockHeader.hash,
+            timestamp: blockHeader.timestamp,
           });
         })
         .on('error', console.error);
@@ -273,7 +280,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       windowNumber: openedWindow,
       startingBlock: openedWindowStartingBlock,
       endingBlock: currentBlock.number,
+      endingBlockTimestamp: currentBlock.timestamp,
     });
+
+    // ToDo: pass "openedWindowData" object and "startingBlockTimestamp" prop to update
+    updateBlockTimestamp(
+      openedWindowStartingBlock
+    );
 
     updatePoolValuesForWindow(
       'Opened',
@@ -304,6 +317,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       startingBlock: ongoingWindowStartingBlock,
       endingBlock: ongoingWindowEndingBlock,
     });
+
+    // ToDo: pass "ongoingWindowData" window object and "startingBlockTimestamp" prop to update
+    updateBlockTimestamp(
+      ongoingWindowStartingBlock
+    );
+
+    // ToDo: pass "ongoingWindowData" window object and "endingBlockTimestamp" prop to update
+    updateBlockTimestamp(
+      ongoingWindowEndingBlock
+    );
 
     updatePricesForWindow('Ongoing', ongoingWindow);
     updatePoolValuesForWindow(
@@ -336,6 +359,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
+    // ToDo: pass "finalizedWindowData" window object and "startingBlockTimestamp" prop to update
+    updateBlockTimestamp(
+      finalizedWindowStartingBlock
+    );
+
+    // ToDo: pass "finalizedWindowData" window object and "endingBlockTimestamp" prop to update
+    updateBlockTimestamp(
+      finalizedWindowEndingBlock
+    );
+
     updatePricesForWindow('Finalized', finalizedWindow);
     updatePoolValuesForWindow(
       'Finalized',
@@ -359,6 +392,18 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       openedPoolData.betDirection !== '' || isBetPlaced === true ? false : true
     );
   }, [currentBlock, windowNumber, openedPoolData]);
+
+  // Retrieve block data
+  // ToDo - pass window objects and props to update
+  const updateBlockTimestamp = (blockNumber) => {
+    if (drizzleReadinessState.loading === false) {
+      drizzle.web3.eth.getBlock(blockNumber)
+      .then(result => {
+        // ToDo - update window object starting or ending timestamp prop
+        console.log(result.timestamp);
+      });
+    }
+  };
 
   // initialPrice , finalPrice
   const updatePricesForWindow = (where, _windowNumber) => {
