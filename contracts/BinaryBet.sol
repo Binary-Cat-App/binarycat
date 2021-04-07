@@ -1,8 +1,32 @@
 pragma solidity ^0.6.8;
+pragma experimental ABIEncoderV2;
+
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BinToken.sol";
 import "./BinStaking.sol";
+
+interface IStdReference {
+    /// A structure returned whenever someone requests for standard reference data.
+    struct ReferenceData {
+        uint256 rate; // base/quote exchange rate, multiplied by 1e18.
+        uint256 lastUpdatedBase; // UNIX epoch of the last time when base price gets updated.
+        uint256 lastUpdatedQuote; // UNIX epoch of the last time when quote price gets updated.
+    }
+
+    /// Returns the price data for the given base/quote pair. Revert if not available.
+    function getReferenceData(string calldata _base, string calldata _quote)
+        external
+        view
+        returns (ReferenceData memory);
+
+    /// Similar to getReferenceData, but with multiple base/quote pairs at once.
+    function getReferenceDataBulk(string[] calldata _bases, string[] calldata _quotes)
+        external
+        view
+        returns (ReferenceData[] memory);
+}
+
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
@@ -18,6 +42,7 @@ contract BinaryBet {
     }
 
     //Betting parameters
+    IStdReference oracle;
     address governance;
     uint public fee;
     uint public windowDuration; //in blocks
@@ -27,7 +52,7 @@ contract BinaryBet {
 
     //Window management
     mapping (uint => Pool) public pools; //windowNumber => Pool
-    mapping(uint => int) public  windowPrice; //first price collection at the window.
+    mapping(uint => uint256) public  windowPrice; //first price collection at the window.
     uint public firstWindow = 1; //Any bet before first block of betting is directed to the first window.
     uint public windowOffset; //used make window continuous and monotonically increasing when window duration and first block changes.
     uint public accumulatedFees;
@@ -44,7 +69,7 @@ contract BinaryBet {
     event newDeposit(address indexed user, uint value);
     event newWithdraw(address indexed user, uint value);
     event betSettled(uint indexed windowNumber, address indexed user, uint gain);
-    event priceUpdated(uint indexed windowNumber, int price);
+    event priceUpdated(uint indexed windowNumber, uint256 price);
 
     
     modifier onlyGovernance() {
@@ -54,6 +79,7 @@ contract BinaryBet {
 
     constructor(uint _firstWindowBlock, uint _windowDuration, uint _fee) public {
         require(_fee <= 100);
+        oracle = IStdReference(address(0xDA7a001b254CD22e46d3eAB04d937489c93174C3));
         firstBlock = _firstWindowBlock;
         windowDuration = _windowDuration;
 
@@ -81,8 +107,6 @@ contract BinaryBet {
         staking = BinaryStaking(stakingAddress); 
     }
 //==============================================================================
-
-
     function deposit() payable external {
         updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);
@@ -143,7 +167,7 @@ contract BinaryBet {
             //Maximum number of itens in list is 2, when the user bets on 2 subsequent windows and the first window is not yet settled.
             uint window = userWindowsList[i-1];
 
-            (int referencePrice, int settlementPrice) = getWindowBetPrices(window);
+            (uint256 referencePrice, uint256 settlementPrice) = getWindowBetPrices(window);
 
             if(settlementPrice == 0) {
                 continue;
@@ -189,7 +213,7 @@ contract BinaryBet {
         }
     }
 
-   function betResult(int referencePrice, int settlementPrice) public pure returns(uint8){
+   function betResult(uint256 referencePrice, uint256 settlementPrice) public pure returns(uint8){
         if(settlementPrice < referencePrice) {
             return 0;
         }
@@ -247,9 +271,9 @@ contract BinaryBet {
         }
     }
 
-    //TODO Implement price API
-    function priceOracle() internal returns (int currentPrice){
-        currentPrice =  int(uint(keccak256(abi.encodePacked(now)))%250 + 10);
+    function priceOracle() internal returns (uint256){
+        IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
+        return data.rate;
     }
 
     //Getters
@@ -267,7 +291,7 @@ contract BinaryBet {
         return balance[user];
     }
 
-    function getWindowBetPrices(uint window) public view returns(int, int) {
+    function getWindowBetPrices(uint window) public view returns(uint256, uint256) {
         return (windowPrice[window+1], windowPrice[window+2]);
     }
 }
