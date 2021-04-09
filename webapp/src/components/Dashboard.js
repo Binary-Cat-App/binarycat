@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
 import { useDrizzle } from '../context/DrizzleContext';
 import { useMetaMask } from '../context/MataMaskContext';
+import _ from 'lodash';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
@@ -39,12 +40,33 @@ export const Dashboard = () => {
     finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
+    openedWindowChartData,
+    ongoingWindowChartData,
+    finalizedWindowChartData,
+    socketData,
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
+
+  React.useEffect(() => {
+    const arr = [...openedWindowChartData, ...socketData];
+    const unique = _.uniqBy(arr, 'time');
+    console.log('---- OPENED DATA', unique);
+    console.log('-----\n\n');
+  }, [openedWindowChartData, socketData]);
+
+  React.useEffect(() => {
+    console.log('---- ONGOING DATA:', ongoingWindowChartData);
+    console.log('-----\n\n');
+  }, [ongoingWindowChartData]);
+
+  React.useEffect(() => {
+    console.log('---- FINALIZED DATA:', finalizedWindowChartData);
+    console.log('-----\n\n');
+  }, [finalizedWindowChartData]);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;

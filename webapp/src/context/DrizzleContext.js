@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useMetaMask } from '../context/MataMaskContext';
 
+import io from 'socket.io-client';
+
 const DrizzleContext = createContext();
 
 export const useDrizzle = () => {
@@ -9,6 +11,7 @@ export const useDrizzle = () => {
 
 const FIRST_BLOCK = 1;
 const WINDOW_DURATION = 10;
+const dataSoc = [];
 
 export const DrizzleProvider = ({ drizzle, children }) => {
   const [drizzleReadinessState, setDrizzleReadinessState] = useState({
@@ -25,6 +28,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [progress, setProgress] = useState(100);
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
+  const [socketData, setSocketData] = useState([]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -36,6 +40,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
+
+  const [openedWindowChartData, setOpenedWindowChartData] = useState([]);
+
   const [openedPricesData, setOpenedPricesData] = useState({
     initialPrice: '',
     finalPrice: '',
@@ -61,6 +68,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
+
+  const [ongoingWindowChartData, setOngoingWindowChartData] = useState([]);
+
   const [ongoingPricesData, setOngoingPricesData] = useState({
     initialPrice: '0.00',
     finalPrice: '',
@@ -86,6 +96,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
+  const [finalizedWindowChartData, setFinalizedWindowChartData] = useState([]);
   const [finalizedPricesData, setFinalizedPricesData] = useState({
     initialPrice: '0.00',
     finalPrice: '0.00',
@@ -293,10 +304,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       openedWindowStartingBlock,
       currentBlock.number
     );
-    updateTimestampsForWindow(
-      'Opened', 
-      currentBlock.timestamp
-    );
+    updateTimestampsForWindow('Opened', currentBlock.timestamp);
   }, [currentBlock]);
 
   // Updates Ongoing Data
@@ -322,18 +330,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: ongoingWindowEndingBlock,
     });
 
-    updatePricesForWindow(
-      'Ongoing', 
-      ongoingWindow);
+    updatePricesForWindow('Ongoing', ongoingWindow);
     updatePoolValuesForWindow(
       'Ongoing',
       ongoingWindowStartingBlock,
       ongoingWindowEndingBlock
     );
-    updateTimestampsForWindow(
-      'Ongoing', 
-      null
-    );
+    updateTimestampsForWindow('Ongoing', null);
   }, [currentBlock, windowNumber]);
 
   // Updates Finalized Data
@@ -359,19 +362,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       endingBlock: finalizedWindowEndingBlock,
     });
 
-    updatePricesForWindow(
-      'Finalized', 
-      finalizedWindow
-    );
+    updatePricesForWindow('Finalized', finalizedWindow);
     updatePoolValuesForWindow(
       'Finalized',
       finalizedWindowStartingBlock,
       finalizedWindowEndingBlock
     );
-    updateTimestampsForWindow(
-      'Finalized', 
-      null
-    );
+    updateTimestampsForWindow('Finalized', null);
   }, [currentBlock, windowNumber]);
 
   // Progress Bar
@@ -399,14 +396,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         case 'Opened':
           _startingBlockTimestamp = await drizzle.web3.eth
             .getBlock(openedWindowData.startingBlock)
-              .then(response => response.timestamp);
-          
-          if(current)
-            _endingBlockTimestamp = current;
+            .then((response) => response.timestamp);
+
+          if (current) _endingBlockTimestamp = current;
           else
             _endingBlockTimestamp = await drizzle.web3.eth
               .getBlock(openedWindowData.endingBlock)
-                .then(response => response.timestamp);
+              .then((response) => response.timestamp);
 
           setOpenedWindowTimestamps({
             startingBlockTimestamp: _startingBlockTimestamp,
@@ -416,12 +412,12 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         case 'Ongoing':
           _startingBlockTimestamp = await drizzle.web3.eth
             .getBlock(ongoingWindowData.startingBlock)
-              .then(response => response.timestamp);
-          
+            .then((response) => response.timestamp);
+
           _endingBlockTimestamp = await drizzle.web3.eth
             .getBlock(ongoingWindowData.endingBlock)
-              .then(response => response.timestamp);
-          
+            .then((response) => response.timestamp);
+
           setOngoingWindowTimestamps({
             startingBlockTimestamp: _startingBlockTimestamp,
             endingBlockTimestamp: _endingBlockTimestamp,
@@ -430,12 +426,12 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         case 'Finalized':
           _startingBlockTimestamp = await drizzle.web3.eth
             .getBlock(finalizedWindowData.startingBlock)
-              .then(response => response.timestamp);
+            .then((response) => response.timestamp);
 
           _endingBlockTimestamp = await drizzle.web3.eth
             .getBlock(finalizedWindowData.endingBlock)
-              .then(response => response.timestamp);
-          
+            .then((response) => response.timestamp);
+
           setFinalizedWindowTimestamps({
             startingBlockTimestamp: _startingBlockTimestamp,
             endingBlockTimestamp: _endingBlockTimestamp,
@@ -443,9 +439,84 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           break;
         default:
       }
-
     }
   };
+
+  useEffect(() => {
+    if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
+      window
+        .fetch('http://localhost:5000', {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: ongoingWindowTimestamps.startingBlockTimestamp,
+            to: ongoingWindowTimestamps.endingBlockTimestamp,
+          }),
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          setOngoingWindowChartData(result.result);
+        });
+    }
+  }, [ongoingWindowTimestamps]);
+
+  useEffect(() => {
+    if (finalizedWindowTimestamps.startingBlockTimestamp !== 0) {
+      window
+        .fetch('http://localhost:5000', {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: finalizedWindowTimestamps.startingBlockTimestamp,
+            to: finalizedWindowTimestamps.endingBlockTimestamp,
+          }),
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          setFinalizedWindowChartData(result.result);
+        });
+    }
+  }, [finalizedWindowTimestamps]);
+
+  useEffect(() => {
+    if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
+      window
+        .fetch('http://localhost:5000', {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: openedWindowTimestamps.startingBlockTimestamp,
+            to: openedWindowTimestamps.endingBlockTimestamp,
+          }),
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          setOpenedWindowChartData(result.result);
+        });
+    }
+  }, [openedWindowTimestamps]);
+
+  useEffect(() => {
+    const socket = io('http://localhost:5000');
+    socket.on('socket-message', (payload) => {
+      console.log('---- SOCKET MESSAGE::', payload.data);
+      console.log('-----\n\n');
+      dataSoc.push(payload.data);
+      setSocketData(dataSoc);
+      // const data = openedWindowChartData.slice(0);
+      // data.push(payload.data);
+      // setOpenedWindowChartData(data);
+    });
+  }, []);
 
   // initialPrice , finalPrice
   const updatePricesForWindow = (where, _windowNumber) => {
@@ -647,6 +718,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
+    openedWindowChartData,
+    ongoingWindowChartData,
+    finalizedWindowChartData,
+    socketData,
   };
 
   return (
