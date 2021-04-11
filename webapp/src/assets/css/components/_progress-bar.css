@@ -1,23 +1,35 @@
 .progress-bar {
-  @apply h-2 w-full block bg-gray-100 mb-4 overflow-hidden;
+  @apply h-2 w-full block bg-gray-100 mb-4 overflow-hidden rounded-xl shadow-inner;
+  box-shadow: 0 1px white;
   background-image: linear-gradient(
-    -90deg,
-    rgba(255, 255, 255, 0.25) 25%,
+    -45deg,
+    rgba(255, 255, 255, 0.2) 25%,
     transparent 25%,
     transparent 50%,
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.25) 75%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
     transparent 75%,
     transparent
   );
 
-  background-size: 32px 32px;
+  background-size: 24px 24px;
   animation: move 2s linear infinite;
 
   & > span {
-    @apply block h-2 w-0;
+    @apply block h-2 w-0 bg-green-500;
 
-    background: rgba(0, 0, 0, 0.16);
+    background-image: linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.1) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.1) 75%,
+      transparent 75%,
+      transparent
+    );
+    background-size: 24px 24px;
+    animation: move 2s linear infinite;
     transition: all 0.5s linear;
   }
 }

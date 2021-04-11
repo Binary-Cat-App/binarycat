@@ -11,8 +11,8 @@ export const BetBadge = ({ isWon, isLost }) => {
         </span>
       )}
       {isLost && (
-        <span className="bg-gray-300 p-1 w-8 h-8 flex items-center justify-center rounded-full shadow-lg">
-          <IconLoser />
+        <span className="bg-gray-200 p-1 w-8 h-8 flex items-center justify-center rounded-full shadow-lg">
+          <IconLoser className="text-white" />
         </span>
       )}
     </div>

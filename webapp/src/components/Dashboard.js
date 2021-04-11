@@ -8,18 +8,10 @@ import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
 import { useDrizzle } from '../context/DrizzleContext';
 import { useMetaMask } from '../context/MataMaskContext';
+import _ from 'lodash';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
-
-const defaultData = {
-  blockSize: '#1',
-  poolTotalUp: '0.00',
-  poolTotalDown: '0.00',
-  poolSize: '0.00',
-  accounts: '0',
-  price: '0',
-};
 
 export const Dashboard = () => {
   const { ethAccount } = useMetaMask();
@@ -31,21 +23,50 @@ export const Dashboard = () => {
     currentBlock,
     balance,
     progress,
+    isOpenForBetting,
+    setIsOpenForBetting,
+    isBetPlaced,
+    setIsBetPlaced,
     windowNumber,
-    windowOngoingNumber,
-    windowOngoingEndingBlock,
-    windowFinalizedNumber,
-    windowFinalizedEndingBlock,
-    currentData,
-    ongoingData,
-    finalizedData,
+    openedWindowData,
+    openedPricesData,
+    openedPoolData,
+    openedAccountsData,
+    ongoingWindowData,
+    ongoingPricesData,
+    ongoingPoolData,
+    ongoingAccountsData,
+    finalizedWindowData,
+    finalizedPricesData,
+    finalizedPoolData,
+    finalizedAccountsData,
+    openedWindowChartData,
+    ongoingWindowChartData,
+    finalizedWindowChartData,
+    socketData,
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
-  const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
+
+  React.useEffect(() => {
+    const arr = [...openedWindowChartData, ...socketData];
+    const unique = _.uniqBy(arr, 'time');
+    console.log('---- OPENED DATA', unique);
+    console.log('-----\n\n');
+  }, [openedWindowChartData, socketData]);
+
+  React.useEffect(() => {
+    console.log('---- ONGOING DATA:', ongoingWindowChartData);
+    console.log('-----\n\n');
+  }, [ongoingWindowChartData]);
+
+  React.useEffect(() => {
+    console.log('---- FINALIZED DATA:', finalizedWindowChartData);
+    console.log('-----\n\n');
+  }, [finalizedWindowChartData]);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
@@ -54,38 +75,39 @@ export const Dashboard = () => {
   // Betting Cards Initialisation
   React.useEffect(() => {
     if (currentBlock) {
-
       if (isFirstLoad) {
         // Initialize Cards
         setBets((prev) => [
           {
-            ...defaultData,
+            ...openedWindowData,
+            ...openedPricesData,
+            ...openedPoolData,
+            ...openedAccountsData,
             status: 'open',
-            blockSize: currentBlock.number,
             id: uuid(),
           },
           {
-            ...defaultData,
-            initialPrice: '0.00',
-            finalPrice: '',
+            ...ongoingWindowData,
+            ...ongoingPricesData,
+            ...ongoingPoolData,
+            ...ongoingAccountsData,
             status: 'ongoing',
-            blockSize: windowOngoingEndingBlock,
             id: uuid(),
           },
           {
-            ...defaultData,
-            finalPrice: '0.00',
-            initialPrice: '0.00',
+            ...finalizedWindowData,
+            ...finalizedPricesData,
+            ...finalizedPoolData,
+            ...finalizedAccountsData,
             status: 'finalized',
-            blockSize: windowFinalizedEndingBlock,
             id: uuid(),
           },
           {
-            ...defaultData,
-            finalPrice: '0.00',
-            initialPrice: '0.00',
+            ...finalizedWindowData,
+            ...finalizedPricesData,
+            ...finalizedPoolData,
+            ...finalizedAccountsData,
             status: 'finalized',
-            blockSize: windowFinalizedEndingBlock,
             id: uuid(),
           },
         ]);
@@ -99,26 +121,25 @@ export const Dashboard = () => {
         // Transforms Current Open For Betting Card to Ongoing Card
         if (opened) {
           opened.status = 'ongoing';
-          opened.blockSize = windowOngoingEndingBlock;
-          opened.initialPrice = '0.00';
-          opened.finalPrice = '?';
+          opened.endingBlock = ongoingWindowData.endingBlock;
         }
 
         // Transforms Current Ongoing Card to Finalized Card
         if (ongoing) {
           ongoing.status = 'finalized';
-          ongoing.blockSize = windowFinalizedEndingBlock;
-          ongoing.finalPrice = '0.00';
-          ongoing.finalPrice = '0.00';
+          ongoing.endingBlock = finalizedWindowData.endingBlock;
         }
 
         // Adds New Open For Betting Card
         updateBets.unshift({
-          ...defaultData,
+          openedWindowData,
+          openedPricesData,
+          openedPoolData,
+          openedAccountsData,
           status: 'open',
-          blockSize: currentBlock.number,
           id: uuid(),
         });
+
         setBets(updateBets);
       }
 
@@ -127,60 +148,58 @@ export const Dashboard = () => {
 
       // Betting Cycles Counter
       setBetSession((prev) => prev + 1);
-      
-      setIsOpenForBetting(true);
     }
   }, [windowNumber]);
 
-  // Opened for betting window (Card): Update Block# on every new blockchain block
+  // Opened for betting window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'open'
-    );
+    const selected = updateBets.find((el) => el.status === 'open');
     if (!selected) return;
-    selected.blockSize = currentBlock.number;
-    setBets(updateBets);
-  }, [currentBlock]);
+    selected.endingBlock = openedWindowData.endingBlock;
+    selected.betDirectionContract = openedPoolData.betDirection;
+    selected.betAmountContract = openedPoolData.betAmount;
+    selected.poolTotalUp = openedPoolData.poolTotalUp;
+    selected.poolTotalDown = openedPoolData.poolTotalDown;
+    selected.poolSize = openedPoolData.poolSize;
+    selected.accounts = openedAccountsData.accounts;
+  }, [currentBlock, openedWindowData, openedPoolData, openedAccountsData]);
 
-  // Opened for betting window (Card): Update data from contract
+  // Ongoing window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'open'
-    );
+    const selected = updateBets.find((el) => el.status === 'ongoing');
     if (!selected) return;
-    selected.poolTotalUp = currentData.poolTotalUp;
-    selected.poolTotalDown = currentData.poolTotalDown;
-    selected.poolSize = currentData.poolSize;
-  }, [currentData, windowNumber]);
+    selected.endingBlock = ongoingWindowData.endingBlock;
+    selected.initialPrice = ongoingPricesData.initialPrice;
+    selected.betDirectionContract = ongoingPoolData.betDirection;
+    selected.betAmountContract = ongoingPoolData.betAmount;
+    selected.poolTotalUp = ongoingPoolData.poolTotalUp;
+    selected.poolTotalDown = ongoingPoolData.poolTotalDown;
+    selected.poolSize = ongoingPoolData.poolSize;
+    selected.accounts = ongoingAccountsData.accounts;
+  }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
 
-  // Ongoing window (Card): Update data from contract
+  // Finalized window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'ongoing'
-    );
+    const selected = updateBets.find((el) => el.status === 'finalized');
     if (!selected) return;
-    selected.poolTotalUp = ongoingData.poolTotalUp;
-    selected.poolTotalDown = ongoingData.poolTotalDown;
-    selected.poolSize = ongoingData.poolSize;
-    selected.initialPrice = ongoingData.initialPrice;
-  }, [ongoingData, windowOngoingNumber]);
-
-  // Finalized window (Card): Update data from contract
-  React.useEffect(() => {
-    const updateBets = bets.slice(0);
-    const selected = updateBets.find(
-      (el) => el.status === 'finalized'
-    );
-    if (!selected) return;
-    selected.poolTotalUp = finalizedData.poolTotalUp;
-    selected.poolTotalDown = finalizedData.poolTotalDown;
-    selected.poolSize = finalizedData.poolSize;
-    selected.initialPrice = finalizedData.initialPrice;
-    selected.finalPrice = finalizedData.finalPrice;
-  }, [finalizedData, windowFinalizedNumber]);
+    selected.endingBlock = finalizedWindowData.endingBlock;
+    selected.initialPrice = finalizedPricesData.initialPrice;
+    selected.finalPrice = finalizedPricesData.finalPrice;
+    selected.betDirectionContract = finalizedPoolData.betDirection;
+    selected.betAmountContract = finalizedPoolData.betAmount;
+    selected.poolTotalUp = finalizedPoolData.poolTotalUp;
+    selected.poolTotalDown = finalizedPoolData.poolTotalDown;
+    selected.poolSize = finalizedPoolData.poolSize;
+    selected.accounts = finalizedAccountsData.accounts;
+  }, [
+    windowNumber,
+    finalizedWindowData,
+    finalizedPoolData,
+    finalizedAccountsData,
+  ]);
 
   // Train animation on every new betting window
   useEffect(() => {
@@ -206,8 +225,6 @@ export const Dashboard = () => {
 
     // Trim Betting Cards up to MAX_CARDS
     setBets(bets.slice(0, MAX_CARDS));
-
-    //console.log("Bets: ", bets);
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
@@ -215,20 +232,29 @@ export const Dashboard = () => {
       alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
       return;
     }
-    setIsOpenForBetting(false);
+
     const eth = drizzle.web3.utils.toWei(
       value,
       global.config.currencyRequestValue
     );
+
     const overBalance = Number(value) > balance ? Number(value) - balance : 0;
+
     const over = drizzle.web3.utils.toWei(
       `${overBalance}`,
       global.config.currencyRequestValue
     );
-    contract.methods['placeBet'].cacheSend(eth, direction, {
-      from: ethAccount,
-      value: over,
-    });
+
+    contract.methods
+      .placeBet(eth, direction)
+      .send({
+        from: ethAccount,
+        value: over,
+      })
+      .on('transactionHash', function (hash) {
+        setIsOpenForBetting(false);
+        setIsBetPlaced(true);
+      });
   };
 
   return isLoading ? (

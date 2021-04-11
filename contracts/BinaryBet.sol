@@ -82,7 +82,6 @@ contract BinaryBet {
     }
 //==============================================================================
 
-
     function deposit() payable external {
         updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);

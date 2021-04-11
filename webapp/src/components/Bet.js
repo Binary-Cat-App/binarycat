@@ -6,9 +6,11 @@ import { BetChart } from './Chart';
 import React, { useState } from 'react';
 
 export const Bet = ({
-  blockSize,
+  endingBlock,
   initialPrice,
   finalPrice,
+  betDirectionContract,
+  betAmountContract,
   poolTotalUp,
   poolTotalDown,
   poolSize,
@@ -22,6 +24,11 @@ export const Bet = ({
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
 
+  React.useEffect(() => {
+      setBetDirection(betDirectionContract);
+      setBetAmount(betAmountContract);
+  }, [betDirectionContract, betAmountContract]);
+
   function handleBetAmount(value) {
     setBetAmount(value);
   }
@@ -30,21 +37,24 @@ export const Bet = ({
     setBetDirection(direction);
     if (status === 'open' && isOpenForBetting) {
       onBet &&
-        onBet({ value: betAmount, direction: direction === 'up' ? 1 : 0 });
+        onBet({ 
+          value: betAmount, 
+          direction: direction === 'up' ? 1 : 0 
+        });
     }
   }
 
   return (
     <div className="w-1/3 px-4 flex-shrink-0">
-      <div className="bg-white p-4 sm:p-6 h-full flex flex-col relative">
-        <div className="mb-2">
+      <div className="bg-white p-4 sm:p-6 h-full flex flex-col relative rounded-3xl">
+        <div className="mb-3">
           <h2 className="text-center text-2xl font-medium">
             {status === 'finalized' && 'Finalized'}
             {status === 'ongoing' && 'Ongoing'}
             {status === 'open' && 'Open for betting'}
           </h2>
-          <p className="text-xxs text-gray-300 text-center">
-            Last Block# {blockSize}
+          <p className="text-sm text-gray-300 text-center">
+            Last Block# {endingBlock}
           </p>
         </div>
 
@@ -61,20 +71,20 @@ export const Bet = ({
           )}
         </div>
 
-        <div className="bg-white px-2 py-4 -mx-2  shadow-lg my-4">
+        <div className="bg-white px-2 py-4 -mx-2 shadow-lg my-4 rounded-lg">
           <div className="flex -mx-2">
             <div className="px-2 w-1/2">
               <div className="flex flex-col items-center border-r">
                 <span
-                  className={`px-2 rounded-full text-white text-xxs ${
-                    initialPrice ? 'bg-blue-500' : 'bg-gray-200'
+                  className={`px-2 rounded-full text-white text-xs ${
+                    initialPrice ? 'bg-gray-500' : 'bg-gray-200'
                   }`}
                 >
                   Initial Price
                 </span>
                 <span
                   className={`font-digits text-xl xl:text-2xl ${
-                    !initialPrice && 'text-gray-300'
+                    !initialPrice && 'text-gray-200'
                   }`}
                 >
                   {initialPrice ? initialPrice : '?'}
@@ -84,15 +94,15 @@ export const Bet = ({
             <div className="px-2 w-1/2">
               <div className="flex flex-col items-center">
                 <span
-                  className={`px-2 rounded-full text-white text-xxs ${
-                    finalPrice ? 'bg-blue-500' : 'bg-gray-200'
+                  className={`px-2 rounded-full text-white text-xs ${
+                    finalPrice ? 'bg-gray-500' : 'bg-gray-200'
                   }`}
                 >
                   Final Price
                 </span>
                 <span
                   className={`font-digits text-xl xl:text-2xl ${
-                    !finalPrice && 'text-gray-300'
+                    !finalPrice && 'text-gray-200'
                   }`}
                 >
                   {finalPrice ? finalPrice : '?'}
@@ -111,7 +121,7 @@ export const Bet = ({
               <span className="font-digits text-xl xl:text-2xl text-green-500">
                 {poolTotalUp}
               </span>
-              <span className="text-xxs text-gray-300 ml-2">
+              <span className="text-xs text-gray-300 ml-2">
                 {global.config.currencyName}
               </span>
             </div>
@@ -122,29 +132,29 @@ export const Bet = ({
               <span className="font-digits text-xl xl:text-2xl text-pink-500">
                 {poolTotalDown}
               </span>
-              <span className="text-xxs text-gray-300 ml-2">
+              <span className="text-xs text-gray-300 ml-2">
                 {global.config.currencyName}
               </span>
             </div>
           </div>
           <div className="px-2 flex-shrink-0">
             <BetPlaced
-              betAmount={betAmount}
-              betDirection={betDirection}
+              betAmountContract={betAmountContract}
+              betDirectionContract={betDirectionContract}
               isWon={
                 (status === 'finalized' &&
-                  betDirection === 'up' &&
+                  betDirectionContract === 'up' &&
                   finalPrice > initialPrice) ||
                 (status === 'finalized' &&
-                  betDirection === 'down' &&
+                  betDirectionContract === 'down' &&
                   finalPrice < initialPrice)
               }
               isLost={
                 (status === 'finalized' &&
-                  betDirection === 'up' &&
+                  betDirectionContract === 'up' &&
                   finalPrice < initialPrice) ||
                 (status === 'finalized' &&
-                  betDirection === 'down' &&
+                  betDirectionContract === 'down' &&
                   finalPrice > initialPrice)
               }
             />
@@ -154,7 +164,7 @@ export const Bet = ({
         <hr className="my-4" />
 
         <div className="flex items-center">
-          <span className="text-xxs text-gray-300 w-1/4">Pool Size</span>
+          <span className="text-xs text-gray-300 w-1/4">Pool Size</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{poolSize}</span>
             <span className="text-xxs text-gray-300 ml-2">{global.config.currencyName}</span>
@@ -162,7 +172,7 @@ export const Bet = ({
         </div>
 
         <div className="flex items-center">
-          <span className="text-xxs text-gray-300 w-1/4">Accounts</span>
+          <span className="text-xs text-gray-300 w-1/4">Accounts</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{accounts}</span>
           </div>

@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+
 import { Header } from './Header';
 import { Support } from './Support';
 import { Faq } from './Faq';
 import Dashboard from './Dashboard';
 import { Container } from './Container';
-import { AuthProvider } from '../context/AuthContext';
+
 import { MetaMaskProvider } from '../context/MataMaskContext';
 import { DrizzleProvider, useDrizzle } from '../context/DrizzleContext';
 
@@ -41,13 +42,11 @@ const ConnectedRoutesComponent = RoutesComponent;
 
 export const App = (props) => {
   return (
-    <AuthProvider>
-      <MetaMaskProvider>
-        <DrizzleProvider drizzle={props.drizzle}>
-          <ConnectedRoutesComponent />
-        </DrizzleProvider>
-      </MetaMaskProvider>
-    </AuthProvider>
+    <MetaMaskProvider>
+      <DrizzleProvider drizzle={props.drizzle}>
+        <ConnectedRoutesComponent />
+      </DrizzleProvider>
+    </MetaMaskProvider>
   );
 };
 

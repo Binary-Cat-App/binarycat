@@ -21,7 +21,7 @@ export const ModalDeposit = ({ onDeposit }) => {
 
   return (
     <div>
-      <Button variant="default" handleClick={handleModalToggle}>
+      <Button variant="green" handleClick={handleModalToggle}>
         Deposit
       </Button>
       {showModal && (
@@ -53,7 +53,7 @@ export const ModalDeposit = ({ onDeposit }) => {
           <div className="flex items-center -mx-2">
             <div className="px-2 flex-grow">
               <Button
-                variant="default"
+                variant="gray"
                 className="w-full"
                 outline
                 handleClick={handleModalToggle}
@@ -63,7 +63,7 @@ export const ModalDeposit = ({ onDeposit }) => {
             </div>
             <div className="px-2 flex-grow">
               <Button
-                variant="green"
+                variant="blue"
                 className="w-full"
                 handleClick={() => {
                   const val = value.replace(/\s/gi, '');
