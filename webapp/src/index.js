@@ -14,7 +14,7 @@ const drizzle = new Drizzle(drizzleOptions);
 
 WebFontLoader.load({
   google: {
-    families: ['Roboto:400,500,900', 'DM+Mono:500'],
+    families: ['Work+Sans:400,500,900', 'DM+Mono:500'],
   },
 });
 ReactDOM.render(

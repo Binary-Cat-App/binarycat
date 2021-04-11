@@ -9,7 +9,7 @@ export const BetPlaced = ({ betAmountContract, betDirectionContract, isWon, isLo
     <>
       <p className="text-xxs text-gray-300 mb-1">My bet</p>
       <div
-        className={`border rounded-sm py-1 px-4 flex flex-col items-center relative bg-gray-50 border-gray-100 ${
+        className={`border py-1 px-4 flex flex-col items-center relative bg-gray-50 border-gray-100 rounded ${
           betDirectionContract === 'up' && 'bg-green-100 border-green-500'
         } ${betDirectionContract === 'down' && 'bg-pink-100 border-pink-500'}`}
       >

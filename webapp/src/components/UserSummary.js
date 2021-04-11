@@ -19,41 +19,43 @@ export const UserSummary = () => {
   }, [drizzle.contracts]);
 
   return (
-    <div className="flex w-2/3">
-      <div className="px-4 w-1/3">
-        <div className="flex">
-          <span className="mr-4">
-            <IconWinningPercentage className="icon" />
+    <div className="flex mr-auto">
+      <div className="px-4">
+        <div className="flex items-center">
+          <span className="-mr-8 rounded-full bg-white p-4 shadow-xl w-20 h-20 flex items-center justify-center flex-shrink-0 z-10 relative">
+            <IconWinningPercentage />
           </span>
-          <dl>
-            <dt className="leading-none">Winning percentage</dt>
-            <dd className="text-2xl font-black text-gray-900">
+          <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
+            <dt className="leading-none whitespace-no-wrap">
+              Winning percentage
+            </dt>
+            <dd className="text-2xl font-black text-green-500 leading-none">
               {winningPercentage} %
             </dd>
           </dl>
         </div>
       </div>
-      <div className="px-4 w-1/3">
-        <div className="flex">
-          <span className="mr-4">
-            <IconTotalWinnings className="icon" />
+      <div className="px-4">
+        <div className="flex items-center">
+          <span className="-mr-8 rounded-full bg-white p-4 shadow-xl w-20 h-20 flex items-center justify-center flex-shrink-0 z-10 relative">
+            <IconTotalWinnings />
           </span>
-          <dl>
-            <dt className="leading-none">Total Winnings</dt>
-            <dd className="text-2xl font-black text-gray-900">
+          <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
+            <dt className="leading-none whitespace-no-wrap">Total Winnings</dt>
+            <dd className="text-2xl font-black text-green-500 leading-none">
               {totalWinnings} {global.config.currencyName}
             </dd>
           </dl>
         </div>
       </div>
-      <div className="px-4 w-1/3">
-        <div className="flex">
-          <span className="mr-4">
-            <IconBallance className="icon" />
+      <div className="px-4">
+        <div className="flex items-center">
+          <span className="-mr-8 rounded-full bg-white p-4 shadow-xl w-20 h-20 flex items-center justify-center flex-shrink-0 z-10 relative">
+            <IconBallance />
           </span>
-          <dl>
-            <dt className="leading-none">Balance</dt>
-            <dd className="text-2xl font-black text-gray-900">
+          <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
+            <dt className="leading-none whitespace-no-wrap">Balance</dt>
+            <dd className="text-2xl font-black text-green-500 leading-none">
               {balance} {global.config.currencyName}
             </dd>
           </dl>

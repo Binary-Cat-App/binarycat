@@ -6,7 +6,7 @@
 
 .btn {
   & .loading {
-    @apply absolute left-0 ml-2 h-4 w-4  border-2;
+    @apply absolute left-0 ml-4 h-6 w-6  border-2;
 
     mix-blend-mode: screen;
   }

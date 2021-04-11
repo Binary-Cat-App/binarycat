@@ -19,18 +19,13 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
 
   return (
     <div>
-      <Button
-        variant="default"
-        outline
-        className="ml-4"
-        handleClick={handleModalToggle}
-      >
+      <Button variant="blue" className="ml-4" handleClick={handleModalToggle}>
         Withdraw
       </Button>
       {showModal && (
         <Modal title="Withdraw" handleModalToggle={handleModalToggle}>
-          <div className="mb-4 pb-2">
-            Your Current Balance is <strong>{balance} {global.config.currencyName}</strong>
+          <div className="mb-4 pb-2 text-lg">
+            Your Current Balance is <strong className="text-pink-500">{balance} {global.config.currencyName}</strong>
           </div>
           {error && <Alert color="red">Not enough balance!</Alert>}
           <div className="min-w-0 flex items-center mb-4 py-2 px-4 bg-gray-100 rounded">
@@ -55,7 +50,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
           <div className="flex items-center -mx-2">
             <div className="px-2 flex-grow">
               <Button
-                variant="default"
+                variant="gray"
                 className="w-full"
                 outline
                 handleClick={handleModalToggle}
@@ -65,7 +60,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
             </div>
             <div className="px-2 flex-grow">
               <Button
-                variant="green"
+                variant="blue"
                 className="w-full"
                 handleClick={() => {
                   const val = value.replace(/\s/gi, '');
