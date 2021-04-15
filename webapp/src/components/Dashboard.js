@@ -50,12 +50,14 @@ export const Dashboard = () => {
   const [bets, setBets] = useState([]);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
+  const [realTimeChartData, setRealTimeChartData] = useState([]);
 
   React.useEffect(() => {
     const arr = [...openedWindowChartData, ...socketData];
     const unique = _.uniqBy(arr, 'time');
     console.log('---- OPENED DATA', unique);
     console.log('-----\n\n');
+    setRealTimeChartData(unique);
   }, [openedWindowChartData, socketData]);
 
   React.useEffect(() => {
@@ -275,26 +277,36 @@ export const Dashboard = () => {
           style={transformMove}
         >
           <TransitionGroup className="flex flex-row-reverse">
-            {bets.map((bet, index) => (
-              <CSSTransition
-                key={`${bet.id}`}
-                timeout={2000}
-                classNames="transition"
-              >
-                <Bet
-                  {...bet}
-                  betSession={index}
-                  onBet={onBetHandler}
-                  isOpenForBetting={isOpenForBetting}
-                />
-              </CSSTransition>
-            ))}
+            {bets.map((bet, index) => {
+              let data = [];
+              if (bet.status === 'finalized') {
+                data = _.uniqBy(finalizedWindowChartData, 'time');
+              }
+              if (bet.status === 'ongoing') {
+                data = _.uniqBy(ongoingWindowChartData, 'time');
+              }
+              return (
+                <CSSTransition
+                  key={`${bet.id}`}
+                  timeout={2000}
+                  classNames="transition"
+                >
+                  <Bet
+                    {...bet}
+                    chart={data}
+                    betSession={index}
+                    onBet={onBetHandler}
+                    isOpenForBetting={isOpenForBetting}
+                  />
+                </CSSTransition>
+              );
+            })}
           </TransitionGroup>
         </div>
       </div>
 
       <div className="mt-6">
-        <BetChart classAlt="h-64" />
+        <BetChart classAlt="h-64" chart={realTimeChartData} />
       </div>
     </>
   );
