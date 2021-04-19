@@ -220,24 +220,18 @@ contract BinaryBet {
         else if(settlementPrice > referencePrice) {
             return 1;
         }
-        else {
-            return 2;
-        }
+        return 2;
     }
 
 
     function updatePool(uint _downValue, uint _upValue, uint8 side, uint value) public pure returns(uint, uint){
         BetSide betSide = BetSide(side);
-        uint upValue = _upValue;
-        uint downValue = _downValue;
         if (betSide == BetSide.down) {
-            downValue = downValue.add(value);
+            return (downValue.add(value), upValue);
         }
         if (betSide == BetSide.up) {
-            upValue = upValue.add(value);
+            return (downValue, upValue.add(value));
         }
-        return (downValue, upValue);
-
     }
 
     function getWindowNumber (uint currentBlock, uint _windowDuration, uint _firstBlock, uint _windowOffset, uint _firstWindow) public pure returns (uint windowNumber) {
@@ -253,7 +247,7 @@ contract BinaryBet {
 
     function getWindowStartingBlock (uint windowNumber, uint _windowDuration, uint _firstBlock, uint _windowOffset) public pure returns (uint startingBlock) {
         //firstBlock + (n-1 - (offset + 1))*window_size
-        startingBlock =  _firstBlock + (windowNumber - 1 - _windowOffset)*_windowDuration;
+        startingBlock =  _firstBlock.add( + (windowNumber.sub(1).sub(_windowOffset)).mul(_windowDuration ));
     }
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
@@ -266,8 +260,7 @@ contract BinaryBet {
         uint window = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         if(windowPrice[window] == 0) {
             windowPrice[window] = priceOracle();
-        emit priceUpdated(window, windowPrice[window]);
-            
+            emit priceUpdated(window, windowPrice[window]);
         }
     }
 
