@@ -224,7 +224,7 @@ contract BinaryBet {
     }
 
 
-    function updatePool(uint _downValue, uint _upValue, uint8 side, uint value) public pure returns(uint, uint){
+    function updatePool(uint downValue, uint upValue, uint8 side, uint value) public pure returns(uint, uint){
         BetSide betSide = BetSide(side);
         if (betSide == BetSide.down) {
             return (downValue.add(value), upValue);
@@ -247,7 +247,7 @@ contract BinaryBet {
 
     function getWindowStartingBlock (uint windowNumber, uint _windowDuration, uint _firstBlock, uint _windowOffset) public pure returns (uint startingBlock) {
         //firstBlock + (n-1 - (offset + 1))*window_size
-        startingBlock =  _firstBlock.add( + (windowNumber.sub(1).sub(_windowOffset)).mul(_windowDuration ));
+        startingBlock =  _firstBlock.add((windowNumber.sub(1).sub(_windowOffset)).mul(_windowDuration ));
     }
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
