@@ -77,10 +77,10 @@ contract BinaryBet {
         _;
     }
 
-    constructor(uint _firstWindowBlock, uint _windowDuration, uint _fee) public {
+    constructor(uint _windowDuration, uint _fee) public {
         require(_fee <= 100);
         oracle = IStdReference(address(0xDA7a001b254CD22e46d3eAB04d937489c93174C3));
-        firstBlock = _firstWindowBlock;
+        firstBlock = block.number;
         windowDuration = _windowDuration;
 
         fee = _fee;

@@ -5,7 +5,7 @@ describe("BinaryBets Windows",function () {
     it("Should find the correct starting block for the window", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 1);
+        let bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
 
         let windowDuration = 30;
@@ -16,7 +16,7 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
         expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
 
-        bet = await BinaryBet.deploy(5, 12, 1);
+        bet = await BinaryBet.deploy(12, 1);
         await bet.deployed();
         windowDuration = 12
         firstBlock = 5
@@ -28,7 +28,7 @@ describe("BinaryBets Windows",function () {
     it("Should find the correct starting block for the window with offset", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 1);
+        let bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
 
         let windowDuration = 50;
@@ -43,7 +43,7 @@ describe("BinaryBets Windows",function () {
     it("Should find the correct window number for block", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 1);
+        let bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
 
         let windowDuration = 30;
@@ -54,7 +54,7 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowNumber(330, windowDuration, firstBlock, 0, 1)).to.equal(11);
         expect(await bet.getWindowNumber(749, windowDuration, firstBlock, 0, 1)).to.equal(25);
 
-        bet = await BinaryBet.deploy(5, 12, 1);
+        bet = await BinaryBet.deploy(12, 1);
         await bet.deployed();
         windowDuration = 12;
         firstBlock = 5;
@@ -68,7 +68,7 @@ describe("BinaryBets Windows",function () {
     it("Should find the correct window number for block with offset", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(100, 50, 1);
+        let bet = await BinaryBet.deploy(50, 1);
         await bet.deployed();
 
         let windowDuration = 50;
