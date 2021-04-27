@@ -176,7 +176,7 @@ contract BinaryBet {
             Pool memory stake = userStake[user][window];
             Pool memory pool = pools[window];
             uint8 result = betResult(referencePrice, settlementPrice);
-            (uint windowGain, uint fees) = settleBet(stake.upValue, stake.downValue, pool.downValue, pool.upValue, result);
+            (uint windowGain, uint fees) = settleBet(stake.upValue, stake.downValue, pool.upValue, pool.downValue, result);
 
             balance[msg.sender] = balance[msg.sender].add(windowGain);
             accumulatedFees = accumulatedFees.add(fees);
