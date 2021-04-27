@@ -192,6 +192,14 @@ describe("BinaryBets Bet management", function () {
         result = await bet.settleBet(100, 0, 450, 0, 0);
         result = result[1]
         expect(result).to.equal(100);
+
+        result = await bet.settleBet(100, 0, 100, 0, 1);
+        result = result[0]
+        expect(result).to.equal(100);
+
+        result = await bet.settleBet(0, 10, 0, 10, 0);
+        result = result[0]
+        expect(result).to.equal(10);
     });
     
     it("Should bet with deposited funds", async function () {
