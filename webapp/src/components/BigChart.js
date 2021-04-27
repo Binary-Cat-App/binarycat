@@ -51,7 +51,7 @@ export const BetChart = ({ classAlt, chart }) => {
     },
     timeScale: {
       rightOffset: 0,
-      barSpacing: 80,
+      barSpacing: 6,
       timeVisible: true,
       secondsVisible: true,
       borderVisible: false,

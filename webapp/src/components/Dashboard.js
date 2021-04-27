@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Bet } from './Bet';
 import { Loading } from './Loading';
 import { UserArea } from './UserArea';
-import { BetChart } from './Chart';
+import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
@@ -36,39 +36,19 @@ export const Dashboard = () => {
     ongoingPricesData,
     ongoingPoolData,
     ongoingAccountsData,
+    ongoingWindowChartData,
     finalizedWindowData,
     finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
-    openedWindowChartData,
-    ongoingWindowChartData,
     finalizedWindowChartData,
-    socketData,
+    historicalChartData
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
-  const [realTimeChartData, setRealTimeChartData] = useState([]);
-
-  React.useEffect(() => {
-    const arr = [...openedWindowChartData, ...socketData];
-    const unique = _.uniqBy(arr, 'time');
-    console.log('---- OPENED DATA', unique);
-    console.log('-----\n\n');
-    setRealTimeChartData(unique);
-  }, [openedWindowChartData, socketData]);
-
-  React.useEffect(() => {
-    console.log('---- ONGOING DATA:', ongoingWindowChartData);
-    console.log('-----\n\n');
-  }, [ongoingWindowChartData]);
-
-  React.useEffect(() => {
-    console.log('---- FINALIZED DATA:', finalizedWindowChartData);
-    console.log('-----\n\n');
-  }, [finalizedWindowChartData]);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
@@ -258,7 +238,7 @@ export const Dashboard = () => {
         setIsBetPlaced(true);
       });
   };
-
+  
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
       <Loading />
@@ -305,8 +285,8 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <div className="mt-6">
-        <BetChart classAlt="h-64" chart={realTimeChartData} />
+      <div className="bg-white rounded-3xl mt-6 px-4">
+        <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>
     </>
   );
