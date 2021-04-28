@@ -1,7 +1,7 @@
 import React from 'react';
 import Chart from 'kaktana-react-lightweight-charts';
 
-export const BetChart = ({ classAlt, chart }) => {
+export const BetChart = ({ classAlt, chart, status }) => {
   const rest = React.useMemo(() => {
     if (chart) {
       if (chart.length > 0) {
@@ -51,7 +51,7 @@ export const BetChart = ({ classAlt, chart }) => {
     },
     timeScale: {
       rightOffset: 0,
-      barSpacing: 80,
+      barSpacing: (status === 'ongoing') ? 80 : 40,
       timeVisible: true,
       secondsVisible: true,
       borderVisible: false,

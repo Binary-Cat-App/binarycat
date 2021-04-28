@@ -390,7 +390,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setOngoingWindowChartData(result.result);
         });
     }
-  }, [currentBlock, windowNumber]);
+  }, [currentBlock, openedWindowTimestamps]);
 
   useEffect(() => {
     if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
@@ -411,8 +411,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setFinalizedWindowChartData(result.result);
         });
     }
-  }, [currentBlock, windowNumber]);
+  }, [currentBlock, ongoingWindowTimestamps]);
 
+  /*
   // Socket for Realtime Currency Rate data
   useEffect(() => {
     const socket = io(global.config.currencyRatesNodeAPI);
@@ -430,6 +431,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     const unique = _.uniqBy(arr, 'time');
     setOngoingWindowChartData(unique);
   }, [socketData]);
+  */
 
   // Combined Chart Data
   React.useEffect(() => {

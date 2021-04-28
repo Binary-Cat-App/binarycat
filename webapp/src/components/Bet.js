@@ -68,7 +68,7 @@ export const Bet = ({
               isOpenForBetting={isOpenForBetting}
             />
           ) : (
-            <BetChart classAlt="h-48" chart={chart} />
+            <BetChart classAlt="h-48" chart={chart} status={status} />
           )}
         </div>
 
