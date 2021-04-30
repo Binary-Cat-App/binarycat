@@ -20,13 +20,14 @@ export const Bet = ({
   id,
   onBet,
   isOpenForBetting,
+  chart,
 }) => {
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
 
   React.useEffect(() => {
-      setBetDirection(betDirectionContract);
-      setBetAmount(betAmountContract);
+    setBetDirection(betDirectionContract);
+    setBetAmount(betAmountContract);
   }, [betDirectionContract, betAmountContract]);
 
   function handleBetAmount(value) {
@@ -37,9 +38,9 @@ export const Bet = ({
     setBetDirection(direction);
     if (status === 'open' && isOpenForBetting) {
       onBet &&
-        onBet({ 
-          value: betAmount, 
-          direction: direction === 'up' ? 1 : 0 
+        onBet({
+          value: betAmount,
+          direction: direction === 'up' ? 1 : 0,
         });
     }
   }
@@ -67,7 +68,7 @@ export const Bet = ({
               isOpenForBetting={isOpenForBetting}
             />
           ) : (
-            <BetChart classAlt="h-48" />
+            <BetChart classAlt="h-48" chart={chart} status={status} />
           )}
         </div>
 
@@ -167,7 +168,9 @@ export const Bet = ({
           <span className="text-xs text-gray-300 w-1/4">Pool Size</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{poolSize}</span>
-            <span className="text-xxs text-gray-300 ml-2">{global.config.currencyName}</span>
+            <span className="text-xxs text-gray-300 ml-2">
+              {global.config.currencyName}
+            </span>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useMetaMask } from '../context/MataMaskContext';
+import _ from 'lodash';
 
 import io from 'socket.io-client';
 
@@ -28,6 +29,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [progress, setProgress] = useState(100);
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
+  const [historicalChartData, setHistoricalChartData] = useState([]);
+  
+  // Realtime Currency Rates Socket data
   const [socketData, setSocketData] = useState([]);
 
   // Open for betting data
@@ -40,9 +44,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
-
-  const [openedWindowChartData, setOpenedWindowChartData] = useState([]);
-
   const [openedPricesData, setOpenedPricesData] = useState({
     initialPrice: '',
     finalPrice: '',
@@ -68,9 +69,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     startingBlockTimestamp: 0,
     endingBlockTimestamp: 0,
   });
-
   const [ongoingWindowChartData, setOngoingWindowChartData] = useState([]);
-
   const [ongoingPricesData, setOngoingPricesData] = useState({
     initialPrice: '0.00',
     finalPrice: '',
@@ -371,6 +370,91 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     updateTimestampsForWindow('Finalized', null);
   }, [currentBlock, windowNumber]);
 
+  // Charts Data
+  useEffect(() => {
+    if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
+      window
+        .fetch(global.config.currencyRatesNodeAPI, {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: openedWindowTimestamps.startingBlockTimestamp,
+            to: openedWindowTimestamps.endingBlockTimestamp,
+          }),
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          setOngoingWindowChartData(result.result);
+        });
+    }
+  }, [currentBlock, openedWindowTimestamps]);
+
+  useEffect(() => {
+    if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
+      window
+        .fetch(global.config.currencyRatesNodeAPI, {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: ongoingWindowTimestamps.startingBlockTimestamp,
+            to: ongoingWindowTimestamps.endingBlockTimestamp,
+          }),
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          setFinalizedWindowChartData(result.result);
+        });
+    }
+  }, [currentBlock, ongoingWindowTimestamps]);
+
+  /*
+  // Socket for Realtime Currency Rate data
+  useEffect(() => {
+    const socket = io(global.config.currencyRatesNodeAPI);
+    socket.on(
+      'socket-message', 
+      (payload) => {
+        dataSoc.push(payload.data);
+        setSocketData(dataSoc);
+      }
+    );
+  }, []);
+
+  React.useEffect(() => {
+    const arr = [...ongoingWindowChartData, ...socketData];
+    const unique = _.uniqBy(arr, 'time');
+    setOngoingWindowChartData(unique);
+  }, [socketData]);
+  */
+
+  // Combined Chart Data
+  React.useEffect(() => {
+    if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
+      window
+        .fetch(global.config.currencyRatesNodeAPI, {
+          method: 'post',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 0,
+            to: openedWindowTimestamps.endingBlockTimestamp,
+          }),
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          setHistoricalChartData(result.result);
+        });
+    }
+  }, [currentBlock]);
+
   // Progress Bar
   useEffect(() => {
     if (!currentBlock) return;
@@ -441,82 +525,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       }
     }
   };
-
-  useEffect(() => {
-    if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
-      window
-        .fetch('http://localhost:5000', {
-          method: 'post',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: ongoingWindowTimestamps.startingBlockTimestamp,
-            to: ongoingWindowTimestamps.endingBlockTimestamp,
-          }),
-        })
-        .then((res) => res.json())
-        .then((result) => {
-          setOngoingWindowChartData(result.result);
-        });
-    }
-  }, [ongoingWindowTimestamps]);
-
-  useEffect(() => {
-    if (finalizedWindowTimestamps.startingBlockTimestamp !== 0) {
-      window
-        .fetch('http://localhost:5000', {
-          method: 'post',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: finalizedWindowTimestamps.startingBlockTimestamp,
-            to: finalizedWindowTimestamps.endingBlockTimestamp,
-          }),
-        })
-        .then((res) => res.json())
-        .then((result) => {
-          setFinalizedWindowChartData(result.result);
-        });
-    }
-  }, [finalizedWindowTimestamps]);
-
-  useEffect(() => {
-    if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
-      window
-        .fetch('http://localhost:5000', {
-          method: 'post',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: openedWindowTimestamps.startingBlockTimestamp,
-            to: openedWindowTimestamps.endingBlockTimestamp,
-          }),
-        })
-        .then((res) => res.json())
-        .then((result) => {
-          setOpenedWindowChartData(result.result);
-        });
-    }
-  }, [openedWindowTimestamps]);
-
-  useEffect(() => {
-    const socket = io('http://localhost:5000');
-    socket.on('socket-message', (payload) => {
-      console.log('---- SOCKET MESSAGE::', payload.data);
-      console.log('-----\n\n');
-      dataSoc.push(payload.data);
-      setSocketData(dataSoc);
-      // const data = openedWindowChartData.slice(0);
-      // data.push(payload.data);
-      // setOpenedWindowChartData(data);
-    });
-  }, []);
 
   // initialPrice , finalPrice
   const updatePricesForWindow = (where, _windowNumber) => {
@@ -714,13 +722,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     ongoingPricesData,
     ongoingPoolData,
     ongoingAccountsData,
+    ongoingWindowChartData,
     finalizedWindowData,
     finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
-    openedWindowChartData,
-    ongoingWindowChartData,
     finalizedWindowChartData,
+    historicalChartData,
     socketData,
   };
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Bet } from './Bet';
 import { Loading } from './Loading';
 import { UserArea } from './UserArea';
-import { BetChart } from './Chart';
+import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
@@ -36,37 +36,19 @@ export const Dashboard = () => {
     ongoingPricesData,
     ongoingPoolData,
     ongoingAccountsData,
+    ongoingWindowChartData,
     finalizedWindowData,
     finalizedPricesData,
     finalizedPoolData,
     finalizedAccountsData,
-    openedWindowChartData,
-    ongoingWindowChartData,
     finalizedWindowChartData,
-    socketData,
+    historicalChartData
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState([]);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
-
-  React.useEffect(() => {
-    const arr = [...openedWindowChartData, ...socketData];
-    const unique = _.uniqBy(arr, 'time');
-    console.log('---- OPENED DATA', unique);
-    console.log('-----\n\n');
-  }, [openedWindowChartData, socketData]);
-
-  React.useEffect(() => {
-    console.log('---- ONGOING DATA:', ongoingWindowChartData);
-    console.log('-----\n\n');
-  }, [ongoingWindowChartData]);
-
-  React.useEffect(() => {
-    console.log('---- FINALIZED DATA:', finalizedWindowChartData);
-    console.log('-----\n\n');
-  }, [finalizedWindowChartData]);
 
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
@@ -256,7 +238,7 @@ export const Dashboard = () => {
         setIsBetPlaced(true);
       });
   };
-
+  
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
       <Loading />
@@ -275,26 +257,36 @@ export const Dashboard = () => {
           style={transformMove}
         >
           <TransitionGroup className="flex flex-row-reverse">
-            {bets.map((bet, index) => (
-              <CSSTransition
-                key={`${bet.id}`}
-                timeout={2000}
-                classNames="transition"
-              >
-                <Bet
-                  {...bet}
-                  betSession={index}
-                  onBet={onBetHandler}
-                  isOpenForBetting={isOpenForBetting}
-                />
-              </CSSTransition>
-            ))}
+            {bets.map((bet, index) => {
+              let data = [];
+              if (bet.status === 'finalized') {
+                data = _.uniqBy(finalizedWindowChartData, 'time');
+              }
+              if (bet.status === 'ongoing') {
+                data = _.uniqBy(ongoingWindowChartData, 'time');
+              }
+              return (
+                <CSSTransition
+                  key={`${bet.id}`}
+                  timeout={2000}
+                  classNames="transition"
+                >
+                  <Bet
+                    {...bet}
+                    chart={data}
+                    betSession={index}
+                    onBet={onBetHandler}
+                    isOpenForBetting={isOpenForBetting}
+                  />
+                </CSSTransition>
+              );
+            })}
           </TransitionGroup>
         </div>
       </div>
 
-      <div className="mt-6">
-        <BetChart classAlt="h-64" />
+      <div className="bg-white rounded-3xl mt-6 px-4">
+        <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>
     </>
   );
