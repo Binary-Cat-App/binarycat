@@ -37,6 +37,11 @@ Now contracts are deployed on Ganache simulated blockchain and contracts artifac
 
 Changes should be reflected on Ganache GUI:
 
+* Already deployed, addresses available at './artifacts'
+* To redeploy, $ npx truffle migrate --network testnet
+
+#### BSC Testnet
+
 - Add link to truffle-config.js to 'settings/workspace' so Ganache can get detailed information from the contract.
 - Select automine = off in 'settings/server' if you want the blockchain to be incremented automatically (new block every x seconds)
 

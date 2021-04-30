@@ -8,7 +8,7 @@ describe("BinaryBets Bet management", function () {
     it("Should get the correct bet result", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        const bet = await BinaryBet.deploy(10, 30, 1);
+        const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
 
         // function betResult(uint referencePrice, uint settlementPrice) public pure returns(BetResult)
@@ -41,7 +41,7 @@ describe("BinaryBets Bet management", function () {
 
     it("Should get the correct bet payoff", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        const bet = await BinaryBet.deploy(10, 30, 1);
+        const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
         let result = await bet.settleBet(78, 5, 1708, 1931, 0);
         result = result[0]
@@ -200,7 +200,7 @@ describe("BinaryBets Bet management", function () {
         const BinToken = await ethers.getContractFactory("BinToken");
         const [owner, account1] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 30, 1);
+        const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
 
         const token = await BinToken.deploy();
@@ -224,7 +224,7 @@ describe("BinaryBets Bet management", function () {
         const BinToken = await ethers.getContractFactory("BinToken");
         const [owner, account1] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 30, 1);
+        const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
 
         const token = await BinToken.deploy();
@@ -241,7 +241,7 @@ describe("BinaryBets Bet management", function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
         const [owner, account1] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 30, 1);
+        const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
         await bet.connect(account1).deposit({value:100});
 
@@ -255,7 +255,7 @@ describe("BinaryBets Bet management", function () {
 
         const [owner, account1, account2, account3] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 30, 1);
+        const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
         const token = await BinToken.deploy();
         await token.deployed();
@@ -282,7 +282,7 @@ describe("BinaryBets Bet management", function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
         const [owner, account1, account2, account3] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 30, 0);
+        const bet = await BinaryBet.deploy(30, 0);
         await bet.deployed();
         await bet.connect(account1).placeBet(100, 0, {value: 100})
         let pool = await bet.getPoolValues(1)
@@ -304,7 +304,7 @@ describe("BinaryBets Bet management", function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
         const [owner, account1, account2, account3] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 200, 0);
+        const bet = await BinaryBet.deploy(200, 0);
         await bet.deployed();
         await bet.connect(account1).placeBet(100, 0, {value: 100})
         let stake = await bet.getUserStake(1, account1._address)
@@ -326,7 +326,7 @@ describe("BinaryBets Bet management", function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
         const [owner, account1, account2, account3] = await ethers.getSigners();
 
-        const bet = await BinaryBet.deploy(1, 100, 0);
+        const bet = await BinaryBet.deploy(100, 0);
         await bet.deployed();
         await bet.connect(account1).placeBet(100, 0, {value: 100})
         let lastBet = await bet.userBets(account1._address, 0)
