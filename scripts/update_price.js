@@ -2,15 +2,15 @@ const Bin = artifacts.require('./BinaryBet.sol')
 const BN = require('bn.js');
 
 async function deployAll(contract) {
-    const duration = await contract.windowDuration()
-    const firstBlock = await contract.firstBlock()
-    const firstWindow = await contract.firstWindow()
-    const offset = await contract.windowOffset()
+    let duration = await contract.windowDuration()
+    let firstBlock = await contract.firstBlock()
+    let firstWindow = await contract.firstWindow()
+    let offset = await contract.windowOffset()
     let block = await web3.eth.getBlock("latest")
-    const blockNumber = block.number
-    const windowNumber = await contract.getWindowNumber(blockNumber, duration, firstBlock, offset, firstWindow);
+    let blockNumber = block.number
+    let windowNumber = await contract.getWindowNumber(blockNumber, duration, firstBlock, offset, firstWindow);
 
-    const price = await contract.windowPrice(windowNumber)
+    let price = await contract.windowPrice(windowNumber)
     if (price == 0) {
         await contract.updatePrice()
         console.log('price updated')
