@@ -2,8 +2,6 @@ node_modules
 
 #Buidler files
 cache
-artifacts
-build/contracts/
 *.swp
 *.swo
 .DS_Store

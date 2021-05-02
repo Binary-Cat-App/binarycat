@@ -4,7 +4,7 @@ describe("BinaryBets Pool Creation", function () {
     it("Should update the pool", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(10, 30, 1);
+        let bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
         let result = await bet.updatePool(100,150, 0, 10)
         expect(result[0]).to.equal(110);
