@@ -10,8 +10,6 @@ export const useDrizzle = () => {
   return useContext(DrizzleContext);
 };
 
-const FIRST_BLOCK = 1;
-const WINDOW_DURATION = 10;
 const dataSoc = [];
 
 export const DrizzleProvider = ({ drizzle, children }) => {
@@ -25,6 +23,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [balKey, setBalKey] = useState(null);
   const { ethAccount } = useMetaMask();
   const [currentBlock, setCurrentBlock] = useState(null);
+  const [firstBlock, setFirstBlock] = useState(null)
+  const [windowDuration, setWindowDuration] = useState(null)
   const [windowNumber, setWindowNumber] = useState(null);
   const [progress, setProgress] = useState(100);
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
@@ -142,6 +142,36 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       unsubscribe();
     };
   }, [drizzle.store, drizzleReadinessState]);
+
+  // Contract Initials
+  useEffect(() => {
+    if (drizzleReadinessState.loading === false) {
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+      
+      contractWeb3.methods
+        .firstBlock()
+        .call()
+        .then(
+          (response) => setFirstBlock(Number.parseInt(response))
+        );
+      
+      contractWeb3.methods
+        .windowDuration()
+        .call()
+        .then(
+          (response) => setWindowDuration(Number.parseInt(response))
+        );
+    }
+  }, [
+    drizzleReadinessState.loading,
+    drizzle.web3,
+    drizzleReadinessState.drizzleState,
+  ]);
 
   // Balance Data
   useEffect(() => {
@@ -272,15 +302,12 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
-    const contract = drizzle.contracts.BinaryBet;
-    const web3 = drizzle.web3;
-    const contractWeb3 = new web3.eth.Contract(contract.abi, contract.address);
 
     const openedWindow = Math.floor(
-      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1
+      (currentBlock.number - firstBlock) / windowDuration + 1
     );
     const openedWindowStartingBlock =
-      FIRST_BLOCK + (openedWindow - 1) * WINDOW_DURATION;
+      firstBlock + (openedWindow - 1) * windowDuration;
 
     // Reset data
     if (openedWindowStartingBlock === currentBlock.number) {
@@ -310,17 +337,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
-    const contract = drizzle.contracts.BinaryBet;
-    const web3 = drizzle.web3;
-    const contractWeb3 = new web3.eth.Contract(contract.abi, contract.address);
 
     const ongoingWindow = Math.floor(
-      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1 - 1
+      (currentBlock.number - firstBlock) / windowDuration + 1 - 1
     );
     const ongoingWindowStartingBlock =
-      FIRST_BLOCK + (ongoingWindow - 1) * WINDOW_DURATION;
+      firstBlock + (ongoingWindow - 1) * windowDuration;
     const ongoingWindowEndingBlock = Math.floor(
-      FIRST_BLOCK + ongoingWindow * WINDOW_DURATION - 1
+      firstBlock + ongoingWindow * windowDuration - 1
     );
 
     setOngoingWindowData({
@@ -342,17 +366,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
-    const contract = drizzle.contracts.BinaryBet;
-    const web3 = drizzle.web3;
-    const contractWeb3 = new web3.eth.Contract(contract.abi, contract.address);
 
     const finalizedWindow = Math.floor(
-      (currentBlock.number - FIRST_BLOCK) / WINDOW_DURATION + 1 - 2
+      (currentBlock.number - firstBlock) / windowDuration + 1 - 2
     );
     const finalizedWindowStartingBlock =
-      FIRST_BLOCK + (finalizedWindow - 1) * WINDOW_DURATION;
+      firstBlock + (finalizedWindow - 1) * windowDuration;
     const finalizedWindowEndingBlock = Math.floor(
-      FIRST_BLOCK + finalizedWindow * WINDOW_DURATION - 1
+      firstBlock + finalizedWindow * windowDuration - 1
     );
 
     setFinalizedWindowData({
@@ -458,9 +479,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   // Progress Bar
   useEffect(() => {
     if (!currentBlock) return;
-    const start = FIRST_BLOCK + (windowNumber - 1) * WINDOW_DURATION;
+    const start = firstBlock + (windowNumber - 1) * windowDuration;
     const _progress =
-      100 - ((currentBlock.number - start) / WINDOW_DURATION) * 100;
+      100 - ((currentBlock.number - start) / windowDuration) * 100;
     setProgress(_progress);
   }, [currentBlock, windowNumber]);
 

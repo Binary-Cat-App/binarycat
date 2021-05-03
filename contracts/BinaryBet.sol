@@ -106,7 +106,7 @@ contract BinaryBet {
         stakingAddress = payable(stakingContract);
         staking = BinaryStaking(stakingAddress); 
     }
-//=============================================================================
+
     function deposit() payable external {
         updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);
