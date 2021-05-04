@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "heroku-prebuild": "bash heroku-prebuild.sh",
+    "heroku-postbuild": "cd webapp && npm install && npm run build",
+    "start": "cd webapp && yarn start"
+  },
   "name": "hardhat-project",
   "devDependencies": {
     "@nomiclabs/buidler": "^1.4.8",

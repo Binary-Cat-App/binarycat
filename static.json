@@ -1,0 +1,7 @@
+{
+  "root": "webapp/build/",
+  "routes": {
+    "/**": "index.html"
+  },
+  "https_only": true
+}
