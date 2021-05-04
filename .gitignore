@@ -1,5 +1,8 @@
 node_modules
 
+#Removing Lock file for Heroku
+package-lock.json
+
 #Buidler files
 cache
 *.swp
