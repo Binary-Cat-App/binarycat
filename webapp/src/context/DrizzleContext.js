@@ -215,9 +215,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         })
         .then(function (result) {
           if (result.length > 0) {
-            var totalGain = result.reduce((acc, current) => {
-              return acc + Number.parseInt(current.returnValues.gain);
-            }, 0);
+            
+            var totalGain = 0;
+            result.forEach(
+              element => totalGain += Number.parseInt(element.returnValues.gain)
+            );
 
             setTotalWinnings(weiToCurrency(totalGain.toString()));
 
