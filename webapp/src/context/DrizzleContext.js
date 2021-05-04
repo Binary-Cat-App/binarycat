@@ -565,13 +565,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         .then((result) => {
           const initialPrice =
             result.length > 0
-              ? Number(result[0].returnValues.price).toFixed(2)
+              ? weiToCurrency(result[0].returnValues.price)
               : '0.00';
           let finalPrice = '0.00';
           if (where === 'Finalized') {
             finalPrice =
               result.length > 1
-                ? Number(result[1].returnValues.price).toFixed(2)
+                ? weiToCurrency(result[1].returnValues.price)
                 : '0.00';
           }
           updatePriceData(where, { initialPrice, finalPrice });
