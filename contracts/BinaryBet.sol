@@ -265,7 +265,7 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256 currentPrice){
-        currentPrice =  (uint(keccak256(abi.encodePacked(now)))%250 + 10);
+        currentPrice =  (uint(keccak256(abi.encodePacked(now)))%20 + 640);
     }
 
     //Getters
