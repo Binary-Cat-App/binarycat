@@ -397,7 +397,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
       window
-        .fetch(global.config.currencyRatesNodeAPI, {
+        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
           headers: {
             Accept: 'application/json',
@@ -418,7 +418,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
       window
-        .fetch(global.config.currencyRatesNodeAPI, {
+        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
           headers: {
             Accept: 'application/json',
@@ -460,7 +460,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   React.useEffect(() => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
       window
-        .fetch(global.config.currencyRatesNodeAPI, {
+        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
           headers: {
             Accept: 'application/json',

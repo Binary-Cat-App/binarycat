@@ -1,8 +1,8 @@
 {
   "scripts": {
     "heroku-prebuild": "bash heroku-prebuild.sh",
-    "heroku-postbuild": "cd webapp && npm install && npm run build",
-    "start": "cd webapp && yarn start"
+    "start": "node backend/index.js",
+    "heroku-postbuild": "cd webapp && npm install && npm run build"
   },
   "name": "hardhat-project",
   "devDependencies": {
