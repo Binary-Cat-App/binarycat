@@ -17,12 +17,8 @@ const io = socketIo(http, {
 
 var MongoClient = require("mongodb").MongoClient;
 var url = settings.db;
-// const socketController = require('./controllers').socket
 
-// require("./config/database")(global.settings);
 require("./config/express")(app);
-// require("./config/socket")(http);
-
 require("./routes")(app);
 
 const sockets = [];
