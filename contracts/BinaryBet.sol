@@ -60,7 +60,6 @@ contract BinaryBet {
     //User variables
     mapping (address => uint) public balance;
     mapping (address => mapping(uint => Pool)) public  userStake;
-    mapping (address => mapping(uint => bool)) public  userBetted;
     mapping (address => uint[]) public userBets;
 
 
@@ -129,8 +128,6 @@ contract BinaryBet {
         updatePrice();
         updateBalance(msg.sender);
                     
-        uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
-        require(!userBetted[msg.sender][windowNumber], "user can only bet one time per window"); 
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         //betValue <= balance + msg.value
@@ -141,8 +138,8 @@ contract BinaryBet {
         accumulatedFees = accumulatedFees.add(betFee);
         uint value = betValue.sub(betFee);
 
+        uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         userBets[msg.sender].push(windowNumber);
-        userBetted[msg.sender][windowNumber] = true;
         
         //Update the pool for the window.
         Pool memory oldPool = pools[windowNumber];
