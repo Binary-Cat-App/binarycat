@@ -9,12 +9,12 @@ contract BinaryStaking {
     IERC20 public binToken;
 
     address payable owner;
-    uint MUL_CONST = 1000;
+    uint constant MUL_CONST = 1000;
     event Staked(address user, uint amount);
     event Unstaked(address user, uint amount);
     struct StakingAccount {
         uint stakedBin;
-        uint valueWhenLastRelesed; //Global acummulated value of new_rewards/total_staked when user last got rewards. 
+        uint valueWhenLastRelesed; //Global accumulated value of new_rewards/total_staked when user last got rewards. 
     }
 
     mapping(address => StakingAccount) stakingBalance;
@@ -37,8 +37,6 @@ contract BinaryStaking {
 
     function stake(uint amount) external{
         require(amount > 0, "Amount should be greater than 0");
-        uint allowance = binToken.allowance(msg.sender, address(this));
-
         if (stakingBalance[msg.sender].stakedBin != 0) {
             release(msg.sender);
         }
@@ -72,7 +70,6 @@ contract BinaryStaking {
         balance.valueWhenLastRelesed = accumulatedRewards;                                                        
         
         payable(user).transfer(amount);
-        
     }
 
 }
