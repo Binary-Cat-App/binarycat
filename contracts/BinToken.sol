@@ -7,7 +7,7 @@ contract BinToken is ERC20{
     using SafeMath for uint256;
 
     string public constant NAME = "KITTY";
-    string public constant SYMBOL = "KTY";
+    string public constant SYMBOL = "KITTY";
     uint8 public constant DECIMALS = 18;
     uint256 public constant INITIAL_SUPPLY = 100000000 * (10 ** uint256(DECIMALS));
 
