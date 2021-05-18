@@ -165,21 +165,26 @@ contract BinaryBet {
             //Maximum number of itens in list is 2, when the user bets on 2 subsequent windows and the first window is not yet settled.
             uint window = userWindowsList[i-1];
             uint currentWindow = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
-            if(currentWindow <= window + 1) {
+            if(currentWindow < window + 2) {
                 //window not yet settled
                 continue;
             }
 
-            //Remove window from list of unsettled bets.
-            userWindowsList[i-1] = userWindowsList[userWindowsList.length -1];
-            userWindowsList.pop();
-
             (uint256 referencePrice, uint256 settlementPrice) = getWindowBetPrices(window);
+            if (settlementPrice == 0 && currentWindow < window + 3) {
+                //price not updated but update still possible.
+                continue;
+            } 
+
             uint8 result = betResult(referencePrice, settlementPrice);
             if (referencePrice == 0 || settlementPrice == 0) {
                 //if the price was not updated for the window it is considered a tie and players can get their money back.
                 result = 2;
             }
+
+            //Remove window from list of unsettled bets.
+            userWindowsList[i-1] = userWindowsList[userWindowsList.length -1];
+            userWindowsList.pop();
 
             Pool memory stake = userStake[user][window];
             Pool memory pool = pools[window];
