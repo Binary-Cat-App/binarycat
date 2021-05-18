@@ -215,9 +215,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         })
         .then(function (result) {
           if (result.length > 0) {
-            var totalGain = result.reduce((acc, current) => {
-              return acc + Number.parseInt(current.returnValues.gain);
-            }, 0);
+            
+            var totalGain = 0;
+            result.forEach(
+              element => totalGain += Number.parseInt(element.returnValues.gain)
+            );
 
             setTotalWinnings(weiToCurrency(totalGain.toString()));
 
@@ -395,7 +397,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
       window
-        .fetch(global.config.currencyRatesNodeAPI, {
+        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
           headers: {
             Accept: 'application/json',
@@ -416,7 +418,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
       window
-        .fetch(global.config.currencyRatesNodeAPI, {
+        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
           headers: {
             Accept: 'application/json',
@@ -457,15 +459,20 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   // Combined Chart Data
   React.useEffect(() => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
+      
+      const today = new Date();
+      const weekbefore = new Date(today.getFullYear(), today.getMonth(), today.getDate()-7);
+      const selectFrom = weekbefore.getTime()/1000;
+      
       window
-        .fetch(global.config.currencyRatesNodeAPI, {
+        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 0,
+            from: selectFrom,
             to: openedWindowTimestamps.endingBlockTimestamp,
           }),
         })
@@ -565,13 +572,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         .then((result) => {
           const initialPrice =
             result.length > 0
-              ? Number(result[0].returnValues.price).toFixed(2)
+              ? weiToCurrency(result[0].returnValues.price)
               : '0.00';
           let finalPrice = '0.00';
           if (where === 'Finalized') {
             finalPrice =
               result.length > 1
-                ? Number(result[1].returnValues.price).toFixed(2)
+                ? weiToCurrency(result[1].returnValues.price)
                 : '0.00';
           }
           updatePriceData(where, { initialPrice, finalPrice });

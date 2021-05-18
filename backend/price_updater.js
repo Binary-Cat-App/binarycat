@@ -13,8 +13,7 @@ async function getPrice() {
 }
 
 var MongoClient = require("mongodb").MongoClient;
-var url =
-  "mongodb+srv://img_bank:Poznai12@images.fnm4n.mongodb.net/pricedb?retryWrites=true&w=majority";
+var url = process.env.MONGODB_URI;
 async function updateDB() {
   let price = await getPrice();
   var obj = { rate: price[0].rate, time: price[0].updatedAt.base };
