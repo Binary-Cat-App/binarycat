@@ -51,7 +51,8 @@ async function updateDB() {
   });
 }
 
-var timer = setInterval(updateDB, settings.INTERVAL);
+if ( process.env.UPDATE_DB !== 'off' )
+  var timer = setInterval(updateDB, settings.INTERVAL);
 
 http.listen(settings.port, () =>
   console.log(`Server listening on port ${settings.port}...`)

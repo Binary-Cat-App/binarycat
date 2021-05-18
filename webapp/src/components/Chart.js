@@ -46,17 +46,24 @@ export const BetChart = ({ classAlt, chart, status }) => {
         },
         mode: 1,
     },
+    handleScroll: false,
+    handleScale: false,
+    axisPressedMouseMove: false,
     priceScale: {
         borderVisible: false,
     },
     timeScale: {
       rightOffset: 0,
-      barSpacing: (status === 'ongoing') ? 80 : 40,
+      fixLeftEdge: true,
+      lockVisibleTimeRangeOnResize: true,
+      shiftVisibleRangeOnNewBar: false,
       timeVisible: true,
       secondsVisible: true,
       borderVisible: false,
     },
   };
+
+  var dataArr = [];
   const lineSeries = [
     {
       options: {
@@ -65,20 +72,27 @@ export const BetChart = ({ classAlt, chart, status }) => {
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 8,
       },
-      data: chart ? chart.map((el) => {
+      data: chart ? chart.map((el) => {        
         const utcTimeObj = new Date(el.time * 1000); 
         const timezoneOffset = (utcTimeObj.getTimezoneOffset()*60000)/1000;
         const localTimestamp = el.time-timezoneOffset;
+        dataArr.push(localTimestamp);
         return { time: localTimestamp, value: el.rate };
       }) : [],
     },
   ];
+
+  const visibleFrom = (dataArr.length > 0) ? Math.min(...dataArr) : 0;
+  const visibleTo = (dataArr.length > 0) ? Math.max(...dataArr) : 4102437600;
+
   return (
     <div
       className={`flex items-center justify-center text-white ${classAlt}`}
     >
       <Chart
         options={options}
+        from={visibleFrom}
+        to={visibleTo}
         lineSeries={lineSeries}
         autoWidth
         height={190}

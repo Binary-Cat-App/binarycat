@@ -459,6 +459,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   // Combined Chart Data
   React.useEffect(() => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
+      
+      const today = new Date();
+      const weekbefore = new Date(today.getFullYear(), today.getMonth(), today.getDate()-7);
+      const selectFrom = weekbefore.getTime()/1000;
+      
       window
         .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
@@ -467,7 +472,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 0,
+            from: selectFrom,
             to: openedWindowTimestamps.endingBlockTimestamp,
           }),
         })

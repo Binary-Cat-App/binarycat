@@ -2,6 +2,7 @@
   "scripts": {
     "heroku-prebuild": "bash heroku-prebuild.sh",
     "start": "node backend/index.js",
+    "start_local": "node -r dotenv/config backend/index.js",
     "heroku-postbuild": "cd webapp && npm install && npm run build"
   },
   "name": "hardhat-project",
@@ -23,6 +24,7 @@
     "@openzeppelin/contracts": "^3.3.0",
     "@truffle/hdwallet-provider": "^1.2.3",
     "bandprotocol": "^0.5.11",
+    "dotenv": "^9.0.2",
     "moment": "^2.29.1",
     "mongodb": "^3.6.5",
     "morgan": "^1.10.0",
