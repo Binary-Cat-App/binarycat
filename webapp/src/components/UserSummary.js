@@ -43,7 +43,7 @@ export const UserSummary = () => {
           <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
             <dt className="leading-none whitespace-no-wrap">Total Winnings</dt>
             <dd className="text-2xl font-black text-green-500 leading-none">
-              {totalWinnings} {global.config.currencyName}
+              {totalWinnings.toFixed(2)} {global.config.currencyName}
             </dd>
           </dl>
         </div>
@@ -56,7 +56,7 @@ export const UserSummary = () => {
           <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
             <dt className="leading-none whitespace-no-wrap">Balance</dt>
             <dd className="text-2xl font-black text-green-500 leading-none">
-              {balance} {global.config.currencyName}
+              {balance.toFixed(2)} {global.config.currencyName}
             </dd>
           </dl>
         </div>

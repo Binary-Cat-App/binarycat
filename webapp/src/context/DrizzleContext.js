@@ -179,6 +179,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       drizzleReadinessState.loading === false &&
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
     ) {
+
+      if(!ethAccount)
+        return;
+
       const contract = drizzle.contracts.BinaryBet;
       const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
       const bal =
@@ -187,7 +191,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         ];
       if (bal) {
         if (bal.value) {
-          const ethBal = weiToCurrency(bal.value);
+          const ethBal = weiToCurrency(bal.value.toString());
           setBalance(ethBal);
         }
       }
@@ -207,6 +211,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         contract.abi,
         contract.address
       );
+
+      if(!ethAccount)
+        return;
+
       contractWeb3
         .getPastEvents('betSettled', {
           filter: { user: ethAccount },
@@ -218,13 +226,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             
             var totalGain = 0;
             result.forEach(
-              element => totalGain += Number.parseInt(element.returnValues.gain)
+              element => totalGain += weiToCurrency(element.returnValues.gain.toString())
             );
 
-            setTotalWinnings(weiToCurrency(totalGain.toString()));
+            setTotalWinnings(totalGain);
 
             const wins = result.filter(
-              (key) => Number.parseInt(key.returnValues.gain) > 0
+              (key) => weiToCurrency(key.returnValues.gain.toString()) > 0
             );
 
             if (wins.length > 0) {
@@ -234,34 +242,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             }
           }
         });
-    }
-  }, [
-    drizzleReadinessState.loading,
-    drizzle.web3,
-    drizzleReadinessState.drizzleState,
-  ]);
-
-  // Deposit update
-  useEffect(() => {
-    if (drizzleReadinessState.loading === false) {
-      const contract = drizzle.contracts.BinaryBet;
-      const web3 = drizzle.web3;
-      const contractWeb3 = new web3.eth.Contract(
-        contract.abi,
-        contract.address
-      );
-      contractWeb3.events
-        .newDeposit({
-          filter: { user: ethAccount },
-          fromBlock: 'latest',
-        })
-        .on('connected', function (subscriptionId) {
-          //console.log(subscriptionId);
-        })
-        .on('data', function (event) {
-          console.log(event); // same results as the optional callback above
-        })
-        .on('error', console.error);
     }
   }, [
     drizzleReadinessState.loading,
@@ -304,6 +284,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
+    if (!firstBlock) return;
+    if (!windowDuration) return;
 
     const openedWindow = Math.floor(
       (currentBlock.number - firstBlock) / windowDuration + 1
@@ -339,6 +321,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
+    if (!firstBlock) return;
+    if (!windowDuration) return;
 
     const ongoingWindow = Math.floor(
       (currentBlock.number - firstBlock) / windowDuration + 1 - 1
@@ -368,6 +352,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
     if (!currentBlock) return;
+    if (!firstBlock) return;
+    if (!windowDuration) return;
 
     const finalizedWindow = Math.floor(
       (currentBlock.number - firstBlock) / windowDuration + 1 - 2
@@ -486,6 +472,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   // Progress Bar
   useEffect(() => {
     if (!currentBlock) return;
+    if (!windowDuration) return;
+    if (!firstBlock) return;
+    if (!windowNumber) return;
+
     const start = firstBlock + (windowNumber - 1) * windowDuration;
     const _progress =
       100 - ((currentBlock.number - start) / windowDuration) * 100;
@@ -504,8 +494,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     if (drizzleReadinessState.loading === false) {
       var _startingBlockTimestamp = 0;
       var _endingBlockTimestamp = 0;
+      
       switch (where) {
         case 'Opened':
+          
+          if(Number.isInteger(openedWindowData.startingBlock) === false)
+            return;
+
           _startingBlockTimestamp = await drizzle.web3.eth
             .getBlock(openedWindowData.startingBlock)
             .then((response) => response.timestamp);
@@ -521,7 +516,15 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             endingBlockTimestamp: _endingBlockTimestamp,
           });
           break;
+        
         case 'Ongoing':
+
+          if (
+            Number.isInteger(ongoingWindowData.startingBlock) === false || 
+            Number.isInteger(ongoingWindowData.endingBlock) === false
+          )
+            return;
+
           _startingBlockTimestamp = await drizzle.web3.eth
             .getBlock(ongoingWindowData.startingBlock)
             .then((response) => response.timestamp);
@@ -535,7 +538,15 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             endingBlockTimestamp: _endingBlockTimestamp,
           });
           break;
+        
         case 'Finalized':
+
+          if (
+            Number.isInteger(finalizedWindowData.startingBlock) === false || 
+            Number.isInteger(finalizedWindowData.endingBlock) === false
+          )
+            return;
+
           _startingBlockTimestamp = await drizzle.web3.eth
             .getBlock(finalizedWindowData.startingBlock)
             .then((response) => response.timestamp);
@@ -551,6 +562,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           break;
         default:
       }
+
     }
   };
 
@@ -563,6 +575,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         contract.abi,
         contract.address
       );
+
+      if(Number.isInteger(_windowNumber) === false)
+        return;
+
       contractWeb3
         .getPastEvents('priceUpdated', {
           filter: { windowNumber: [_windowNumber + 1, _windowNumber + 2] },
@@ -572,13 +588,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         .then((result) => {
           const initialPrice =
             result.length > 0
-              ? weiToCurrency(result[0].returnValues.price)
+              ? weiToCurrency(result[0].returnValues.price.toString())
               : '0.00';
           let finalPrice = '0.00';
           if (where === 'Finalized') {
             finalPrice =
               result.length > 1
-                ? weiToCurrency(result[1].returnValues.price)
+                ? weiToCurrency(result[1].returnValues.price.toString())
                 : '0.00';
           }
           updatePriceData(where, { initialPrice, finalPrice });
@@ -606,6 +622,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         contract.abi,
         contract.address
       );
+
+      if(isNaN(startingBlock) || isNaN(endingBlock))
+        return;
+
       contractWeb3
         .getPastEvents('newBet', {
           fromBlock: startingBlock,
@@ -621,22 +641,25 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           if (result.length > 0) {
             // poolSize
             _poolSize = result.reduce((acc, current) => {
-              return acc + Number.parseInt(current.returnValues.value);
+              return acc + weiToCurrency(current.returnValues.value.toString());
             }, 0);
+            _poolSize = _poolSize.toFixed(2);
 
             // poolTotalUp
             _poolTotalUp = result
               .filter((key) => Number.parseInt(key.returnValues.side) === 1)
               .reduce((acc, current) => {
-                return acc + Number.parseInt(current.returnValues.value);
+                return acc + weiToCurrency(current.returnValues.value.toString());
               }, 0);
+            _poolTotalUp = _poolTotalUp.toFixed(2);
 
             // poolTotalDown
             _poolTotalDown = result
               .filter((key) => Number.parseInt(key.returnValues.side) === 0)
               .reduce((acc, current) => {
-                return acc + Number.parseInt(current.returnValues.value);
+                return acc + weiToCurrency(current.returnValues.value.toString());
               }, 0);
+            _poolTotalDown = _poolTotalDown.toFixed(2);
 
             // user bet amount and direction
             const currentUser = result.filter(
@@ -644,7 +667,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                 key.returnValues.user.toLowerCase() === ethAccount.toLowerCase()
             );
             if (currentUser.length > 0) {
-              _betAmount = currentUser[0].returnValues.value;
+              _betAmount = weiToCurrency(currentUser[0].returnValues.value.toString()).toFixed(2);
               _betDirection =
                 Number.parseInt(currentUser[0].returnValues.side) === 1
                   ? 'up'
@@ -670,11 +693,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         setOpenedPoolData(
           details.accounts.length > 0
             ? {
-                betAmount: weiToCurrency(details._betAmount.toString()),
+                betAmount: details._betAmount,
                 betDirection: details._betDirection,
-                poolTotalUp: weiToCurrency(details._poolTotalUp.toString()),
-                poolTotalDown: weiToCurrency(details._poolTotalDown.toString()),
-                poolSize: weiToCurrency(details._poolSize.toString()),
+                poolTotalUp: details._poolTotalUp,
+                poolTotalDown: details._poolTotalDown,
+                poolSize: details._poolSize,
               }
             : initPoolData
         );
@@ -686,11 +709,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         setOngoingPoolData(
           details.accounts.length > 0
             ? {
-                betAmount: weiToCurrency(details._betAmount.toString()),
+                betAmount: details._betAmount,
                 betDirection: details._betDirection,
-                poolTotalUp: weiToCurrency(details._poolTotalUp.toString()),
-                poolTotalDown: weiToCurrency(details._poolTotalDown.toString()),
-                poolSize: weiToCurrency(details._poolSize.toString()),
+                poolTotalUp: details._poolTotalUp,
+                poolTotalDown: details._poolTotalDown,
+                poolSize: details._poolSize,
               }
             : initPoolData
         );
@@ -702,11 +725,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         setFinalizedPoolData(
           details.accounts.length > 0
             ? {
-                betAmount: weiToCurrency(details._betAmount.toString()),
+                betAmount: details._betAmount,
                 betDirection: details._betDirection,
-                poolTotalUp: weiToCurrency(details._poolTotalUp.toString()),
-                poolTotalDown: weiToCurrency(details._poolTotalDown.toString()),
-                poolSize: weiToCurrency(details._poolSize.toString()),
+                poolTotalUp: details._poolTotalUp,
+                poolTotalDown: details._poolTotalDown,
+                poolSize: details._poolSize,
               }
             : initPoolData
         );
@@ -720,13 +743,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   const weiToCurrency = (value) => {
     if (!value) return;
-    const valueInCurrency =
-      Math.round(
-        drizzle.web3.utils.fromWei(value, global.config.currencyRequestValue) *
-          100
-      ) / 100;
-
-    return Number(valueInCurrency).toFixed(2);
+    const valueInCurrency = drizzle.web3.utils.fromWei(value, global.config.currencyRequestValue);
+    return parseFloat(valueInCurrency);
   };
 
   const value = {
