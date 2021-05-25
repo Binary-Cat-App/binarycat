@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useMetaMask } from '../context/MataMaskContext';
 import _ from 'lodash';
 
 import io from 'socket.io-client';
@@ -18,10 +17,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     loading: true,
   });
   const [balance, setBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [totalWinnings, setTotalWinnings] = useState(0);
   const [winningPercentage, setWinningPercentage] = useState(0);
   const [balKey, setBalKey] = useState(null);
-  const { ethAccount } = useMetaMask();
   const [currentBlock, setCurrentBlock] = useState(null);
   const [firstBlock, setFirstBlock] = useState(null)
   const [windowDuration, setWindowDuration] = useState(null)
@@ -145,7 +144,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   // Contract Initials
   useEffect(() => {
-    if (drizzleReadinessState.loading === false) {
+    if (
+      drizzleReadinessState.loading === false &&
+      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
+    ) {
       const contract = drizzle.contracts.BinaryBet;
       const web3 = drizzle.web3;
       const contractWeb3 = new web3.eth.Contract(
@@ -177,14 +179,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   useEffect(() => {
     if (
       drizzleReadinessState.loading === false &&
+      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0 &&
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
     ) {
-
-      if(!ethAccount)
-        return;
-
       const contract = drizzle.contracts.BinaryBet;
-      const balKey = contract.methods['getBalance'].cacheCall(ethAccount);
+      const balKey = contract.methods['getBalance'].cacheCall(drizzleReadinessState.drizzleState.accounts[0]);
       const bal =
         drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
           balKey
@@ -195,6 +194,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setBalance(ethBal);
         }
       }
+      setWalletBalance(
+        weiToCurrency(
+          drizzleReadinessState.drizzleState.accountBalances[
+            drizzleReadinessState.drizzleState.accounts[0]
+          ]
+        )
+      );
     }
   }, [
     drizzleReadinessState.loading,
@@ -204,26 +210,24 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   // Calculate Totals
   useEffect(() => {
-    if (drizzleReadinessState.loading === false) {
+    if (
+      drizzleReadinessState.loading === false &&
+      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
+    ) {
       const contract = drizzle.contracts.BinaryBet;
       const web3 = drizzle.web3;
       const contractWeb3 = new web3.eth.Contract(
         contract.abi,
         contract.address
       );
-
-      if(!ethAccount)
-        return;
-
       contractWeb3
         .getPastEvents('betSettled', {
-          filter: { user: ethAccount },
+          filter: { user: drizzleReadinessState.drizzleState.accounts[0] },
           fromBlock: 0,
           toBlock: 'latest',
         })
         .then(function (result) {
           if (result.length > 0) {
-            
             var totalGain = 0;
             result.forEach(
               element => totalGain += weiToCurrency(element.returnValues.gain.toString())
@@ -251,7 +255,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   // Gets Current Blockchain Block
   useEffect(() => {
-    if (drizzleReadinessState.loading === false) {
+    if (
+      drizzleReadinessState.loading === false &&
+      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
+    ) {
       drizzle.web3.eth.getBlock('latest').then((data) => {
         setCurrentBlock({ number: data.number, hash: data.hash });
       });
@@ -615,7 +622,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   };
 
   const updatePoolValuesForWindow = (where, startingBlock, endingBlock) => {
-    if (drizzleReadinessState.loading === false) {
+    if (
+      drizzleReadinessState.loading === false &&
+      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
+    ) {
       const contract = drizzle.contracts.BinaryBet;
       const web3 = drizzle.web3;
       const contractWeb3 = new web3.eth.Contract(
@@ -664,7 +674,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             // user bet amount and direction
             const currentUser = result.filter(
               (key) =>
-                key.returnValues.user.toLowerCase() === ethAccount.toLowerCase()
+                key.returnValues.user.toLowerCase() === drizzleReadinessState.drizzleState.accounts[0].toLowerCase()
             );
             if (currentUser.length > 0) {
               _betAmount = weiToCurrency(currentUser[0].returnValues.value.toString()).toFixed(2);
@@ -752,6 +762,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState,
     currentBlock,
     balance,
+    walletBalance,
     totalWinnings,
     winningPercentage,
     progress,

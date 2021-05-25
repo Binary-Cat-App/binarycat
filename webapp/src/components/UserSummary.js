@@ -2,11 +2,10 @@ import React from 'react';
 import { ReactComponent as IconWinningPercentage } from '../assets/images/icon-winning-percantage.svg';
 import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-total-winnings.svg';
 import { ReactComponent as IconBallance } from '../assets/images/icon-ballance.svg';
-import { useMetaMask } from '../context/MataMaskContext';
 import { useDrizzle } from '../context/DrizzleContext';
 
 export const UserSummary = () => {
-  const { ethAccount } = useMetaMask();
+  
   const { 
     drizzleReadinessState, 
     drizzle,
@@ -14,8 +13,10 @@ export const UserSummary = () => {
     winningPercentage,
     balance,
   } = useDrizzle();
+  
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
+  
   }, [drizzle.contracts]);
 
   return (
