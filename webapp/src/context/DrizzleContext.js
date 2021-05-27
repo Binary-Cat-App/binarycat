@@ -427,7 +427,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setFinalizedWindowChartData(result.result);
         });
     }
-  }, [currentBlock, ongoingWindowTimestamps]);
+  }, [windowNumber, ongoingWindowTimestamps]);
 
   /*
   // Socket for Realtime Currency Rate data
