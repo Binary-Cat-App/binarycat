@@ -4,9 +4,11 @@ import MetaMaskLogo from '../assets/images/metamask.svg';
 import { ModalDeposit } from './ModalDeposit';
 import { ModalWithdraw } from './ModalWithdraw';
 import { useDrizzle } from '../context/DrizzleContext';
+import { useMetaMask } from '../context/MataMaskContext';
 import { Button } from './Button';
 
 export const UserActions = () => {
+  const { ethAccount } = useMetaMask();
   const {
     drizzleReadinessState,
     drizzle,
@@ -19,26 +21,22 @@ export const UserActions = () => {
   }, [drizzle.contracts]);
 
   const handleDeposit = (value) => {
-    if (drizzleReadinessState.drizzleState.accounts) {
-      const eth = parseInt(
-        drizzle.web3.utils.toWei(value, global.config.currencyRequestValue)
-      );
-      contract.methods['deposit'].cacheSend({
-        from: drizzleReadinessState.drizzleState.accounts[0],
-        value: eth,
-      });
-    }
+    const eth = parseInt(
+      drizzle.web3.utils.toWei(value, global.config.currencyRequestValue)
+    );
+    contract.methods['deposit'].cacheSend({
+      from: ethAccount,
+      value: eth,
+    });
   };
   const handleWithdraw = (value) => {
-    if (drizzleReadinessState.drizzleState.accounts) {
-      const eth = drizzle.web3.utils.toWei(
-        value,
-        global.config.currencyRequestValue
-      );
-      contract.methods['withdraw'].cacheSend(eth, {
-        from: drizzleReadinessState.drizzleState.accounts[0],
-      });
-    }
+    const eth = drizzle.web3.utils.toWei(
+      value,
+      global.config.currencyRequestValue
+    );
+    contract.methods['withdraw'].cacheSend(eth, {
+      from: ethAccount,
+    });
   };
 
   return (
