@@ -454,7 +454,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
       
       const today = new Date();
-      const weekbefore = new Date(today.getFullYear(), today.getMonth(), today.getDate()-7);
+      const weekbefore = new Date(today.getFullYear(), today.getMonth(), today.getDate()-2);
       const selectFrom = weekbefore.getTime()/1000;
       
       window
