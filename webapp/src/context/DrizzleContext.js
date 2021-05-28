@@ -454,7 +454,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setHistoricalChartData(result.result);
         });
     }
-  }, []);
+  }, [currentBlock]);
 
   // Socket for Realtime Currency Rate data
   useEffect(() => {
