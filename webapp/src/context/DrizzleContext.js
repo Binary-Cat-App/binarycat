@@ -429,26 +429,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     }
   }, [windowNumber, ongoingWindowTimestamps]);
 
-  // Socket for Realtime Currency Rate data
-  useEffect(() => {
-    const socket = io(global.config.currencyRatesNodeAPI);
-    socket.on(
-      'socket-message', 
-      (payload) => {
-        dataSoc.push(payload.data);
-        setSocketData(dataSoc);
-      }
-    );
-  }, []);
-
-  React.useEffect(() => {
-    if (socketData.length > 0) {
-      const arr = [...ongoingWindowChartData, ...socketData];
-      const unique = _.uniqBy(arr, 'time');
-      setOngoingWindowChartData(unique);
-    }
-  }, [socketData]);
-
   // Combined Chart Data
   React.useEffect(() => {
     if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
@@ -474,7 +454,30 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           setHistoricalChartData(result.result);
         });
     }
-  }, [currentBlock]);
+  }, []);
+
+  // Socket for Realtime Currency Rate data
+  useEffect(() => {
+    const socket = io(global.config.currencyRatesNodeAPI);
+    socket.on(
+      'socket-message', 
+      (payload) => {
+        dataSoc.push(payload.data);
+        setSocketData(dataSoc);
+      }
+    );
+  }, []);
+
+  React.useEffect(() => {
+    if (socketData.length > 0) {
+      const arr = [...ongoingWindowChartData, ...socketData];
+      const arr2 = [...historicalChartData, ...socketData];
+      const unique = _.uniqBy(arr, 'time');
+      const unique2 = _.uniqBy(arr2, 'time');
+      setOngoingWindowChartData(unique);
+      setHistoricalChartData(unique2);
+    }
+  }, [socketData]);
 
   // Progress Bar
   useEffect(() => {
