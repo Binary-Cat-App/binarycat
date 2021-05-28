@@ -30,12 +30,18 @@ io.on("connect", socket => {
 });
 
 async function getPrice() {
-  const rate = await client.getReferenceData([settings.PAIR]);
-  return rate;
+  try {
+    const rate = await client.getReferenceData([settings.PAIR]);
+    return rate;
+  } catch (e) {
+    console.log(e.message)
+    return null
+  }
 }
 
 async function updateDB() {
   let price = await getPrice();
+  if (price === null) return;
   var obj = { rate: price[0].rate, time: price[0].updatedAt.base };
   MongoClient.connect(url, function(err, db) {
     if (err) throw err;
