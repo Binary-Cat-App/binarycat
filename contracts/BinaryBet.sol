@@ -274,8 +274,9 @@ contract BinaryBet {
         }
     }
 
-    function priceOracle() internal returns (uint256 currentPrice){
-        currentPrice =  (uint(keccak256(abi.encodePacked(now)))%20 + 640);
+    function priceOracle() internal returns (uint256){
+        IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
+        return data.rate;
     }
 
     //Getters
