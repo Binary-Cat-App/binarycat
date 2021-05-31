@@ -60,7 +60,6 @@ contract BinaryBet {
     //User variables
     mapping (address => uint) public balance;
     mapping (address => mapping(uint => Pool)) public  userStake;
-    mapping (address => mapping(uint => bool)) public  userBetted;
     mapping (address => uint[]) public userBets;
 
 
@@ -106,7 +105,7 @@ contract BinaryBet {
         stakingAddress = payable(stakingContract);
         staking = BinaryStaking(stakingAddress); 
     }
-//==============================================================================
+
     function deposit() payable external {
         updatePrice();
         balance[msg.sender] = balance[msg.sender].add(msg.value);
@@ -129,8 +128,6 @@ contract BinaryBet {
         updatePrice();
         updateBalance(msg.sender);
                     
-        uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
-        require(!userBetted[msg.sender][windowNumber], "user can only bet one time per window"); 
         require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
 
         //betValue <= balance + msg.value
@@ -141,8 +138,8 @@ contract BinaryBet {
         accumulatedFees = accumulatedFees.add(betFee);
         uint value = betValue.sub(betFee);
 
+        uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         userBets[msg.sender].push(windowNumber);
-        userBetted[msg.sender][windowNumber] = true;
         
         //Update the pool for the window.
         Pool memory oldPool = pools[windowNumber];
@@ -160,30 +157,43 @@ contract BinaryBet {
     function updateBalance(address user) public {
         uint[] storage userWindowsList = userBets[user];
         if(userWindowsList.length == 0) {
+            //No bets to settle
             return;
         }
 
         for(uint i = userWindowsList.length; i > 0; i--) {
             //Maximum number of itens in list is 2, when the user bets on 2 subsequent windows and the first window is not yet settled.
             uint window = userWindowsList[i-1];
-
-            (uint256 referencePrice, uint256 settlementPrice) = getWindowBetPrices(window);
-
-            if(settlementPrice == 0) {
+            uint currentWindow = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
+            if(currentWindow < window + 2) {
+                //window not yet settled
                 continue;
             }
 
+            (uint256 referencePrice, uint256 settlementPrice) = getWindowBetPrices(window);
+            if (settlementPrice == 0 && currentWindow < window + 3) {
+                //price not updated but update still possible.
+                continue;
+            } 
+
+            uint8 result = betResult(referencePrice, settlementPrice);
+            if (referencePrice == 0 || settlementPrice == 0) {
+                //if the price was not updated for the window it is considered a tie and players can get their money back.
+                result = 2;
+            }
+
+            //Remove window from list of unsettled bets.
+            userWindowsList[i-1] = userWindowsList[userWindowsList.length -1];
+            userWindowsList.pop();
+
             Pool memory stake = userStake[user][window];
             Pool memory pool = pools[window];
-            uint8 result = betResult(referencePrice, settlementPrice);
             (uint windowGain, uint fees) = settleBet(stake.upValue, stake.downValue, pool.upValue, pool.downValue, result);
 
             balance[msg.sender] = balance[msg.sender].add(windowGain);
             accumulatedFees = accumulatedFees.add(fees);
 
             emit betSettled(window, user, windowGain);
-            userWindowsList[i-1] = userWindowsList[userWindowsList.length -1];
-            userWindowsList.pop();
         }
 
         if(accumulatedFees > 0) {

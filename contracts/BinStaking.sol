@@ -9,16 +9,17 @@ contract BinaryStaking {
     IERC20 public binToken;
 
     address payable owner;
-    uint MUL_CONST = 1000;
-    event Staked(address user, uint amount);
-    event Unstaked(address user, uint amount);
+    uint constant MUL_CONST = 1000;
     struct StakingAccount {
         uint stakedBin;
-        uint valueWhenLastRelesed; //Global acummulated value of new_rewards/total_staked when user last got rewards. 
+        uint valueWhenLastReleased; //Global accumulated value of new_rewards/total_staked when user last got rewards. 
     }
 
     mapping(address => StakingAccount) stakingBalance;
     uint accumulatedRewards; //(per staked token)
+
+    event Staked(address indexed user, uint amount);
+    event Unstaked(address indexed user, uint amount);
 
     constructor(address token) public {
         owner = msg.sender;
@@ -28,7 +29,7 @@ contract BinaryStaking {
     function receiveFunds() public payable {
         uint value = msg.value;
         if (binToken.balanceOf(address(this)) != 0) {
-            accumulatedRewards = accumulatedRewards.add(value.div(binToken.balanceOf(address(this))).mul(MUL_CONST));
+            accumulatedRewards = accumulatedRewards.add(value.mul(MUL_CONST).div(binToken.balanceOf(address(this))));
         }
         else {
             owner.transfer(value);
@@ -37,15 +38,12 @@ contract BinaryStaking {
 
     function stake(uint amount) external{
         require(amount > 0, "Amount should be greater than 0");
-        uint allowance = binToken.allowance(msg.sender, address(this));
-
         if (stakingBalance[msg.sender].stakedBin != 0) {
             release(msg.sender);
         }
 
         binToken.transferFrom(msg.sender, address(this), amount);
         stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.add(amount);
-        stakingBalance[msg.sender].valueWhenLastRelesed = accumulatedRewards;
 
         emit Staked(msg.sender, amount);
     }
@@ -65,14 +63,16 @@ contract BinaryStaking {
         if (accumulatedRewards == 0){
             return;
         }
-        StakingAccount storage balance = stakingBalance[user];
-        uint amount = (accumulatedRewards.sub(balance.valueWhenLastRelesed)).mul(balance.stakedBin).div(MUL_CONST);
-        
-        accumulatedRewards = accumulatedRewards.sub(amount.div( binToken.balanceOf(address(this))));
-        balance.valueWhenLastRelesed = accumulatedRewards;                                                        
+        uint amount = ownedDividends(user);
+        accumulatedRewards = accumulatedRewards.sub(amount.mul(MUL_CONST).div( binToken.balanceOf(address(this))));
+        stakingBalance[user].valueWhenLastReleased = accumulatedRewards;                                                        
         
         payable(user).transfer(amount);
-        
+    }
+
+    function ownedDividends(address user) public view returns(uint) {
+        StakingAccount memory balance = stakingBalance[user];
+        return ((accumulatedRewards.sub(balance.valueWhenLastReleased)).mul(balance.stakedBin)).div(MUL_CONST);
     }
 
 }
