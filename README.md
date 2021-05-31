@@ -56,6 +56,7 @@ Changes should be reflected on Ganache GUI:
 1. In the project root folder, create '.env' file with the following content. The file is excluded from the GH repo.
 
 > MONGODB_URI=mongodb+srv://binarycatUser:7gb4NntHWlSHETjE@cluster0.a8hop.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+
 > UPDATE_DB=off
 
 2. Make sure to 'npm install' both in the project root and webapp folders
