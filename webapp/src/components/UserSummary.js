@@ -2,11 +2,10 @@ import React from 'react';
 import { ReactComponent as IconWinningPercentage } from '../assets/images/icon-winning-percantage.svg';
 import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-total-winnings.svg';
 import { ReactComponent as IconBallance } from '../assets/images/icon-ballance.svg';
-import { useMetaMask } from '../context/MataMaskContext';
 import { useDrizzle } from '../context/DrizzleContext';
 
 export const UserSummary = () => {
-  const { ethAccount } = useMetaMask();
+  
   const { 
     drizzleReadinessState, 
     drizzle,
@@ -14,8 +13,10 @@ export const UserSummary = () => {
     winningPercentage,
     balance,
   } = useDrizzle();
+  
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
+  
   }, [drizzle.contracts]);
 
   return (
@@ -43,7 +44,7 @@ export const UserSummary = () => {
           <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
             <dt className="leading-none whitespace-no-wrap">Total Winnings</dt>
             <dd className="text-2xl font-black text-green-500 leading-none">
-              {totalWinnings} {global.config.currencyName}
+              {totalWinnings.toFixed(2)} {global.config.currencyName}
             </dd>
           </dl>
         </div>
@@ -56,7 +57,7 @@ export const UserSummary = () => {
           <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
             <dt className="leading-none whitespace-no-wrap">Balance</dt>
             <dd className="text-2xl font-black text-green-500 leading-none">
-              {balance} {global.config.currencyName}
+              {balance.toFixed(2)} {global.config.currencyName}
             </dd>
           </dl>
         </div>

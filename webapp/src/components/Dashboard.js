@@ -1,24 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Bet } from './Bet';
 import { Loading } from './Loading';
-import { UserArea } from './UserArea';
+import { UserSummary } from './UserSummary';
+import { UserActions } from './UserActions';
 import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
 import { useDrizzle } from '../context/DrizzleContext';
-import { useMetaMask } from '../context/MataMaskContext';
 import _ from 'lodash';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
 
 export const Dashboard = () => {
-  const { ethAccount } = useMetaMask();
-
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const {
+    drizzleReadinessState,
     drizzle,
     currentBlock,
     balance,
@@ -210,33 +209,35 @@ export const Dashboard = () => {
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
-    if (Number(value) <= MIN_BET_AMOUNT) {
-      alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
-      return;
+    if (Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0) {
+      if (Number(value) <= MIN_BET_AMOUNT) {
+        alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
+        return;
+      }
+
+      const eth = drizzle.web3.utils.toWei(
+        value,
+        global.config.currencyRequestValue
+      );
+
+      const overBalance = Number(value) > balance ? Number(value) - balance : 0;
+
+      const over = drizzle.web3.utils.toWei(
+        `${overBalance}`,
+        global.config.currencyRequestValue
+      );
+
+      contract.methods
+        .placeBet(eth, direction)
+        .send({
+          from: drizzleReadinessState.drizzleState.accounts[0],
+          value: over,
+        })
+        .on('transactionHash', function (hash) {
+          setIsOpenForBetting(false);
+          setIsBetPlaced(true);
+        });
     }
-
-    const eth = drizzle.web3.utils.toWei(
-      value,
-      global.config.currencyRequestValue
-    );
-
-    const overBalance = Number(value) > balance ? Number(value) - balance : 0;
-
-    const over = drizzle.web3.utils.toWei(
-      `${overBalance}`,
-      global.config.currencyRequestValue
-    );
-
-    contract.methods
-      .placeBet(eth, direction)
-      .send({
-        from: ethAccount,
-        value: over,
-      })
-      .on('transactionHash', function (hash) {
-        setIsOpenForBetting(false);
-        setIsBetPlaced(true);
-      });
   };
   
   return isLoading ? (
@@ -245,7 +246,10 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
-      <UserArea />
+      <div className="flex -mx-4 justify-between items-end mb-8">
+        <UserSummary />
+        <UserActions />
+      </div>
 
       <BetProgressBar completed={progress} />
 

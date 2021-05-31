@@ -1,15 +1,19 @@
 import React from 'react';
+import { useDrizzle } from '../context/DrizzleContext';
 import NumberFormat from 'react-number-format';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { Alert } from './Alert';
-import { useMetaMask } from '../context/MataMaskContext';
 
 export const ModalDeposit = ({ onDeposit }) => {
-  const { balance } = useMetaMask();
   const [showModal, setShowModal] = React.useState(false);
   const [error, setError] = React.useState(false);
   const [value, setValue] = React.useState(false);
+
+  const {
+    drizzleReadinessState,
+    walletBalance
+  } = useDrizzle();
 
   React.useEffect(() => {
     if (showModal === false) setValue(false);
@@ -67,7 +71,7 @@ export const ModalDeposit = ({ onDeposit }) => {
                 className="w-full"
                 handleClick={() => {
                   const val = value.replace(/\s/gi, '');
-                  if (Number(val) > balance) {
+                  if (Number(val) > walletBalance) {
                     setError(true);
                   } else {
                     onDeposit(val);
