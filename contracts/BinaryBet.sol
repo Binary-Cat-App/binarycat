@@ -3,29 +3,30 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 import "./BinToken.sol";
 import "./BinStaking.sol";
 
-interface IStdReference {
+//interface IStdReference {
     /// A structure returned whenever someone requests for standard reference data.
-    struct ReferenceData {
-        uint256 rate; // base/quote exchange rate, multiplied by 1e18.
-        uint256 lastUpdatedBase; // UNIX epoch of the last time when base price gets updated.
-        uint256 lastUpdatedQuote; // UNIX epoch of the last time when quote price gets updated.
-    }
-
-    /// Returns the price data for the given base/quote pair. Revert if not available.
-    function getReferenceData(string calldata _base, string calldata _quote)
-        external
-        view
-        returns (ReferenceData memory);
+    //struct ReferenceData {
+        //uint256 rate; // base/quote exchange rate, multiplied by 1e18.
+        //uint256 lastUpdatedBase; // UNIX epoch of the last time when base price gets updated.
+        //uint256 lastUpdatedQuote; // UNIX epoch of the last time when quote price gets updated.
+    //}
+//
+    ///// Returns the price data for the given base/quote pair. Revert if not available.
+    //function getReferenceData(string calldata _base, string calldata _quote)
+        //external
+        //view
+        //returns (ReferenceData memory);
 
     /// Similar to getReferenceData, but with multiple base/quote pairs at once.
-    function getReferenceDataBulk(string[] calldata _bases, string[] calldata _quotes)
-        external
-        view
-        returns (ReferenceData[] memory);
-}
+    //function getReferenceDataBulk(string[] calldata _bases, string[] calldata _quotes)
+        //external
+        //view
+        //returns (ReferenceData[] memory);
+//}
 
 
 //SPDX-License-Identifier: UNLICENSED
@@ -42,7 +43,8 @@ contract BinaryBet {
     }
 
     //Betting parameters
-    IStdReference oracle;
+    //IStdReference oracle;
+    AggregatorV3Interface internal priceFeed;  
     address governance;
     uint public fee;
     uint public windowDuration; //in blocks
@@ -78,7 +80,8 @@ contract BinaryBet {
 
     constructor(uint _windowDuration, uint _fee) public {
         require(_fee <= 100);
-        oracle = IStdReference(address(0xDA7a001b254CD22e46d3eAB04d937489c93174C3));
+        //oracle = IStdReference(address(0xDA7a001b254CD22e46d3eAB04d937489c93174C3));
+        priceFeed = AggregatorV3Interface(0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526);
         firstBlock = block.number;
         windowDuration = _windowDuration;
 
@@ -275,8 +278,16 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256){
-        IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
-        return data.rate;
+        //IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
+        (
+            uint80 roundID, 
+            int price,
+            uint startedAt,
+            uint timeStamp,
+            uint80 answeredInRound
+        ) = priceFeed.latestRoundData();
+        return uint256(price);
+        //return data.rate;
     }
 
     //Getters
