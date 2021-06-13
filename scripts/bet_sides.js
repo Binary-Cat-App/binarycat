@@ -10,12 +10,12 @@ async function deployAll(contract) {
     let blockNumber = block.number
     let windowNumber = await contract.getWindowNumber(blockNumber, duration, firstBlock, offset, firstWindow);
 
-    let val = "100000000000000000"
+    let val = "10000000000000000"
 
     let price = await contract.windowPrice(windowNumber)
     if (price == 0) {
-        await contract.placeBet(val, 0, {value: val})
-        await contract.placeBet(val, 1, {value: val})
+        await contract.placeBet(val, 0)
+        await contract.placeBet(val, 1)
         console.log('bets placed')
     }
     else {
