@@ -63,6 +63,7 @@ contract BinaryBet {
     mapping (address => uint) public balance;
     mapping (address => mapping(uint => Pool)) public  userStake;
     mapping (address => uint[]) public userBets;
+    mapping (address => mapping(uint => bool)) userBetted;
 
 
     //EVENTS
@@ -142,7 +143,11 @@ contract BinaryBet {
         uint value = betValue.sub(betFee);
 
         uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
-        userBets[msg.sender].push(windowNumber);
+        if(!userBetted[msg.sender][windowNumber]) {
+            //only adds the bet to the list if it is the first time the user bets at the window
+            userBets[msg.sender].push(windowNumber);
+            userBetted[msg.sender][windowNumber] = true;
+        }
         
         //Update the pool for the window.
         Pool memory oldPool = pools[windowNumber];
@@ -280,11 +285,11 @@ contract BinaryBet {
     function priceOracle() internal returns (uint256){
         //IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
         (
-            uint80 roundID, 
+             , 
             int price,
-            uint startedAt,
-            uint timeStamp,
-            uint80 answeredInRound
+             ,
+             ,
+             
         ) = priceFeed.latestRoundData();
         return uint256(price);
         //return data.rate;
@@ -307,5 +312,13 @@ contract BinaryBet {
 
     function getWindowBetPrices(uint window) public view returns(uint256, uint256) {
         return (windowPrice[window+1], windowPrice[window+2]);
+    }
+
+    function getUserBetList(address user, uint index) public view returns (uint) {
+         return userBets[user][index];
+    }
+
+    function betListLen(address user) public view returns (uint) {
+        return userBets[user].length;
     }
 }
