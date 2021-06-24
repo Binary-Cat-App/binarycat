@@ -1,8 +1,4 @@
 {
-  "engines": {
-    "node": ">=14.12.0",
-    "npm": ">=6.14.0"
-  },
   "scripts": {
     "heroku-prebuild": "bash heroku-prebuild.sh",
     "start": "node --optimize_for_size --max_old_space_size=460 --gc_interval=100 backend/index.js",

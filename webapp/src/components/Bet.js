@@ -25,10 +25,10 @@ export const Bet = ({
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
   
-  const _isWon = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice > initialPrice ) ||
-                 ( status === 'finalized' && betDirectionContract === 'down' && finalPrice < initialPrice );
-  const _isLost = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice < initialPrice ) ||
-                  ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > initialPrice );
+  const _isWon = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice > 0 && initialPrice > 0 && finalPrice > initialPrice ) ||
+                 ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice );
+  const _isLost = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice ) ||
+                  ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > 0 && initialPrice > 0 && finalPrice > initialPrice );
 
 
   React.useEffect(() => {
