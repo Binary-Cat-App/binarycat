@@ -29,11 +29,21 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
           </div>
           {error && <Alert color="red">Not enough balance!</Alert>}
           <div className="min-w-0 flex items-center mb-4 py-2 px-4 bg-gray-100 rounded">
+            
+            <Button 
+              handleClick={() => {
+                setValue(balance);
+              }}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-normal py-1 px-2 border border-gray-400 rounded shadow outline-none"
+            >
+              max
+            </Button>
+
             <NumberFormat
               thousandSeparator=" "
               decimalSeparator="."
-              decimalScale="2"
-              fixedDecimalScale="2"
+              decimalScale="10"
+              fixedDecimalScale="true"
               allowNegative="false"
               autoFocus
               className="form-control font-digits text-xl border-0 bg-transparent text-center"
@@ -46,6 +56,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
             <label htmlFor="betAmount" className="ml-2 text-lg flex-shrink-0">
               {global.config.currencyName}
             </label>
+
           </div>
           <div className="flex items-center -mx-2">
             <div className="px-2 flex-grow">
@@ -63,7 +74,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
                 variant="blue"
                 className="w-full"
                 handleClick={() => {
-                  const val = value.replace(/\s/gi, '');
+                  const val = value.toString().replace(/\s/gi, '');
                   if (Number(val) > balance) {
                     setError(true);
                   } else {
