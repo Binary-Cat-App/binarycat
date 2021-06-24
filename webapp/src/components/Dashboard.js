@@ -288,8 +288,12 @@ export const Dashboard = () => {
           </TransitionGroup>
         </div>
       </div>
-
-      <div className="bg-white rounded-3xl mt-6 px-4">
+      
+      <div className={`flex flex-row p-5 text-xs text-gray-300`}>
+        <span className={`mr-2`}>*</span><span>There may be a discrepancy between initial/final prices and prices shown on the graph. The graph is just for illustration purpose, the official prices, used to settle the bets, are the initial/final prices collected from the Chainlink onchain API</span>
+      </div>
+      
+      <div className="bg-white rounded-3xl mt-2 px-4">
         <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>
     </>

@@ -30,5 +30,6 @@
 @import './components/_icon';
 @import './components/_transition';
 @import './components/_progress-bar';
+@import './components/_tooltip';
 
 @tailwind utilities;
