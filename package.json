@@ -24,6 +24,7 @@
     "truffle": "^5.1.60"
   },
   "dependencies": {
+    "webpack": "^4.44.2",
     "@bandprotocol/bandchain.js": "^1.2.1",
     "@chainlink/contracts": "^0.1.7",
     "@openzeppelin/contracts": "^3.3.0",
