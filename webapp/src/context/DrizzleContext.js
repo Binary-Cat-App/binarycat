@@ -598,13 +598,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         .then((result) => {
           const initialPrice =
             result.length > 0
-              ? weiToCurrency(result[0].returnValues.price.toString())
+              ? weiToCurrency((result[0].returnValues.price * 10000000000).toString())
               : '0.00';
           let finalPrice = '0.00';
           if (where === 'Finalized') {
             finalPrice =
               result.length > 1
-                ? weiToCurrency(result[1].returnValues.price.toString())
+                ? weiToCurrency((result[1].returnValues.price  * 10000000000).toString())
                 : '0.00';
           }
           updatePriceData(where, { initialPrice, finalPrice });

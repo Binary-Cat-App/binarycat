@@ -88,7 +88,7 @@ export const Bet = ({
                     !initialPrice && 'text-gray-200'
                   }`}
                 >
-                  {initialPrice ? initialPrice : '?'}
+                  {initialPrice ? parseFloat(initialPrice).toFixed(2) : '?'}
                 </span>
               </div>
             </div>
@@ -106,7 +106,7 @@ export const Bet = ({
                     !finalPrice && 'text-gray-200'
                   }`}
                 >
-                  {finalPrice ? finalPrice : '?'}
+                  {finalPrice ? parseFloat(finalPrice).toFixed(2) : '?'}
                 </span>
               </div>
             </div>
