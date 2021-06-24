@@ -29,7 +29,8 @@ export const Bet = ({
                  ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice );
   const _isLost = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice ) ||
                   ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > 0 && initialPrice > 0 && finalPrice > initialPrice );
-
+  
+  const _endingBlock = ( endingBlock ) ? endingBlock.toString() : '';
 
   React.useEffect(() => {
     setBetDirection(betDirectionContract);
@@ -65,7 +66,7 @@ export const Bet = ({
             { _isLost && (<span className="animate-pulse bg-gray-200 text-white px-3 py-1 ml-2 rounded-full">Losе</span>) }
           </h2>
           <p className="text-sm text-gray-300 text-center">
-            Last Block# {endingBlock}
+            Last Block# {_endingBlock.slice(0, _endingBlock.length-3)}<span className="text-gray-600 font-medium">{_endingBlock.slice(-3)}</span>
           </p>
         </div>
 

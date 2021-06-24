@@ -299,6 +299,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     );
     const openedWindowStartingBlock =
       firstBlock + (openedWindow - 1) * windowDuration;
+    const openedWindowEndingBlock = Math.floor(
+      firstBlock + openedWindow * windowDuration - 1
+    );
 
     // Reset data
     if (openedWindowStartingBlock === currentBlock.number) {
@@ -313,7 +316,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     setOpenedWindowData({
       windowNumber: openedWindow,
       startingBlock: openedWindowStartingBlock,
-      endingBlock: currentBlock.number,
+      endingBlock: openedWindowEndingBlock,
     });
 
     updatePoolValuesForWindow(
