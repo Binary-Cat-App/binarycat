@@ -1,7 +1,7 @@
 {
   "engines": {
-    "node": ">=14.16.0",
-    "npm": ">=6.14.0"
+    "node": ">=16.x",
+    "npm": ">=6.x"
   },
   "scripts": {
     "heroku-prebuild": "bash heroku-prebuild.sh",
