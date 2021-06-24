@@ -24,6 +24,12 @@ export const Bet = ({
 }) => {
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
+  
+  const _isWon = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice > initialPrice ) ||
+                 ( status === 'finalized' && betDirectionContract === 'down' && finalPrice < initialPrice );
+  const _isLost = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice < initialPrice ) ||
+                  ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > initialPrice );
+
 
   React.useEffect(() => {
     setBetDirection(betDirectionContract);
@@ -47,12 +53,16 @@ export const Bet = ({
 
   return (
     <div className="w-1/3 px-4 flex-shrink-0">
-      <div className="bg-white p-4 sm:p-6 h-full flex flex-col relative rounded-3xl">
+
+      <div className={`${ ( _isWon ) ? 'border-2 border-yellow-300' : ( _isLost ) ? 'border-2 border-gray-100' : '' } bg-white p-4 sm:p-6 h-full flex flex-col relative rounded-3xl`}>
+
         <div className="mb-3">
           <h2 className="text-center text-2xl font-medium">
             {status === 'finalized' && 'Finalized'}
             {status === 'ongoing' && 'Ongoing'}
             {status === 'open' && 'Open for betting'}
+            { _isWon && (<span className="animate-pulse bg-yellow-500 text-white px-3 py-1 ml-2 rounded-full">Win</span>) }
+            { _isLost && (<span className="animate-pulse bg-gray-200 text-white px-3 py-1 ml-2 rounded-full">Losе</span>) }
           </h2>
           <p className="text-sm text-gray-300 text-center">
             Last Block# {endingBlock}
@@ -142,22 +152,8 @@ export const Bet = ({
             <BetPlaced
               betAmountContract={betAmountContract}
               betDirectionContract={betDirectionContract}
-              isWon={
-                (status === 'finalized' &&
-                  betDirectionContract === 'up' &&
-                  finalPrice > initialPrice) ||
-                (status === 'finalized' &&
-                  betDirectionContract === 'down' &&
-                  finalPrice < initialPrice)
-              }
-              isLost={
-                (status === 'finalized' &&
-                  betDirectionContract === 'up' &&
-                  finalPrice < initialPrice) ||
-                (status === 'finalized' &&
-                  betDirectionContract === 'down' &&
-                  finalPrice > initialPrice)
-              }
+              isWon={_isWon}
+              isLost={_isLost}
             />
           </div>
         </div>
