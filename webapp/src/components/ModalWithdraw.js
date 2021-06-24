@@ -74,10 +74,11 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
                 variant="blue"
                 className="w-full"
                 handleClick={() => {
-                  const val = Number( value.toString().replace(/\s/gi, '') );
-                  
-                  if(val > 0 ) {
-                    if ( val > balance ) {
+                  const val = value.toString().replace(/\s/gi, '');
+                  const _val = Number( val );
+
+                  if( _val > 0 ) {
+                    if ( _val > balance ) {
                       setError(true);
                     } else {
                       onWithdraw(val);
