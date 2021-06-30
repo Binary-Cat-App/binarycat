@@ -57,6 +57,12 @@ Changes should be reflected on Ganache GUI:
 
 > MONGODB_URI=mongodb+srv://binarycatUser:7gb4NntHWlSHETjE@cluster0.a8hop.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 
+> CURRENCY_FEED_URL=https://data-seed-prebsc-1-s1.binance.org:8545
+
+> CURRENCY_FEED_CONTRACT_ADDRESS=0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526
+
+> CURRENCY_FEED_INTERVAL=30000
+
 > UPDATE_DB=off
 
 2. Make sure to 'npm install' both in the project root and webapp folders
