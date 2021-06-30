@@ -23,7 +23,7 @@ function updateDB( data ) {
   const price = data.answer / 100000000;
   const time = data.startedAt;
   
-  var obj = { rate: price.toFixed(4), time: time };
+  var obj = { rate: parseFloat(price.toFixed(4)), time: parseInt(time) };
 
   MongoClient.connect(url, function(err, db) {
     if (err) throw err;
