@@ -29,6 +29,9 @@ export const Bet = ({
                  ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice );
   const _isLost = ( status === 'finalized' && betDirectionContract === 'up' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice ) ||
                   ( status === 'finalized' && betDirectionContract === 'down' && finalPrice > 0 && initialPrice > 0 && finalPrice > initialPrice );
+
+  const _isUp = ( status === 'finalized' && finalPrice > 0 && initialPrice > 0 && finalPrice > initialPrice );
+  const _isDown = ( status === 'finalized' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice );
   
   const _endingBlock = ( endingBlock ) ? endingBlock.toString() : '';
 
@@ -83,7 +86,7 @@ export const Bet = ({
           )}
         </div>
 
-        <div className="bg-white px-2 py-4 -mx-2 shadow-lg my-4 rounded-lg">
+        <div className={`${ ( _isUp ) ? 'bg-green-100' : ( _isDown ) ? 'bg-red-100' : 'bg-white' } px-2 py-4 -mx-2 shadow-lg my-4 rounded-lg`}>
           <div className="flex -mx-2">
             <div className="px-2 w-1/2">
               <div className="flex flex-col items-center border-r">

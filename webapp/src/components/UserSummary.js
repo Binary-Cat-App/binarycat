@@ -28,7 +28,7 @@ export const UserSummary = () => {
           </span>
           <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
             <dt className="leading-none whitespace-no-wrap">
-              Winning percentage
+              Winning Percentage
             </dt>
             <dd className="text-2xl font-black text-green-500 leading-none">
               {winningPercentage} %
