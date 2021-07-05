@@ -14,19 +14,22 @@ module.exports = app => {
       settings.dbURL,
       { useUnifiedTopology: true, useNewUrlParser: true },
       (err, db) => {
+        
         if (err) throw err;
         var dbo = db.db(settings.database);
+        
         dbo
           .collection(settings.collection)
-          .find(
-            { time: { $gte: Number(from), $lte: Number(to) } },
-            async (err, cursor) => {
+          .find( { time: { $gte: Number(from), $lte: Number(to) } } )
+          .sort( { time: -1 } )
+          .limit(settings.currencyResultLimit)
+          .toArray(function (err, result) {
               if (err) throw err;
-              const result = await cursor.toArray();
+              console.log(result);
               db.close();
               res.json({ success: true, result });
-            }
-          );
+          });
+      
       }
     );
   });
