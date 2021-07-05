@@ -16,7 +16,6 @@ const io = socketIo(http, {
 });
 
 var MongoClient = require("mongodb").MongoClient;
-var url = settings.db;
 
 require("./config/express")(app);
 require("./routes")(app);
@@ -49,22 +48,58 @@ function updateDB( data ) {
   
   var obj = { rate: parseFloat(price.toFixed(4)), time: parseInt(time) };
 
-  MongoClient.connect(url, function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("pricedb");
-    dbo.collection("BNBUSD").insertOne(obj, async (err, cursor) => {
-      if (err) throw err;
-      console.log("1 document inserted");
-      db.close();
-      sockets.forEach(s => {
-        s.emit("socket-message", { data: obj });
-      });
+  if ( process.env.UPDATE_DB === 'off' ) {
+    sockets.forEach(s => {
+      s.emit("socket-message", { data: obj });
     });
-  });
+  }
+  else {
+    MongoClient.connect(
+      settings.dbURL,
+      { useUnifiedTopology: true, useNewUrlParser: true },
+      (err, db) => {
+        if (err) throw err;
+        var dbo = db.db(settings.database);
+        dbo
+          .collection(settings.collection)
+          .find(
+            obj,
+            async (err, cursor) => {
+              
+              if (err) throw err;
+              
+              const result = await cursor.toArray();
+
+              if( result.length == 0) {
+                MongoClient.connect(
+                  settings.dbURL, 
+                  function(err, db) {
+                    
+                    if (err) throw err;
+                    var dbo = db.db(settings.database);
+                    
+                    dbo.collection(settings.collection).insertOne(obj, async (err, cursor) => {
+                      if (err) throw err;
+                      console.log("1 document inserted");
+                      db.close();
+                      
+                      sockets.forEach(s => {
+                        s.emit("socket-message", { data: obj });
+                      });
+
+                    });
+                });
+              }
+
+              db.close();
+            }
+          );
+      }
+    );
+  }
 }
 
-if ( process.env.UPDATE_DB !== 'off' )
-  var timer = setInterval(getPrice, settings.INTERVAL);
+var timer = setInterval(getPrice, settings.INTERVAL);
 
 http.listen(settings.port, () =>
   console.log(`Server listening on port ${settings.port}...`)

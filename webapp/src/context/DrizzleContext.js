@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import _ from 'lodash';
 
 import io from 'socket.io-client';
@@ -8,8 +8,6 @@ const DrizzleContext = createContext();
 export const useDrizzle = () => {
   return useContext(DrizzleContext);
 };
-
-const dataSoc = [];
 
 export const DrizzleProvider = ({ drizzle, children }) => {
   const [drizzleReadinessState, setDrizzleReadinessState] = useState({
@@ -123,6 +121,17 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const initAccountsData = {
     accounts: 0,
   };
+
+  const usePrevious = (value) => {
+    const ref = useRef();
+    useEffect(() => {
+      ref.current = value;
+    });
+    return ref.current;
+  };
+
+  const prevOpenedWindowTimestamps = usePrevious( openedWindowTimestamps );
+  const prevOngoingWindowTimestamps = usePrevious( ongoingWindowTimestamps );
 
   // Drizzle Readiness State
   useEffect(() => {
@@ -308,6 +317,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       setOpenedPoolData(initPoolData);
       setIsOpenForBetting(true);
       setIsBetPlaced(false);
+      setOngoingWindowChartData([]);
     }
 
     // Current Window Number
@@ -391,7 +401,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   // Charts Data
   useEffect(() => {
-    if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
+    if (
+          openedWindowTimestamps.startingBlockTimestamp !== 0 &&
+          openedWindowTimestamps.startingBlockTimestamp !== prevOpenedWindowTimestamps.startingBlockTimestamp &&
+          openedWindowTimestamps.startingBlockTimestamp !== openedWindowTimestamps.endingBlockTimestamp
+    ) {
       window
         .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
@@ -406,13 +420,19 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         })
         .then((res) => res.json())
         .then((result) => {
-          setOngoingWindowChartData(result.result);
+          if(result.result.length > 0) {
+            setOngoingWindowChartData(result.result);
+          }
         });
     }
   }, [windowNumber, openedWindowTimestamps]);
 
   useEffect(() => {
-    if (ongoingWindowTimestamps.startingBlockTimestamp !== 0) {
+    if (
+          ongoingWindowTimestamps.startingBlockTimestamp !== 0 &&
+          ongoingWindowTimestamps.endingBlockTimestamp !== prevOngoingWindowTimestamps.endingBlockTimestamp &&
+          ongoingWindowTimestamps.startingBlockTimestamp !== ongoingWindowTimestamps.endingBlockTimestamp
+    ) {
       window
         .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
@@ -427,46 +447,52 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         })
         .then((res) => res.json())
         .then((result) => {
-          setFinalizedWindowChartData(result.result);
+          if(result.result.length > 0) {
+            setFinalizedWindowChartData(result.result);
+          }
         });
     }
   }, [windowNumber, ongoingWindowTimestamps]);
 
   // Combined Chart Data
   React.useEffect(() => {
-    if (openedWindowTimestamps.startingBlockTimestamp !== 0) {
-      
-      const today = new Date();
-      const weekbefore = new Date(today.getFullYear(), today.getMonth(), today.getDate()-2);
-      const selectFrom = weekbefore.getTime()/1000;
-      
-      window
-        .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
-          method: 'post',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: selectFrom,
-            to: openedWindowTimestamps.endingBlockTimestamp,
-          }),
-        })
-        .then((res) => res.json())
-        .then((result) => {
+
+    const today = new Date();
+    const nextdate = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1);
+    const prevdate = new Date(today.getFullYear(), today.getMonth(), today.getDate()-1);
+    const selectFrom = prevdate.getTime()/1000;
+    const selectTo = nextdate.getTime()/1000;
+
+    window
+      .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
+        method: 'post',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: selectFrom,
+          to: selectTo,
+        }),
+      })
+      .then((res) => res.json())
+      .then((result) => {
+        if(result.result.length > 0) {
           setHistoricalChartData(result.result);
-        });
-    }
-  }, [currentBlock]);
+        }
+      });
+
+  }, []);
 
   // Socket for Realtime Currency Rate data
-  useEffect(() => {
+  React.useEffect(() => {
     const socket = io(global.config.currencyRatesNodeAPI);
     socket.on(
       'socket-message', 
       (payload) => {
-        dataSoc.push(payload.data);
-        setSocketData(dataSoc);
+        if ( payload.data ) {
+          setSocketData([payload.data]);
+        }
       }
     );
   }, []);

@@ -3,7 +3,6 @@ const express = require('express');
 var MongoClient = require("mongodb").MongoClient;
 const moment = require("moment");
 const settings = require("../config/settings");
-var url = settings.db;
 
 module.exports = app => {
   // Serve static files from the React app
@@ -12,13 +11,13 @@ module.exports = app => {
   app.post("/api/prices", (req, res) => {
     const { from, to } = req.body;
     MongoClient.connect(
-      url,
+      settings.dbURL,
       { useUnifiedTopology: true, useNewUrlParser: true },
       (err, db) => {
         if (err) throw err;
-        var dbo = db.db("pricedb");
+        var dbo = db.db(settings.database);
         dbo
-          .collection("BNBUSD")
+          .collection(settings.collection)
           .find(
             { time: { $gte: Number(from), $lte: Number(to) } },
             async (err, cursor) => {
