@@ -25,7 +25,6 @@ module.exports = app => {
           .limit(settings.currencyResultLimit)
           .toArray(function (err, result) {
               if (err) throw err;
-              console.log(result);
               db.close();
               res.json({ success: true, result });
           });
