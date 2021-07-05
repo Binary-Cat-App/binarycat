@@ -78,14 +78,17 @@ function updateDB( data ) {
                     if (err) throw err;
                     var dbo = db.db(settings.database);
                     
-                    dbo.collection(settings.collection).insertOne(obj, async (err, cursor) => {
-                      if (err) throw err;
-                      console.log("1 document inserted");
-                      db.close();
-                      
-                      sockets.forEach(s => {
-                        s.emit("socket-message", { data: obj });
-                      });
+                    dbo
+                      .collection(settings.collection)
+                      .insertOne(obj, async (err, cursor) => {
+                        
+                        if (err) throw err;
+                        console.log("1 document inserted");
+                        db.close();
+                        
+                        sockets.forEach(s => {
+                          s.emit("socket-message", { data: obj });
+                        });
 
                     });
                 });
