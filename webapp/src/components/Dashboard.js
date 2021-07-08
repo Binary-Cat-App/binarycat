@@ -21,6 +21,7 @@ export const Dashboard = () => {
     drizzle,
     currentBlock,
     balance,
+    unsettledGains,
     progress,
     isOpenForBetting,
     setIsOpenForBetting,

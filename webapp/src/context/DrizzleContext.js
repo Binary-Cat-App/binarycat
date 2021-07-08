@@ -15,6 +15,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     loading: true,
   });
   const [balance, setBalance] = useState(0);
+  const [unsettledGains, setUnsettledGains] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [totalWinnings, setTotalWinnings] = useState(0);
   const [winningPercentage, setWinningPercentage] = useState(0);
@@ -192,17 +193,25 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
     ) {
       const contract = drizzle.contracts.BinaryBet;
-      const balKey = contract.methods['getBalance'].cacheCall(drizzleReadinessState.drizzleState.accounts[0]);
+      
+      const balKey = 
+        contract.methods['getBalance'].cacheCall(
+          drizzleReadinessState.drizzleState.accounts[0]
+        );
       const bal =
         drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
           balKey
         ];
+      
       if (bal) {
         if (bal.value) {
           const ethBal = weiToCurrency(bal.value.toString());
+          // User SmartContract Balance
           setBalance(ethBal);
         }
       }
+
+      // User Personal Wallet
       setWalletBalance(
         weiToCurrency(
           drizzleReadinessState.drizzleState.accountBalances[
@@ -210,6 +219,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           ]
         )
       );
+
     }
   }, [
     drizzleReadinessState.loading,
@@ -223,12 +233,136 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       drizzleReadinessState.loading === false &&
       Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
     ) {
+
       const contract = drizzle.contracts.BinaryBet;
       const web3 = drizzle.web3;
       const contractWeb3 = new web3.eth.Contract(
         contract.abi,
         contract.address
       );
+
+      var unsettledUserBets = 0;
+      var unsettledUserWins = 0;
+      var unsettledUserGains = 0;
+
+      const unsettledBetsCountKey = 
+        contract.methods['betListLen'].cacheCall(
+          drizzleReadinessState.drizzleState.accounts[0]
+        );
+      const unsettledBetsCount =
+        drizzleReadinessState.drizzleState.contracts.BinaryBet.betListLen[
+          unsettledBetsCountKey
+        ];
+      
+      if (unsettledBetsCount) {
+        if (unsettledBetsCount.value > 0) {
+          
+          // unsettledBetsCount.value is the length of the unsettledBets array
+          console.log("User Unsettled Bets regardless the WindowPrices:", unsettledBetsCount.value);
+
+          for (let i = 0; i < unsettledBetsCount.value; i++) {
+
+            const userBetListKey = 
+              contract.methods['getUserBetList'].cacheCall(
+                drizzleReadinessState.drizzleState.accounts[0],
+                i
+              );
+            const userBetList =
+              drizzleReadinessState.drizzleState.contracts.BinaryBet.getUserBetList[
+                userBetListKey
+              ];
+            
+            if (userBetList) {
+              if (userBetList.value > 0) {
+                
+                // userBetList.value is BettingWindow #
+
+                const windowBetPricesKey = 
+                  contract.methods['getWindowBetPrices'].cacheCall(
+                    userBetList.value
+                  );
+                const windowBetPrices =
+                  drizzleReadinessState.drizzleState.contracts.BinaryBet.getWindowBetPrices[
+                    windowBetPricesKey
+                  ];
+
+                if (windowBetPrices) {
+                  if (windowBetPrices.value) {
+                    const prices = Object.values(windowBetPrices.value)
+                    
+                    if( prices[0] !== 0 && prices[1] !== 0) {
+
+                      unsettledUserBets = unsettledUserBets + 1;
+
+                      const userStakeKey = 
+                        contract.methods['getUserStake'].cacheCall(
+                          userBetList.value,
+                          drizzleReadinessState.drizzleState.accounts[0]
+                        );
+                      const userStake =
+                        drizzleReadinessState.drizzleState.contracts.BinaryBet.getUserStake[
+                          userStakeKey
+                        ];
+
+                      // 0 = Down, 1 = Up
+                      const priceDirection = ( prices[0] < prices[1] ) ? 1 : 0 ;
+                      
+                      if (userStake) {
+                        if (userStake.value) {
+                          const userBet = Object.values(userStake.value);
+                          userBet[0] = weiToCurrency(userBet[0].toString());
+                          userBet[1] = weiToCurrency(userBet[1].toString());
+
+                          if (userBet[priceDirection] !== 0) {
+                            
+                            unsettledUserWins = unsettledUserWins + 1;
+
+                            const windowPoolValuesKey = 
+                              contract.methods['getPoolValues'].cacheCall(
+                                userBetList.value
+                              );
+                            const windowPoolValues =
+                              drizzleReadinessState.drizzleState.contracts.BinaryBet.getPoolValues[
+                                windowPoolValuesKey
+                              ];
+
+                            if (windowPoolValues) {
+                              if (windowPoolValues.value) {
+                                const poolValues = Object.values(windowPoolValues.value);
+                                poolValues[0] = weiToCurrency(poolValues[0].toString());
+                                poolValues[1] = weiToCurrency(poolValues[1].toString());
+                                
+                                const poolTotal = poolValues[0] + poolValues[1];
+                                const gain = ( userBet[priceDirection] * poolTotal ) / poolValues[priceDirection];
+                                unsettledUserGains = unsettledUserGains + gain;
+                              }
+                            }
+
+                          }
+
+                        }
+                      }
+
+                    }
+
+                  }
+                }
+
+              }
+            }
+
+          }
+
+        }
+      }
+
+      console.log("Unsettled Bets for Windows with available Initial/Final prices: ", unsettledUserBets);
+      console.log("Unsettled Wins for Windows with available Initial/Final prices: ", unsettledUserWins);
+      console.log("Unsettled Gains for Windows with available Initial/Final prices: ", unsettledUserGains);
+      console.log("------");
+      
+      setUnsettledGains(unsettledUserGains);
+
       contractWeb3
         .getPastEvents('betSettled', {
           filter: { user: drizzleReadinessState.drizzleState.accounts[0] },
@@ -242,7 +376,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
               element => totalGain += weiToCurrency(element.returnValues.gain.toString())
             );
 
-            setTotalWinnings(totalGain);
+            setTotalWinnings(totalGain + unsettledUserGains);
 
             const wins = result.filter(
               (key) => weiToCurrency(key.returnValues.gain.toString()) > 0
@@ -250,11 +384,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
             if (wins.length > 0) {
               setWinningPercentage(
-                Number((wins.length / result.length) * 100).toFixed(2)
+                Number( 
+                  ( ( wins.length + unsettledUserWins ) / ( result.length + unsettledUserBets ) ) * 100
+                ).toFixed(2)
               );
             }
           }
         });
+
     }
   }, [
     drizzleReadinessState.loading,
@@ -794,6 +931,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState,
     currentBlock,
     balance,
+    unsettledGains,
     walletBalance,
     totalWinnings,
     winningPercentage,

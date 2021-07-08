@@ -12,11 +12,13 @@ export const UserSummary = () => {
     totalWinnings,
     winningPercentage,
     balance,
+    unsettledGains
   } = useDrizzle();
   
+  const _balance = balance + unsettledGains;
+
   const contract = React.useMemo(() => {
     return drizzle.contracts.BinaryBet;
-  
   }, [drizzle.contracts]);
 
   return (
@@ -57,7 +59,7 @@ export const UserSummary = () => {
           <dl className="px-8 py-3 pl-12  bg-white rounded-r-3xl">
             <dt className="leading-none whitespace-no-wrap">Balance</dt>
             <dd className="text-2xl font-black text-green-500 leading-none">
-              {balance.toFixed(2)} {global.config.currencyName}
+              {_balance.toFixed(2)} {global.config.currencyName}
             </dd>
           </dl>
         </div>
