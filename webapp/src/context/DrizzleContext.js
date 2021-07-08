@@ -290,6 +290,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                 if (windowBetPrices) {
                   if (windowBetPrices.value) {
                     const prices = Object.values(windowBetPrices.value)
+                    prices[0] = weiToCurrency(prices[0].toString());
+                    prices[1] = weiToCurrency(prices[1].toString());
+
+                    console.log("Window Initial Price: ", prices[0]);
+                    console.log("Window Final Price: ", prices[1]);
                     
                     if( prices[0] !== 0 && prices[1] !== 0) {
 
@@ -307,6 +312,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
                       // 0 = Down, 1 = Up
                       const priceDirection = ( prices[0] < prices[1] ) ? 1 : 0 ;
+
+                      console.log("Window Price Direction: ", (priceDirection === 1) ? 'Up' : 'Down');
                       
                       if (userStake) {
                         if (userStake.value) {
