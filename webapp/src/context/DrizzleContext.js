@@ -207,7 +207,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         if (bal.value) {
           const ethBal = weiToCurrency(bal.value.toString());
           // User SmartContract Balance
-          setBalance(ethBal);
+          setBalance(ethBal + unsettledGains);
         }
       }
 
@@ -225,6 +225,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState.loading,
     drizzle.web3,
     drizzleReadinessState.drizzleState,
+    unsettledGains
   ]);
 
   // Calculate Totals
@@ -931,7 +932,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState,
     currentBlock,
     balance,
-    unsettledGains,
     walletBalance,
     totalWinnings,
     winningPercentage,
