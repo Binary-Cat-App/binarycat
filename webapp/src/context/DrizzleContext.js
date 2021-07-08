@@ -310,10 +310,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                           userStakeKey
                         ];
 
-                      // 0 = Down, 1 = Up
-                      const priceDirection = ( prices[0] < prices[1] ) ? 1 : 0 ;
+                      // 0 = Down, 1 = Up, 2 = Tie
+                      const priceDirection = ( prices[0] > prices[1] ) ? 0 : ( prices[0] < prices[1] ) ? 1 : 2 ;
 
-                      console.log("Window Price Direction: ", (priceDirection === 1) ? 'Up' : 'Down');
+                      console.log("Window Price Direction: ", (priceDirection === 0) ? 'Down' : (priceDirection === 1) ? 'Up' : 'Tie');
                       
                       if (userStake) {
                         if (userStake.value) {
@@ -321,7 +321,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                           userBet[0] = weiToCurrency(userBet[0].toString());
                           userBet[1] = weiToCurrency(userBet[1].toString());
 
-                          if (userBet[priceDirection] !== 0) {
+                          if (priceDirection === 2) {
+                            const gain = userBet[0] + userBet[1];
+                            unsettledUserGains = unsettledUserGains + gain;
+                          }
+                          else if (userBet[priceDirection] !== 0) {
                             
                             unsettledUserWins = unsettledUserWins + 1;
 
