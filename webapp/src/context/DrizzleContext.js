@@ -322,6 +322,9 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                           userBet[1] = weiToCurrency(userBet[1].toString());
 
                           if (priceDirection === 2) {
+                            
+                            unsettledUserWins = unsettledUserWins + 1;
+
                             const gain = userBet[0] + userBet[1];
                             unsettledUserGains = unsettledUserGains + gain;
                           }
