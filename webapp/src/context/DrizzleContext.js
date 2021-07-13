@@ -896,17 +896,17 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                     const poolValues = Object.values(windowPoolValues);
                     
                     const settledBet = await contractWeb3.methods
-                    .settleBet(
-                      userBet[1], 
-                      userBet[0], 
-                      poolValues[1], 
-                      poolValues[0], 
-                      priceDirection
-                    )
-                    .call({
-                      from: drizzleReadinessState.drizzleState.accounts[0]
-                    })
-                    .then((response) => response);
+                      .settleBet(
+                        userBet[1], 
+                        userBet[0], 
+                        poolValues[1], 
+                        poolValues[0], 
+                        priceDirection
+                      )
+                      .call({
+                        from: drizzleReadinessState.drizzleState.accounts[0]
+                      })
+                      .then((response) => response);
 
                     if (settledBet) {
                       const gain = weiToCurrency(settledBet.gain.toString());
