@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { differenceInDays } from 'date-fns';
 import _ from 'lodash';
 
 import io from 'socket.io-client';
@@ -28,7 +29,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [historicalChartData, setHistoricalChartData] = useState([]);
-  
+
   // Realtime Currency Rates Socket data
   const [socketData, setSocketData] = useState([]);
 
@@ -164,14 +165,14 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         contract.abi,
         contract.address
       );
-      
+
       contractWeb3.methods
         .firstBlock()
         .call()
         .then(
           (response) => setFirstBlock(Number.parseInt(response))
         );
-      
+
       contractWeb3.methods
         .windowDuration()
         .call()
@@ -193,23 +194,20 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance
     ) {
       const contract = drizzle.contracts.BinaryBet;
-      
-      const balKey = 
-        contract.methods['getBalance'].cacheCall(
-          drizzleReadinessState.drizzleState.accounts[0]
-        );
-      const bal =
-        drizzleReadinessState.drizzleState.contracts.BinaryBet.getBalance[
-          balKey
-        ];
-      
-      if (bal) {
-        if (bal.value) {
-          const ethBal = weiToCurrency(bal.value.toString());
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+
+      contractWeb3.methods
+        .getBalance(drizzleReadinessState.drizzleState.accounts[0])
+        .call({from: drizzleReadinessState.drizzleState.accounts[0]})
+        .then(function(result) {
+          const ethBal = weiToCurrency(result.toString());
           // User SmartContract Balance
           setBalance(ethBal + unsettledGains);
-        }
-      }
+        });
 
       // User Personal Wallet
       setWalletBalance(
@@ -246,7 +244,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       var unsettledUserWins = 0;
       var unsettledUserGains = 0;
 
-      const unsettledBetsCountKey = 
+      const unsettledBetsCountKey =
         contract.methods['betListLen'].cacheCall(
           drizzleReadinessState.drizzleState.accounts[0]
         );
@@ -254,16 +252,15 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         drizzleReadinessState.drizzleState.contracts.BinaryBet.betListLen[
           unsettledBetsCountKey
         ];
-      
+
       if (unsettledBetsCount) {
         if (unsettledBetsCount.value > 0) {
-          
+
           // unsettledBetsCount.value is the length of the unsettledBets array
-          console.log("User Unsettled Bets regardless the WindowPrices:", unsettledBetsCount.value);
 
           for (let i = 0; i < unsettledBetsCount.value; i++) {
 
-            const userBetListKey = 
+            const userBetListKey =
               contract.methods['getUserBetList'].cacheCall(
                 drizzleReadinessState.drizzleState.accounts[0],
                 i
@@ -272,13 +269,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
               drizzleReadinessState.drizzleState.contracts.BinaryBet.getUserBetList[
                 userBetListKey
               ];
-            
+
             if (userBetList) {
               if (userBetList.value > 0) {
-                
+
                 // userBetList.value is BettingWindow #
 
-                const windowBetPricesKey = 
+                const windowBetPricesKey =
                   contract.methods['getWindowBetPrices'].cacheCall(
                     userBetList.value
                   );
@@ -293,14 +290,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                     prices[0] = weiToCurrency(prices[0].toString());
                     prices[1] = weiToCurrency(prices[1].toString());
 
-                    console.log("Window Initial Price: ", prices[0]);
-                    console.log("Window Final Price: ", prices[1]);
-                    
                     if( prices[0] !== 0 && prices[1] !== 0) {
 
                       unsettledUserBets = unsettledUserBets + 1;
 
-                      const userStakeKey = 
+                      const userStakeKey =
                         contract.methods['getUserStake'].cacheCall(
                           userBetList.value,
                           drizzleReadinessState.drizzleState.accounts[0]
@@ -313,26 +307,24 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                       // 0 = Down, 1 = Up, 2 = Tie
                       const priceDirection = ( prices[0] > prices[1] ) ? 0 : ( prices[0] < prices[1] ) ? 1 : 2 ;
 
-                      console.log("Window Price Direction: ", (priceDirection === 0) ? 'Down' : (priceDirection === 1) ? 'Up' : 'Tie');
-                      
                       if (userStake) {
                         if (userStake.value) {
+
+                          unsettledUserWins = unsettledUserWins + 1;
+
                           const userBet = Object.values(userStake.value);
                           userBet[0] = weiToCurrency(userBet[0].toString());
                           userBet[1] = weiToCurrency(userBet[1].toString());
 
                           if (priceDirection === 2) {
-                            
-                            unsettledUserWins = unsettledUserWins + 1;
-
                             const gain = userBet[0] + userBet[1];
                             unsettledUserGains = unsettledUserGains + gain;
                           }
                           else if (userBet[priceDirection] !== 0) {
-                            
+
                             unsettledUserWins = unsettledUserWins + 1;
 
-                            const windowPoolValuesKey = 
+                            const windowPoolValuesKey =
                               contract.methods['getPoolValues'].cacheCall(
                                 userBetList.value
                               );
@@ -346,7 +338,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                                 const poolValues = Object.values(windowPoolValues.value);
                                 poolValues[0] = weiToCurrency(poolValues[0].toString());
                                 poolValues[1] = weiToCurrency(poolValues[1].toString());
-                                
+
                                 const poolTotal = poolValues[0] + poolValues[1];
                                 const gain = ( userBet[priceDirection] * poolTotal ) / poolValues[priceDirection];
                                 unsettledUserGains = unsettledUserGains + gain;
@@ -371,11 +363,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         }
       }
 
-      console.log("Unsettled Bets for Windows with available Initial/Final prices: ", unsettledUserBets);
-      console.log("Unsettled Wins for Windows with available Initial/Final prices: ", unsettledUserWins);
-      console.log("Unsettled Gains for Windows with available Initial/Final prices: ", unsettledUserGains);
-      console.log("------");
-      
       setUnsettledGains(unsettledUserGains);
 
       contractWeb3
@@ -399,7 +386,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
             if (wins.length > 0) {
               setWinningPercentage(
-                Number( 
+                Number(
                   ( ( wins.length + unsettledUserWins ) / ( result.length + unsettledUserBets ) ) * 100
                 ).toFixed(2)
               );
@@ -553,11 +540,15 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
   // Charts Data
   useEffect(() => {
-    if (
-          openedWindowTimestamps.startingBlockTimestamp !== 0 &&
-          openedWindowTimestamps.startingBlockTimestamp !== prevOpenedWindowTimestamps.startingBlockTimestamp &&
-          openedWindowTimestamps.startingBlockTimestamp !== openedWindowTimestamps.endingBlockTimestamp
-    ) {
+    const startBlockDate = new Date(openedWindowTimestamps.startingBlockTimestamp * 1000);
+    const endBlockDate = new Date(openedWindowTimestamps.endingBlockTimestamp * 1000);
+    const dayDifference = differenceInDays(endBlockDate, startBlockDate);
+    const shouldFetchPrices = openedWindowTimestamps.startingBlockTimestamp !== 0
+      && openedWindowTimestamps.startingBlockTimestamp !== prevOpenedWindowTimestamps.startingBlockTimestamp
+      && openedWindowTimestamps.startingBlockTimestamp !== openedWindowTimestamps.endingBlockTimestamp
+      && dayDifference <= 1;
+
+    if (shouldFetchPrices) {
       window
         .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
           method: 'post',
@@ -572,7 +563,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         })
         .then((res) => res.json())
         .then((result) => {
-          if(result.result.length > 0) {
+          if (result.result.length > 0) {
             setOngoingWindowChartData(result.result);
           }
         });
@@ -640,7 +631,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   React.useEffect(() => {
     const socket = io(global.config.currencyRatesNodeAPI);
     socket.on(
-      'socket-message', 
+      'socket-message',
       (payload) => {
         if ( payload.data ) {
           setSocketData([payload.data]);
@@ -655,6 +646,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       const arr2 = [...historicalChartData, ...socketData];
       const unique = _.uniqBy(arr, 'time');
       const unique2 = _.uniqBy(arr2, 'time');
+
       setOngoingWindowChartData(unique);
       setHistoricalChartData(unique2);
     }
@@ -685,10 +677,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     if (drizzleReadinessState.loading === false) {
       var _startingBlockTimestamp = 0;
       var _endingBlockTimestamp = 0;
-      
+
       switch (where) {
         case 'Opened':
-          
+
           if(Number.isInteger(openedWindowData.startingBlock) === false)
             return;
 
@@ -707,11 +699,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             endingBlockTimestamp: _endingBlockTimestamp,
           });
           break;
-        
+
         case 'Ongoing':
 
           if (
-            Number.isInteger(ongoingWindowData.startingBlock) === false || 
+            Number.isInteger(ongoingWindowData.startingBlock) === false ||
             Number.isInteger(ongoingWindowData.endingBlock) === false
           )
             return;
@@ -729,11 +721,11 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             endingBlockTimestamp: _endingBlockTimestamp,
           });
           break;
-        
+
         case 'Finalized':
 
           if (
-            Number.isInteger(finalizedWindowData.startingBlock) === false || 
+            Number.isInteger(finalizedWindowData.startingBlock) === false ||
             Number.isInteger(finalizedWindowData.endingBlock) === false
           )
             return;
