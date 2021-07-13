@@ -20,24 +20,49 @@ export const UserActions = () => {
 
   const handleDeposit = (value) => {
     if (drizzleReadinessState.drizzleState.accounts) {
-      const eth = parseInt(
-        drizzle.web3.utils.toWei(value, global.config.currencyRequestValue)
+
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
       );
-      contract.methods['deposit'].cacheSend({
-        from: drizzleReadinessState.drizzleState.accounts[0],
-        value: eth,
-      });
+
+      const eth = parseInt(
+        web3.utils.toWei(
+          value, 
+          global.config.currencyRequestValue
+        )
+      );
+
+      contractWeb3.methods
+        .deposit()
+        .send({
+          from: drizzleReadinessState.drizzleState.accounts[0],
+          value: eth
+        });
     }
   };
   const handleWithdraw = (value) => {
     if (drizzleReadinessState.drizzleState.accounts) {
-      const eth = drizzle.web3.utils.toWei(
+
+      const contract = drizzle.contracts.BinaryBet;
+      const web3 = drizzle.web3;
+      const contractWeb3 = new web3.eth.Contract(
+        contract.abi,
+        contract.address
+      );
+
+      const eth = web3.utils.toWei(
         value,
         global.config.currencyRequestValue
       );
-      contract.methods['withdraw'].cacheSend(eth, {
-        from: drizzleReadinessState.drizzleState.accounts[0],
-      });
+
+      contractWeb3.methods
+        .withdraw(eth)
+        .send({
+          from: drizzleReadinessState.drizzleState.accounts[0]
+        });
     }
   };
 
