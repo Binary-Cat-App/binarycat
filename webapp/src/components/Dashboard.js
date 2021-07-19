@@ -145,7 +145,12 @@ export const Dashboard = () => {
     selected.poolTotalDown = openedPoolData.poolTotalDown;
     selected.poolSize = openedPoolData.poolSize;
     selected.accounts = openedAccountsData.accounts;
-  }, [currentBlock, openedWindowData, openedPoolData, openedAccountsData]);
+  }, [
+    currentBlock, 
+    openedWindowData, 
+    openedPoolData, 
+    openedAccountsData
+  ]);
 
   // Ongoing window (Card): Update data
   React.useEffect(() => {
@@ -160,7 +165,13 @@ export const Dashboard = () => {
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
     selected.accounts = ongoingAccountsData.accounts;
-  }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
+  }, [
+    windowNumber, 
+    ongoingWindowData, 
+    ongoingPoolData, 
+    ongoingAccountsData,
+    ongoingPricesData
+  ]);
 
   // Finalized window (Card): Update data
   React.useEffect(() => {
