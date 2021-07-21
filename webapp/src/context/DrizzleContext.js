@@ -116,14 +116,20 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   const initPoolData = {
     betAmount: '0.00',
     betDirection: '',
-    initialPrice: '',
-    finalPrice: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
   };
   const initAccountsData = {
     accounts: 0,
+  };
+  const resetOngoingPricesData = {
+    initialPrice: '0.00',
+    finalPrice: '',
+  };
+  const resetFinalizedPricesData = {
+    initialPrice: '0.00',
+    finalPrice: '0.00',
   };
 
   const usePrevious = (value) => {
@@ -134,6 +140,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     return ref.current;
   };
 
+  const prevBlock = usePrevious( currentBlock );
+  const prevWindowNumber = usePrevious( windowNumber );
   const prevOpenedWindowTimestamps = usePrevious( openedWindowTimestamps );
   const prevOngoingWindowTimestamps = usePrevious( ongoingWindowTimestamps );
 
@@ -315,108 +323,98 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     }
   }, [drizzleReadinessState.loading]);
 
-  // Updates Opened data
+  // Windows data
   useEffect(() => {
     if (!drizzle.contracts.BinaryBet) return;
-    if (!currentBlock) return;
-    if (!firstBlock) return;
-    if (!windowDuration) return;
 
-    const openedWindow = Math.floor(
-      (currentBlock.number - firstBlock) / windowDuration + 1
-    );
-    const openedWindowStartingBlock =
-      firstBlock + (openedWindow - 1) * windowDuration;
-    const openedWindowEndingBlock = Math.floor(
-      firstBlock + openedWindow * windowDuration - 1
-    );
+    const openedWindow = windowCalculations('Opened');
+    const ongoingWindow = windowCalculations('Ongoing');
+    const finalizedWindow = windowCalculations('Finalized');
+    
+    if ( 
+          openedWindow && ongoingWindow && finalizedWindow &&
+          currentBlock && prevBlock &&
+          Number(prevBlock.number) !== Number(currentBlock.number)
+    ) {
+      
+      // Reset data
+      if ( Number(openedWindow.startingBlock) === Number(currentBlock.number) ) {
+        setOpenedPoolData(initPoolData);
+        setIsOpenForBetting(true);
+        setIsBetPlaced(false);
+      }
 
-    // Reset data
-    if (openedWindowStartingBlock === currentBlock.number) {
-      setOpenedPoolData(initPoolData);
-      setIsOpenForBetting(true);
-      setIsBetPlaced(false);
-      setOngoingWindowChartData([]);
+      if (prevWindowNumber != openedWindow.windowNumber ) {
+        
+        setWindowNumber(openedWindow.windowNumber);
+        
+        setOpenedWindowData({
+          windowNumber: openedWindow.windowNumber,
+          startingBlock: openedWindow.startingBlock,
+          endingBlock: openedWindow.endingBlock,
+        });
+        
+        setOngoingWindowData({
+          windowNumber: ongoingWindow.windowNumber,
+          startingBlock: ongoingWindow.startingBlock,
+          endingBlock: ongoingWindow.endingBlock,
+        });
+        
+        setFinalizedWindowData({
+          windowNumber: finalizedWindow.windowNumber,
+          startingBlock: finalizedWindow.startingBlock,
+          endingBlock: finalizedWindow.endingBlock,
+        });
+      
+      }
+
+      updatePoolValuesForWindow(
+        'Opened',
+        openedWindow.startingBlock,
+        currentBlock.number
+      );
+
+      updateTimestampsForWindow('Opened', currentBlock.timestamp);
+
+      if ( Number(openedWindow.endingBlock) > Number(currentBlock.number) ) {
+
+        updatePricesForWindow('Ongoing', ongoingWindow.windowNumber);
+        updatePricesForWindow('Finalized', finalizedWindow.windowNumber);
+
+        updatePoolValuesForWindow(
+          'Ongoing',
+          ongoingWindow.startingBlock,
+          ongoingWindow.endingBlock
+        );
+        updatePoolValuesForWindow(
+          'Finalized',
+          finalizedWindow.startingBlock,
+          finalizedWindow.endingBlock
+        );
+
+        updateTimestampsForWindow('Ongoing', null);
+        updateTimestampsForWindow('Finalized', null);
+
+      }
+      else {
+
+        setOngoingWindowChartData([]);
+        setFinalizedWindowChartData([]);
+
+        setOngoingPricesData(resetOngoingPricesData);
+        setFinalizedPricesData(resetFinalizedPricesData);
+        
+        setOngoingPoolData(initPoolData);
+        setFinalizedPoolData(initPoolData);
+
+        setOngoingAccountsData(initAccountsData);
+        setFinalizedAccountsData(initAccountsData);
+
+      }
+    
     }
 
-    // Current Window Number
-    setWindowNumber(openedWindow);
-
-    setOpenedWindowData({
-      windowNumber: openedWindow,
-      startingBlock: openedWindowStartingBlock,
-      endingBlock: openedWindowEndingBlock,
-    });
-
-    updatePoolValuesForWindow(
-      'Opened',
-      openedWindowStartingBlock,
-      currentBlock.number
-    );
-    updateTimestampsForWindow('Opened', currentBlock.timestamp);
   }, [currentBlock]);
-
-  // Updates Ongoing Data
-  useEffect(() => {
-    if (!drizzle.contracts.BinaryBet) return;
-    if (!currentBlock) return;
-    if (!firstBlock) return;
-    if (!windowDuration) return;
-
-    const ongoingWindow = Math.floor(
-      (currentBlock.number - firstBlock) / windowDuration + 1 - 1
-    );
-    const ongoingWindowStartingBlock =
-      firstBlock + (ongoingWindow - 1) * windowDuration;
-    const ongoingWindowEndingBlock = Math.floor(
-      firstBlock + ongoingWindow * windowDuration - 1
-    );
-
-    setOngoingWindowData({
-      windowNumber: ongoingWindow,
-      startingBlock: ongoingWindowStartingBlock,
-      endingBlock: ongoingWindowEndingBlock,
-    });
-
-    updatePricesForWindow('Ongoing', ongoingWindow);
-    updatePoolValuesForWindow(
-      'Ongoing',
-      ongoingWindowStartingBlock,
-      ongoingWindowEndingBlock
-    );
-    updateTimestampsForWindow('Ongoing', null);
-  }, [currentBlock, windowNumber]);
-
-  // Updates Finalized Data
-  useEffect(() => {
-    if (!drizzle.contracts.BinaryBet) return;
-    if (!currentBlock) return;
-    if (!firstBlock) return;
-    if (!windowDuration) return;
-
-    const finalizedWindow = Math.floor(
-      (currentBlock.number - firstBlock) / windowDuration + 1 - 2
-    );
-    const finalizedWindowStartingBlock =
-      firstBlock + (finalizedWindow - 1) * windowDuration;
-    const finalizedWindowEndingBlock = Math.floor(
-      firstBlock + finalizedWindow * windowDuration - 1
-    );
-
-    setFinalizedWindowData({
-      windowNumber: finalizedWindow,
-      startingBlock: finalizedWindowStartingBlock,
-      endingBlock: finalizedWindowEndingBlock,
-    });
-
-    updatePricesForWindow('Finalized', finalizedWindow);
-    updatePoolValuesForWindow(
-      'Finalized',
-      finalizedWindowStartingBlock,
-      finalizedWindowEndingBlock
-    );
-    updateTimestampsForWindow('Finalized', null);
-  }, [currentBlock, windowNumber]);
 
   // Charts Data
   useEffect(() => {
@@ -630,7 +628,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
   };
 
   // initialPrice , finalPrice
-  const updatePricesForWindow = (where, _windowNumber) => {
+  const updatePricesForWindow = async (where, _windowNumber) => {
     if (drizzleReadinessState.loading === false) {
       const contract = drizzle.contracts.BinaryBet;
       const web3 = drizzle.web3;
@@ -642,38 +640,44 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       if(Number.isInteger(_windowNumber) === false)
         return;
 
-      contractWeb3
+      const prices = await contractWeb3
         .getPastEvents('priceUpdated', {
           filter: { windowNumber: [_windowNumber + 1, _windowNumber + 2] },
           fromBlock: 0,
           toBlock: 'latest',
         })
-        .then((result) => {
-          const initialPrice =
-            result.length > 0
-              ? weiToCurrency((result[0].returnValues.price * 10000000000).toString())
-              : '0.00';
-          let finalPrice = '0.00';
-          if (where === 'Finalized') {
-            finalPrice =
-              result.length > 1
-                ? weiToCurrency((result[1].returnValues.price  * 10000000000).toString())
-                : '0.00';
-          }
-          updatePriceData(where, { initialPrice, finalPrice });
-        });
-    }
-  };
+        .then((result) => result);
 
-  const updatePriceData = (key, data) => {
-    switch (key) {
-      case 'Ongoing':
-        setOngoingPricesData({ ...data });
-        break;
-      case 'Finalized':
-        setFinalizedPricesData({ ...data });
-        break;
-      default:
+      const initialPrice = prices.length > 0 
+        ? weiToCurrency((prices[0].returnValues.price * 10000000000).toString())
+        : '0.00';
+
+      let finalPrice = '0.00';
+      
+      if (where === 'Finalized') {
+        finalPrice = prices.length > 1
+          ? weiToCurrency((prices[1].returnValues.price  * 10000000000).toString())
+          : '0.00';
+      }
+
+      switch ( where ) {
+        case 'Ongoing':
+          if( 
+              parseFloat(initialPrice) !== parseFloat(ongoingPricesData.initialPrice) 
+          ) {
+            setOngoingPricesData({ initialPrice, finalPrice });
+          }
+          break;
+        case 'Finalized':
+          if( 
+              parseFloat(initialPrice) !== parseFloat(finalizedPricesData.initialPrice) || 
+              parseFloat(finalPrice) !== parseFloat(finalizedPricesData.finalPrice)
+          ) {
+            setFinalizedPricesData({ initialPrice, finalPrice });
+          }
+          break;
+        default:
+      }
     }
   };
 
@@ -936,6 +940,37 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       setUnsettledWins(unsettledUserWins);
       setUnsettledGains(unsettledUserGains);
     }
+  };
+
+  const windowCalculations = (which) => {
+    if (!currentBlock) return;
+    if (!firstBlock) return;
+    if (!windowDuration) return;
+
+    var offset = 0;
+
+    switch (which) {
+      case 'Opened':
+        offset = 0;        
+        break;
+      case 'Ongoing':
+        offset = 1;
+        break;
+      case 'Finalized':
+        offset = 2;
+        break;
+      default:
+    }
+
+    const _windowNumber = Math.floor( (currentBlock.number - firstBlock) / windowDuration + 1 - offset );
+    const _windowStartingBlock = firstBlock + (_windowNumber - 1) * windowDuration;
+    const _windowEndingBlock = Math.floor( firstBlock + _windowNumber * windowDuration - 1 );
+
+    return {
+      windowNumber: _windowNumber,
+      startingBlock: _windowStartingBlock,
+      endingBlock: _windowEndingBlock
+    };
   };
 
   const weiToCurrency = (value) => {
