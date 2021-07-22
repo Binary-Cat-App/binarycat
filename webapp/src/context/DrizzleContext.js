@@ -576,6 +576,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             startingBlockTimestamp: _startingBlockTimestamp,
             endingBlockTimestamp: _endingBlockTimestamp,
           });
+          
           break;
 
         case 'Ongoing':
@@ -594,10 +595,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             .getBlock(ongoingWindowData.endingBlock)
             .then((response) => response.timestamp);
 
-          setOngoingWindowTimestamps({
-            startingBlockTimestamp: _startingBlockTimestamp,
-            endingBlockTimestamp: _endingBlockTimestamp,
-          });
+          if(
+            Number(ongoingWindowTimestamps.startingBlockTimestamp) !== Number(_startingBlockTimestamp) ||
+            Number(ongoingWindowTimestamps.endingBlockTimestamp) !== Number(_endingBlockTimestamp)
+          ) {
+            setOngoingWindowTimestamps({
+              startingBlockTimestamp: _startingBlockTimestamp,
+              endingBlockTimestamp: _endingBlockTimestamp,
+            });
+          }
+
           break;
 
         case 'Finalized':
@@ -616,10 +623,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             .getBlock(finalizedWindowData.endingBlock)
             .then((response) => response.timestamp);
 
-          setFinalizedWindowTimestamps({
-            startingBlockTimestamp: _startingBlockTimestamp,
-            endingBlockTimestamp: _endingBlockTimestamp,
-          });
+          if(
+            Number(finalizedWindowTimestamps.startingBlockTimestamp) !== Number(_startingBlockTimestamp) ||
+            Number(finalizedWindowTimestamps.endingBlockTimestamp) !== Number(_endingBlockTimestamp)
+          ) {
+            setFinalizedWindowTimestamps({
+              startingBlockTimestamp: _startingBlockTimestamp,
+              endingBlockTimestamp: _endingBlockTimestamp,
+            });
+          }
+
           break;
         default:
       }
