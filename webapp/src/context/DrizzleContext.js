@@ -661,6 +661,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       }
 
       switch ( where ) {
+        
         case 'Ongoing':
           if( 
               parseFloat(initialPrice) !== parseFloat(ongoingPricesData.initialPrice) 
@@ -668,6 +669,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             setOngoingPricesData({ initialPrice, finalPrice });
           }
           break;
+        
         case 'Finalized':
           if( 
               parseFloat(initialPrice) !== parseFloat(finalizedPricesData.initialPrice) || 
@@ -676,12 +678,13 @@ export const DrizzleProvider = ({ drizzle, children }) => {
             setFinalizedPricesData({ initialPrice, finalPrice });
           }
           break;
+        
         default:
       }
     }
   };
 
-  const updatePoolValuesForWindow = (where, startingBlock, endingBlock) => {
+  const updatePoolValuesForWindow = async (where, startingBlock, endingBlock) => {
     if (
       drizzleReadinessState.loading === false &&
       Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
@@ -696,116 +699,163 @@ export const DrizzleProvider = ({ drizzle, children }) => {
       if(isNaN(startingBlock) || isNaN(endingBlock))
         return;
 
-      contractWeb3
+      var _betAmount = 0;
+      var _betDirection = '';
+      var _poolSize = 0;
+      var _poolTotalUp = 0;
+      var _poolTotalDown = 0;
+
+      const result = await contractWeb3
         .getPastEvents('newBet', {
           fromBlock: startingBlock,
           toBlock: endingBlock,
         })
-        .then((result) => {
-          var _betAmount = 0;
-          var _betDirection = '';
-          var _poolSize = 0;
-          var _poolTotalUp = 0;
-          var _poolTotalDown = 0;
+        .then((result) => result);
 
-          if (result.length > 0) {
-            // poolSize
-            _poolSize = result.reduce((acc, current) => {
-              return acc + weiToCurrency(current.returnValues.value.toString());
-            }, 0);
-            _poolSize = _poolSize.toFixed(2);
+      if (result.length > 0) {
+        
+        // poolSize
+        _poolSize = result.reduce((acc, current) => {
+          return acc + weiToCurrency(current.returnValues.value.toString());
+        }, 0);
+        _poolSize = _poolSize.toFixed(2);
 
-            // poolTotalUp
-            _poolTotalUp = result
-              .filter((key) => Number.parseInt(key.returnValues.side) === 1)
-              .reduce((acc, current) => {
-                return acc + weiToCurrency(current.returnValues.value.toString());
-              }, 0);
-            _poolTotalUp = _poolTotalUp.toFixed(2);
+        // poolTotalUp
+        _poolTotalUp = result
+          .filter((key) => Number.parseInt(key.returnValues.side) === 1)
+          .reduce((acc, current) => {
+            return acc + weiToCurrency(current.returnValues.value.toString());
+          }, 0);
+        _poolTotalUp = _poolTotalUp.toFixed(2);
 
-            // poolTotalDown
-            _poolTotalDown = result
-              .filter((key) => Number.parseInt(key.returnValues.side) === 0)
-              .reduce((acc, current) => {
-                return acc + weiToCurrency(current.returnValues.value.toString());
-              }, 0);
-            _poolTotalDown = _poolTotalDown.toFixed(2);
+        // poolTotalDown
+        _poolTotalDown = result
+          .filter((key) => Number.parseInt(key.returnValues.side) === 0)
+          .reduce((acc, current) => {
+            return acc + weiToCurrency(current.returnValues.value.toString());
+          }, 0);
+        _poolTotalDown = _poolTotalDown.toFixed(2);
 
-            // user bet amount and direction
-            const currentUser = result.filter(
-              (key) =>
-                key.returnValues.user.toLowerCase() === drizzleReadinessState.drizzleState.accounts[0].toLowerCase()
-            );
-            if (currentUser.length > 0) {
-              _betAmount = weiToCurrency(currentUser[0].returnValues.value.toString()).toFixed(2);
-              _betDirection =
-                Number.parseInt(currentUser[0].returnValues.side) === 1
-                  ? 'up'
-                  : 'down';
-            }
-          }
+        // user bet amount and direction
+        const currentUser = result.filter(
+          (key) =>
+            key.returnValues.user.toLowerCase() === drizzleReadinessState.drizzleState.accounts[0].toLowerCase()
+        );
+        if (currentUser.length > 0) {
+          _betAmount = weiToCurrency(currentUser[0].returnValues.value.toString()).toFixed(2);
+          _betDirection =
+            Number.parseInt(currentUser[0].returnValues.side) === 1
+              ? 'up'
+              : 'down';
+        }
+      }
 
-          updatePoolAndAccountsData(where, {
-            accounts: result,
-            _betAmount,
-            _betDirection,
-            _poolTotalUp,
-            _poolTotalDown,
-            _poolSize,
-          });
-        });
+      updatePoolAndAccountsData(where, {
+        accounts: result,
+        _betAmount,
+        _betDirection,
+        _poolTotalUp,
+        _poolTotalDown,
+        _poolSize,
+      });
+
     }
   };
 
   const updatePoolAndAccountsData = (key, details) => {
     switch (key) {
+      
       case 'Opened':
-        setOpenedPoolData(
-          details.accounts.length > 0
-            ? {
-                betAmount: details._betAmount,
-                betDirection: details._betDirection,
-                poolTotalUp: details._poolTotalUp,
-                poolTotalDown: details._poolTotalDown,
-                poolSize: details._poolSize,
-              }
-            : initPoolData
-        );
-        setOpenedAccountsData({
-          accounts: details.accounts.length,
-        });
+        
+        if (
+          Number(openedAccountsData.accounts) !== details.accounts.length ||
+          parseFloat(openedPoolData.betAmount) !== parseFloat(details._betAmount) ||
+          openedPoolData.betDirection !== details._betDirection ||
+          parseFloat(openedPoolData.poolTotalUp) !== parseFloat(details._poolTotalUp) ||
+          parseFloat(openedPoolData.poolTotalDown) !== parseFloat(details._poolTotalDown) ||
+          parseFloat(openedPoolData.poolSize) !== parseFloat(details._poolSize)
+        ) {
+          setOpenedPoolData(
+            details.accounts.length > 0
+              ? {
+                  betAmount: details._betAmount,
+                  betDirection: details._betDirection,
+                  poolTotalUp: details._poolTotalUp,
+                  poolTotalDown: details._poolTotalDown,
+                  poolSize: details._poolSize,
+                }
+              : initPoolData
+          );
+        }
+        
+        if ( Number(openedAccountsData.accounts) !== details.accounts.length ) {
+          setOpenedAccountsData({
+            accounts: details.accounts.length,
+          });
+        }
+
         break;
+      
       case 'Ongoing':
-        setOngoingPoolData(
-          details.accounts.length > 0
-            ? {
-                betAmount: details._betAmount,
-                betDirection: details._betDirection,
-                poolTotalUp: details._poolTotalUp,
-                poolTotalDown: details._poolTotalDown,
-                poolSize: details._poolSize,
-              }
-            : initPoolData
-        );
-        setOngoingAccountsData({
-          accounts: details.accounts.length,
-        });
+
+        if (
+          Number(ongoingAccountsData.accounts) !== details.accounts.length ||
+          parseFloat(ongoingPoolData.betAmount) !== parseFloat(details._betAmount) ||
+          ongoingPoolData.betDirection !== details._betDirection ||
+          parseFloat(ongoingPoolData.poolTotalUp) !== parseFloat(details._poolTotalUp) ||
+          parseFloat(ongoingPoolData.poolTotalDown) !== parseFloat(details._poolTotalDown) ||
+          parseFloat(ongoingPoolData.poolSize) !== parseFloat(details._poolSize)
+        ) {
+          setOngoingPoolData(
+            details.accounts.length > 0
+              ? {
+                  betAmount: details._betAmount,
+                  betDirection: details._betDirection,
+                  poolTotalUp: details._poolTotalUp,
+                  poolTotalDown: details._poolTotalDown,
+                  poolSize: details._poolSize,
+                }
+              : initPoolData
+          );
+        }
+
+        if ( Number(ongoingAccountsData.accounts) !== details.accounts.length ) {
+          setOngoingAccountsData({
+            accounts: details.accounts.length,
+          });
+        }
+
         break;
+      
       case 'Finalized':
-        setFinalizedPoolData(
-          details.accounts.length > 0
-            ? {
-                betAmount: details._betAmount,
-                betDirection: details._betDirection,
-                poolTotalUp: details._poolTotalUp,
-                poolTotalDown: details._poolTotalDown,
-                poolSize: details._poolSize,
-              }
-            : initPoolData
-        );
-        setFinalizedAccountsData({
-          accounts: details.accounts.length,
-        });
+
+        if (
+          Number(finalizedAccountsData.accounts) !== details.accounts.length ||
+          parseFloat(finalizedPoolData.betAmount) !== parseFloat(details._betAmount) ||
+          finalizedPoolData.betDirection !== details._betDirection ||
+          parseFloat(finalizedPoolData.poolTotalUp) !== parseFloat(details._poolTotalUp) ||
+          parseFloat(finalizedPoolData.poolTotalDown) !== parseFloat(details._poolTotalDown) ||
+          parseFloat(finalizedPoolData.poolSize) !== parseFloat(details._poolSize)
+        ) {
+          setFinalizedPoolData(
+            details.accounts.length > 0
+              ? {
+                  betAmount: details._betAmount,
+                  betDirection: details._betDirection,
+                  poolTotalUp: details._poolTotalUp,
+                  poolTotalDown: details._poolTotalDown,
+                  poolSize: details._poolSize,
+                }
+              : initPoolData
+          );
+        }
+
+        if ( Number(finalizedAccountsData.accounts) !== details.accounts.length ) {
+          setFinalizedAccountsData({
+            accounts: details.accounts.length,
+          });
+        }
+
         break;
       default:
     }
