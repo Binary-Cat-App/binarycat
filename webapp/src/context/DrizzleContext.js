@@ -1036,10 +1036,10 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     };
   };
 
-  const weiToCurrency = (value) => {
+  const weiToCurrency = (value, asFloat = true) => {
     if (!value) return;
     const valueInCurrency = drizzle.web3.utils.fromWei(value, global.config.currencyRequestValue);
-    return parseFloat(valueInCurrency);
+    return (asFloat) ? parseFloat(valueInCurrency) : valueInCurrency;
   };
 
   const value = {
