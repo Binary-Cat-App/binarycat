@@ -223,6 +223,7 @@ contract BinaryBet {
             gain = 0;
             fees = upStake.add(downStake);
         }
+    }
 
    function betResult(uint256 referencePrice, uint256 settlementPrice) public pure returns(uint8){
         if(settlementPrice < referencePrice) {
