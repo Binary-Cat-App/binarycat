@@ -7,27 +7,6 @@ import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 import "./BinToken.sol";
 import "./BinStaking.sol";
 
-//interface IStdReference {
-    /// A structure returned whenever someone requests for standard reference data.
-    //struct ReferenceData {
-        //uint256 rate; // base/quote exchange rate, multiplied by 1e18.
-        //uint256 lastUpdatedBase; // UNIX epoch of the last time when base price gets updated.
-        //uint256 lastUpdatedQuote; // UNIX epoch of the last time when quote price gets updated.
-    //}
-//
-    ///// Returns the price data for the given base/quote pair. Revert if not available.
-    //function getReferenceData(string calldata _base, string calldata _quote)
-        //external
-        //view
-        //returns (ReferenceData memory);
-
-    /// Similar to getReferenceData, but with multiple base/quote pairs at once.
-    //function getReferenceDataBulk(string[] calldata _bases, string[] calldata _quotes)
-        //external
-        //view
-        //returns (ReferenceData[] memory);
-//}
-
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
@@ -43,7 +22,6 @@ contract BinaryBet {
     }
 
     //Betting parameters
-    //IStdReference oracle;
     AggregatorV3Interface internal priceFeed;  
     address governance;
     uint public fee;
@@ -51,6 +29,10 @@ contract BinaryBet {
     uint public firstBlock;
     BinaryStaking staking; 
     address payable stakingAddress;
+
+    BinToken token;
+    address tokenAddress;
+
 
     //Window management
     mapping (uint => Pool) public pools; //windowNumber => Pool
@@ -108,6 +90,12 @@ contract BinaryBet {
         require(stakingAddress == address(0), "staking address already set");
         stakingAddress = payable(stakingContract);
         staking = BinaryStaking(stakingAddress); 
+    }
+
+    function setTokenAddress(address tokenContract) external {
+        require(tokenAddress == address(0), "token address already set");
+        tokenAddress = tokenContract;
+        token = BinToken(tokenAddress); 
     }
 
     function deposit() payable external {
@@ -198,8 +186,14 @@ contract BinaryBet {
             Pool memory pool = pools[window];
             (uint windowGain, uint fees) = settleBet(stake.upValue, stake.downValue, pool.upValue, pool.downValue, result);
 
-            balance[msg.sender] = balance[msg.sender].add(windowGain);
+            balance[user] = balance[user].add(windowGain);
             accumulatedFees = accumulatedFees.add(fees);
+            
+            //KITTY token rewards
+            uint reward = calculateTokenReward(stake.upValue, stake.downValue, pool.upValue, pool.downValue);
+            if (token.balanceOf(address(this)) >= reward) {
+                token.transfer(user, reward);
+            }
 
             emit betSettled(window, user, windowGain);
         }
@@ -229,7 +223,6 @@ contract BinaryBet {
             gain = 0;
             fees = upStake.add(downStake);
         }
-    }
 
    function betResult(uint256 referencePrice, uint256 settlementPrice) public pure returns(uint8){
         if(settlementPrice < referencePrice) {
@@ -239,6 +232,11 @@ contract BinaryBet {
             return 1;
         }
         return 2;
+    }
+
+    function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
+        uint REWARD_PER_WINDOW = 665 ether;
+        return (upStake.add(downStake).mul(REWARD_PER_WINDOW)).div(poolUp.add(poolDown));
     }
 
 
@@ -283,16 +281,15 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256){
-        //IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
-        (
-             , 
-            int price,
-             ,
-             ,
-             
-        ) = priceFeed.latestRoundData();
-        return uint256(price);
-        //return data.rate;
+        //(
+             //, 
+            //int price,
+             //,
+             //,
+             //
+        //) = priceFeed.latestRoundData();
+        //return uint256(price);
+        return (uint(keccak256(abi.encodePacked(now)))%20 + 640);
     }
 
     //Getters
