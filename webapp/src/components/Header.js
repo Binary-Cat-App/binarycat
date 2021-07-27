@@ -40,7 +40,7 @@ export const Header = () => {
               </li>
               <li className="mr-4">
                 <a 
-                  href="https://discord.gg/9svxUjmq"
+                  href="https://twitter.com/BinaryCatApp"
                   className="text-gray-500 hover:text-gray-800 flex items-center"
                   target="_blank"
                 >
