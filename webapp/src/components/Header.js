@@ -13,9 +13,10 @@ export const Header = () => {
       <Container>
         <div className="flex items-center justify-between">
           <span className="mr-4">
-            <Link to="/">
+            <a 
+              href="/">
               <Logo />
-            </Link>
+            </a>
           </span>
           <div>
             <ul className="flex items-center text-sm">
