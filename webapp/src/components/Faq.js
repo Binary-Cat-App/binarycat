@@ -7,7 +7,7 @@ export const Faq = () => {
     <ul className="list-none">
       <li>
         <h4>Do I need any special software to bet on Binary Cat?</h4>
-        <p>The only software you need is a web browser compatible with the Metamask extension (https://metamask.io/).</p>
+        <p>The only software you need is a web browser compatible with the Metamask extension (<a href="https://metamask.io/" target="_blank">https://metamask.io/</a>).</p>
       </li>
 
       <li>
@@ -34,7 +34,7 @@ export const Faq = () => {
 
       <li>
         <h4>How are prices to settle bets defined?</h4>
-        <p>The prices are computed from the Chainlink onchain oracle (https://chain.link/). The initial price is set as the first price update after the betting window becomes ongoing and the final price as the first update after the betting window is finalized.</p>
+        <p>The prices are computed from the Chainlink onchain oracle (<a href="https://chain.link/" target="_blank">https://chain.link/</a>). The initial price is set as the first price update after the betting window becomes ongoing and the final price as the first update after the betting window is finalized.</p>
       </li>
 
       <li>
@@ -126,7 +126,7 @@ export const Faq = () => {
 
       <li>
         <h4>How do I stake my tokens?</h4>
-        <p>Staking can be done through the page staking.binarycat.app.</p>
+        <p>Staking can be done through the page <a href="https://staking.binarycat.app" target="_blank">staking.binarycat.app</a>.</p>
       </li>
 
       <li>
