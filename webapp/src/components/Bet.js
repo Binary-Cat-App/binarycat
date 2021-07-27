@@ -106,7 +106,7 @@ export const Bet = ({
                     !initialPrice && 'text-gray-200'
                   }`}
                 >
-                  {initialPrice ? (_initialPrice > 0 ? _initialPrice.toFixed(2) : <IconSpinner className="animate-spin mt-2 mb-2 h-5 w-5 text-gray" />) : '?'}
+                  {initialPrice ? (_initialPrice > 0 ? _initialPrice.toFixed(2) : <IconSpinner className="spinner animate-spin mt-2 mb-2 h-5 w-5 text-gray" />) : '?'}
                 </span>
               </div>
             </div>
@@ -124,7 +124,7 @@ export const Bet = ({
                     !finalPrice && 'text-gray-200'
                   }`}
                 >
-                  {finalPrice ? (_finalPrice > 0 ? _finalPrice.toFixed(2) : <IconSpinner className="animate-spin mt-2 mb-2 h-5 w-5 text-gray" />) : '?'}
+                  {finalPrice ? (_finalPrice > 0 ? _finalPrice.toFixed(2) : <IconSpinner className="spinner animate-spin mt-2 mb-2 h-5 w-5 text-gray" />) : '?'}
                 </span>
               </div>
             </div>
