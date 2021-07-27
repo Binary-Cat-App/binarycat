@@ -1,5 +1,6 @@
 import { ReactComponent as IconUp } from '../assets/images/icon-up.svg';
 import { ReactComponent as IconDown } from '../assets/images/icon-down.svg';
+import { ReactComponent as IconSpinner } from '../assets/images/icon-spinner.svg';
 import { BetPlaced } from './BetPlaced';
 import { PlaceBet } from './PlaceBet';
 import { BetChart } from './Chart';
@@ -34,6 +35,9 @@ export const Bet = ({
   const _isDown = ( status === 'finalized' && finalPrice > 0 && initialPrice > 0 && finalPrice < initialPrice );
   
   const _endingBlock = ( endingBlock ) ? endingBlock.toString() : '';
+
+  const _initialPrice = initialPrice ? parseFloat(initialPrice) : 0;
+  const _finalPrice = finalPrice ? parseFloat(finalPrice) : 0;
 
   React.useEffect(() => {
     setBetDirection(betDirectionContract);
@@ -102,7 +106,7 @@ export const Bet = ({
                     !initialPrice && 'text-gray-200'
                   }`}
                 >
-                  {initialPrice ? parseFloat(initialPrice).toFixed(2) : '?'}
+                  {initialPrice ? (_initialPrice > 0 ? _initialPrice.toFixed(2) : <IconSpinner className="animate-spin mt-2 mb-2 h-5 w-5 text-gray" />) : '?'}
                 </span>
               </div>
             </div>
@@ -120,7 +124,7 @@ export const Bet = ({
                     !finalPrice && 'text-gray-200'
                   }`}
                 >
-                  {finalPrice ? parseFloat(finalPrice).toFixed(2) : '?'}
+                  {finalPrice ? (_finalPrice > 0 ? _finalPrice.toFixed(2) : <IconSpinner className="animate-spin mt-2 mb-2 h-5 w-5 text-gray" />) : '?'}
                 </span>
               </div>
             </div>
