@@ -1,0 +1,63 @@
+.page-content h1 {
+    @apply text-5xl leading-tight;
+    @apply font-light;
+    margin-top: 0.53em;
+    margin-bottom: 0.53em;
+}
+
+.page-content h2 {
+    @apply text-4xl leading-tight;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+}
+
+.page-content h3 {
+    @apply text-3xl;
+    @apply font-medium;
+    margin-top: 1.5em;
+    margin-bottom: 0.4em;
+}
+
+.page-content h4 {
+    @apply text-2xl;
+    @apply text-green-500;
+    @apply font-medium;
+    margin-top: 1.5em;
+    margin-bottom: 0.67em;
+}
+
+.page-content h5 {
+    @apply text-lg;
+    margin-top: 1.5em;
+    margin-bottom: 0.94em;
+}
+
+.page-content li::marker {
+    @apply text-green-500;
+    font-size: 0.875em;
+}
+
+.page-content hr {
+    @apply my-6;
+}
+
+.page-content figure {
+    @apply mb-6;
+}
+
+.page-content p {
+    margin-top: 1em;
+    margin-bottom: 1.5em;
+}
+
+.page-content strong {
+    @apply font-semibold text-gray-500;
+}
+
+.page-content em {
+    font-style: italic;
+}
+
+.page-content a {
+	@apply text-green-500;
+}
