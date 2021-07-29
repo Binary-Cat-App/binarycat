@@ -3,11 +3,16 @@ import NumberFormat from 'react-number-format';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { Alert } from './Alert';
+import { useDrizzle } from '../context/DrizzleContext';
 
 export const ModalWithdraw = ({ onWithdraw, balance }) => {
   const [showModal, setShowModal] = React.useState(false);
   const [error, setError] = React.useState(false);
   const [value, setValue] = React.useState(false);
+
+  const { 
+    weiToCurrency
+  } = useDrizzle();
 
   React.useEffect(() => {
     if (showModal === false) setValue(false);
@@ -17,6 +22,9 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
     setShowModal(!showModal);
   }, [showModal]);
 
+  const _balanceAsString = (balance) ? weiToCurrency( balance, false ) : 0;
+  const _balanceAsFloat = parseFloat(_balanceAsString);
+
   return (
     <div>
       <Button variant="blue" className="ml-4" handleClick={handleModalToggle}>
@@ -25,14 +33,14 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
       {showModal && (
         <Modal title="Withdraw" handleModalToggle={handleModalToggle}>
           <div className="mb-4 pb-2 text-lg">
-            Your Current Balance is <strong className="text-pink-500">{balance.toFixed(10)} {global.config.currencyName}</strong>
+            Your Current Balance is <strong className="text-pink-500">{_balanceAsString} {global.config.currencyName}</strong>
           </div>
           {error && <Alert color="red">Not enough balance!</Alert>}
           <div className="min-w-0 flex items-center mb-4 py-2 px-4 bg-gray-100 rounded">
             
             <Button 
               handleClick={() => {
-                setValue(balance);
+                setValue(_balanceAsString);
               }}
               className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-normal py-1 px-2 border border-gray-400 rounded shadow outline-none"
             >
@@ -42,8 +50,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
             <NumberFormat
               thousandSeparator=" "
               decimalSeparator="."
-              decimalScale="10"
-              fixedDecimalScale="true"
+              fixedDecimalScale="false"
               allowNegative="false"
               autoFocus
               className="form-control font-digits text-xl border-0 bg-transparent text-center"
@@ -78,7 +85,7 @@ export const ModalWithdraw = ({ onWithdraw, balance }) => {
                   const _val = Number( val );
 
                   if( _val > 0 ) {
-                    if ( _val > balance ) {
+                    if ( _val > _balanceAsFloat ) {
                       setError(true);
                     } else {
                       onWithdraw(val);

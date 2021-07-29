@@ -42,7 +42,9 @@ export const Dashboard = () => {
     finalizedPoolData,
     finalizedAccountsData,
     finalizedWindowChartData,
-    historicalChartData
+    historicalChartData,
+    weiToCurrency,
+    currencyToWei
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
@@ -223,28 +225,22 @@ export const Dashboard = () => {
 
   const onBetHandler = ({ value, direction }) => {
     if (Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0) {
+      
       if (Number(value) <= MIN_BET_AMOUNT) {
         alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
         return;
       }
 
-      const eth = drizzle.web3.utils.toWei(
-        value,
-        global.config.currencyRequestValue
-      );
+      const _bet = currencyToWei(value, true);
+      const _balance = BigInt(balance);
 
-      const overBalance = Number(value) > balance ? Number(value) - balance : 0;
-
-      const over = drizzle.web3.utils.toWei(
-        `${overBalance}`,
-        global.config.currencyRequestValue
-      );
+      const overBalance = _bet > _balance ? _bet - _balance : 0;
 
       contract.methods
-        .placeBet(eth, direction)
+        .placeBet(_bet.toString(), direction)
         .send({
           from: drizzleReadinessState.drizzleState.accounts[0],
-          value: over,
+          value: overBalance.toString(),
         })
         .on('transactionHash', function (hash) {
           setIsOpenForBetting(false);

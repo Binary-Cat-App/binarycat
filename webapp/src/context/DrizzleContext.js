@@ -216,9 +216,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
           from: drizzleReadinessState.drizzleState.accounts[0]
         })
         .then(function(result) {
-          const ethBal = weiToCurrency(result.toString());
-          // User SmartContract Balance
-          setBalance(ethBal + unsettledGains);
+          const _preCalcBalance = BigInt(result) + BigInt(unsettledGains);
+          setBalance( _preCalcBalance.toString() );
         });
 
       // User Personal Wallet
@@ -261,12 +260,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         })
         .then(function (result) {
           if (result.length > 0) {
-            var totalGain = 0;
+            
+            var totalGain = 0n;
+            
             result.forEach(
-              element => totalGain += weiToCurrency(element.returnValues.gain.toString())
+              element => totalGain += BigInt(element.returnValues.gain)
             );
 
-            setTotalWinnings(totalGain + unsettledGains);
+            const _totalWinnings = totalGain + BigInt(unsettledGains);
+
+            setTotalWinnings( weiToCurrency(_totalWinnings.toString()) );
 
             const wins = result.filter(
               (key) => weiToCurrency(key.returnValues.gain.toString()) > 0
@@ -887,7 +890,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
-      var unsettledUserGains = 0;
+      var unsettledUserGains = 0n;
       
       const unsettledBetsCount = await contractWeb3.methods
         .betListLen(drizzleReadinessState.drizzleState.accounts[0])
@@ -976,7 +979,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
                       .then((response) => response);
 
                     if (settledBet) {
-                      const gain = weiToCurrency(settledBet.gain.toString());
+                      const gain = BigInt(settledBet.gain);
                       
                       if (gain > 0) {
                         unsettledUserWins = unsettledUserWins + 1;
@@ -1001,7 +1004,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
 
       setUnsettledBets(unsettledUserBets);
       setUnsettledWins(unsettledUserWins);
-      setUnsettledGains(unsettledUserGains);
+      setUnsettledGains(unsettledUserGains.toString());
     }
   };
 
@@ -1036,10 +1039,16 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     };
   };
 
-  const weiToCurrency = (value) => {
+  const weiToCurrency = (value, asFloat = true) => {
     if (!value) return;
     const valueInCurrency = drizzle.web3.utils.fromWei(value, global.config.currencyRequestValue);
-    return parseFloat(valueInCurrency);
+    return (asFloat) ? parseFloat(valueInCurrency) : valueInCurrency;
+  };
+
+  const currencyToWei = (value, asBigInt = false) => {
+    if (!value) return;
+    const valueInWei = drizzle.web3.utils.toWei(value, global.config.currencyRequestValue);
+    return (asBigInt) ? BigInt(valueInWei) : valueInWei;
   };
 
   const value = {
@@ -1072,6 +1081,8 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     finalizedWindowChartData,
     historicalChartData,
     socketData,
+    weiToCurrency,
+    currencyToWei
   };
 
   return (

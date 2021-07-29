@@ -12,6 +12,8 @@ export const UserActions = () => {
     drizzle,
     currentBlock,
     balance,
+    weiToCurrency,
+    currencyToWei
   } = useDrizzle();
 
   const contract = React.useMemo(() => {
@@ -28,21 +30,15 @@ export const UserActions = () => {
         contract.address
       );
 
-      const eth = parseInt(
-        web3.utils.toWei(
-          value, 
-          global.config.currencyRequestValue
-        )
-      );
-
       contractWeb3.methods
         .deposit()
         .send({
           from: drizzleReadinessState.drizzleState.accounts[0],
-          value: eth
+          value: currencyToWei(value)
         });
     }
   };
+
   const handleWithdraw = (value) => {
     if (drizzleReadinessState.drizzleState.accounts) {
 
@@ -53,13 +49,8 @@ export const UserActions = () => {
         contract.address
       );
 
-      const eth = web3.utils.toWei(
-        value,
-        global.config.currencyRequestValue
-      );
-
       contractWeb3.methods
-        .withdraw(eth)
+        .withdraw( currencyToWei(value) )
         .send({
           from: drizzleReadinessState.drizzleState.accounts[0]
         });

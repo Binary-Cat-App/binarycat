@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
 import { Header } from './Header';
-import { Support } from './Support';
 import { Faq } from './Faq';
 import { NoMetamask } from './NoMetamask';
 import { LoadingMetamask } from './LoadingMetamask';
@@ -24,9 +23,6 @@ const RoutesComponent = () => {
               <Switch>
                 <Route path="/faq">
                   <Faq />
-                </Route>
-                <Route path="/support">
-                  <Support />
                 </Route>
                 <Route exact path="/">
                   <NoMetamask />
@@ -52,9 +48,6 @@ const RoutesComponent = () => {
                 <Route path="/faq">
                   <Faq />
                 </Route>
-                <Route path="/support">
-                  <Support />
-                </Route>
                 <Route exact path="/">
                   <LoadingMetamask />
                 </Route>
@@ -74,9 +67,6 @@ const RoutesComponent = () => {
             <Switch>
               <Route path="/faq">
                 <Faq />
-              </Route>
-              <Route path="/support">
-                <Support />
               </Route>
               <Route exact path="/">
                 <Dashboard />
