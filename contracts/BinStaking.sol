@@ -1,11 +1,11 @@
-pragma solidity ^0.6.8;
-import "@openzeppelin/contracts/math/SafeMath.sol";
+pragma solidity ^0.8.0;
+//import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BinToken.sol";
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryStaking {
-    using SafeMath for uint256;
+    //using SafeMath for uint256;
     IERC20 public binToken;
 
     address payable owner;
@@ -22,14 +22,14 @@ contract BinaryStaking {
     event Unstaked(address indexed user, uint amount);
 
     constructor(address token) public {
-        owner = msg.sender;
+        owner = payable(msg.sender);
         binToken = BinToken(token);
     }
 
     function receiveFunds() public payable {
         uint value = msg.value;
         if (binToken.balanceOf(address(this)) != 0) {
-            accumulatedRewards = accumulatedRewards.add(value.mul(MUL_CONST).div(binToken.balanceOf(address(this))));
+            accumulatedRewards = accumulatedRewards + value*MUL_CONST/binToken.balanceOf(address(this));
         }
         else {
             owner.transfer(value);
@@ -43,7 +43,7 @@ contract BinaryStaking {
         }
 
         binToken.transferFrom(msg.sender, address(this), amount);
-        stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.add(amount);
+        stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin + amount;
 
         emit Staked(msg.sender, amount);
     }
@@ -53,7 +53,7 @@ contract BinaryStaking {
         require(amount <= stakingBalance[msg.sender].stakedBin, "Cannot unstake more than balance");
 
         release(msg.sender);
-        stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin.sub(amount);
+        stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin - amount;
 
         binToken.transfer(msg.sender, amount);
         emit Unstaked(msg.sender, amount);
@@ -64,7 +64,7 @@ contract BinaryStaking {
             return;
         }
         uint amount = ownedDividends(user);
-        accumulatedRewards = accumulatedRewards.sub(amount.mul(MUL_CONST).div( binToken.balanceOf(address(this))));
+        accumulatedRewards = accumulatedRewards - amount*MUL_CONST/binToken.balanceOf(address(this));
         stakingBalance[user].valueWhenLastReleased = accumulatedRewards;                                                        
         
         payable(user).transfer(amount);
@@ -72,7 +72,7 @@ contract BinaryStaking {
 
     function ownedDividends(address user) public view returns(uint) {
         StakingAccount memory balance = stakingBalance[user];
-        return ((accumulatedRewards.sub(balance.valueWhenLastReleased)).mul(balance.stakedBin)).div(MUL_CONST);
+        return ((accumulatedRewards - balance.valueWhenLastReleased)*balance.stakedBin)/MUL_CONST;
     }
 
 }

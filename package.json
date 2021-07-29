@@ -27,7 +27,7 @@
     "webpack": "^4.44.2",
     "@bandprotocol/bandchain.js": "^1.2.1",
     "@chainlink/contracts": "^0.1.7",
-    "@openzeppelin/contracts": "^3.3.0",
+    "@openzeppelin/contracts": "^4.2.0",
     "@truffle/hdwallet-provider": "^1.2.3",
     "bandprotocol": "^0.5.11",
     "dotenv": "^9.0.2",
