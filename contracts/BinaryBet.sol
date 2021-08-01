@@ -3,13 +3,14 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+import "./libraries/WadRayMath.sol";
 import "./BinToken.sol";
 import "./BinStaking.sol";
 
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
-    //using WadRayMath for uint256;
+    using WadRayMath for uint256;
 
     //Structs and enums
     enum BetSide {down, up} 
@@ -193,6 +194,9 @@ contract BinaryBet {
             if (token.balanceOf(address(this)) >= reward) {
                 token.transfer(user, reward);
             }
+            else {
+                token.transfer(user, token.balanceOf(address(this)));
+            }
 
             emit betSettled(window, user, windowGain);
         }
@@ -209,12 +213,12 @@ contract BinaryBet {
         uint poolTotal = poolUp + poolDown;
         if (result == BetResult.up && poolUp != 0) {
             //(upStake/poolUp)*poolTotal
-            gain = (upStake*poolTotal) / poolUp;
+            gain = sharePool(poolTotal, upStake, poolUp);
         } 
 
         else if (result == BetResult.down && poolDown != 0) {
             //(downStake/poolDown)*poolTotal
-            gain = (downStake*poolTotal) / poolDown;
+            gain = sharePool(poolTotal, downStake, poolDown);
         }
         else if (result == BetResult.tie) {
             gain = upStake + downStake;
@@ -236,9 +240,18 @@ contract BinaryBet {
         return 2;
     }
 
+    function sharePool(uint value, uint shares, uint totalShares) internal pure returns (uint) {
+        uint valueRay = value.wadToRay();
+        uint sharesRay = shares.wadToRay();
+        uint totalSharesRay = totalShares.wadToRay();
+        
+        uint resultRay = ( sharesRay.rayMul(valueRay) ).rayDiv(totalSharesRay);
+        return resultRay.rayToWad();
+    }
+
     function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
-        uint REWARD_PER_WINDOW = 665 ether;
-        return ((upStake + downStake)*REWARD_PER_WINDOW)/(poolUp + poolDown);
+        uint REWARD_PER_WINDOW = 665e18;
+        return sharePool(REWARD_PER_WINDOW, upStake + downStake, poolUp + poolDown);
     }
 
 
