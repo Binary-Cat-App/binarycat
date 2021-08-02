@@ -296,15 +296,14 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256){
-        //(
-             //, 
-            //int price,
-             //,
-             //,
-             //
-        //) = priceFeed.latestRoundData();
-        //return uint256(price);
-        return (uint(keccak256(abi.encodePacked(block.timestamp)))%20 + 640);
+        (
+             , 
+            int price,
+             ,
+             ,
+             
+        ) = priceFeed.latestRoundData();
+        return uint256(price);
     }
 
     //Getters
