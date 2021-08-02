@@ -1,10 +1,10 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+//import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract BinToken is ERC20{
-    using SafeMath for uint256;
+    //using SafeMath for uint256;
 
     string public constant NAME = "KITTY";
     string public constant SYMBOL = "KITTY";

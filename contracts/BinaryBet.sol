@@ -1,37 +1,16 @@
-pragma solidity ^0.6.8;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+import "./libraries/WadRayMath.sol";
 import "./BinToken.sol";
 import "./BinStaking.sol";
-
-//interface IStdReference {
-    /// A structure returned whenever someone requests for standard reference data.
-    //struct ReferenceData {
-        //uint256 rate; // base/quote exchange rate, multiplied by 1e18.
-        //uint256 lastUpdatedBase; // UNIX epoch of the last time when base price gets updated.
-        //uint256 lastUpdatedQuote; // UNIX epoch of the last time when quote price gets updated.
-    //}
-//
-    ///// Returns the price data for the given base/quote pair. Revert if not available.
-    //function getReferenceData(string calldata _base, string calldata _quote)
-        //external
-        //view
-        //returns (ReferenceData memory);
-
-    /// Similar to getReferenceData, but with multiple base/quote pairs at once.
-    //function getReferenceDataBulk(string[] calldata _bases, string[] calldata _quotes)
-        //external
-        //view
-        //returns (ReferenceData[] memory);
-//}
 
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
-    using SafeMath for uint256;
+    using WadRayMath for uint256;
 
     //Structs and enums
     enum BetSide {down, up} 
@@ -43,7 +22,6 @@ contract BinaryBet {
     }
 
     //Betting parameters
-    //IStdReference oracle;
     AggregatorV3Interface internal priceFeed;  
     address governance;
     uint public fee;
@@ -51,6 +29,10 @@ contract BinaryBet {
     uint public firstBlock;
     BinaryStaking staking; 
     address payable stakingAddress;
+
+    BinToken token;
+    address tokenAddress;
+
 
     //Window management
     mapping (uint => Pool) public pools; //windowNumber => Pool
@@ -81,7 +63,6 @@ contract BinaryBet {
 
     constructor(uint _windowDuration, uint _fee) public {
         require(_fee <= 100);
-        //oracle = IStdReference(address(0xDA7a001b254CD22e46d3eAB04d937489c93174C3));
         priceFeed = AggregatorV3Interface(0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526);
         firstBlock = block.number;
         windowDuration = _windowDuration;
@@ -98,11 +79,12 @@ contract BinaryBet {
     function changeWindowSize(uint windowSize) onlyGovernance public {
         require(windowSize > 0, "window size should be strictly positive");
         uint currentWindow = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
-        firstBlock = getWindowStartingBlock(currentWindow.add(1), windowDuration, firstBlock, windowOffset);
+        firstBlock = getWindowStartingBlock(currentWindow + 1, windowDuration, firstBlock, windowOffset);
         windowOffset = currentWindow;
         firstWindow = currentWindow;
         windowDuration = windowSize;
     }
+//==============================================================================
 
     function setStakingAddress(address stakingContract) external {
         require(stakingAddress == address(0), "staking address already set");
@@ -110,9 +92,15 @@ contract BinaryBet {
         staking = BinaryStaking(stakingAddress); 
     }
 
+    function setTokenAddress(address tokenContract) external {
+        require(tokenAddress == address(0), "token address already set");
+        tokenAddress = tokenContract;
+        token = BinToken(tokenAddress); 
+    }
+
     function deposit() payable external {
         updatePrice();
-        balance[msg.sender] = balance[msg.sender].add(msg.value);
+        balance[msg.sender] = balance[msg.sender] + msg.value;
         emit newDeposit(msg.sender, msg.value);
     }
 
@@ -121,8 +109,8 @@ contract BinaryBet {
         updateBalance(msg.sender);
 
         require(value <= balance[msg.sender], "not enough funds");
-        balance[msg.sender] = balance[msg.sender].sub(value);
-        msg.sender.transfer(value);
+        balance[msg.sender] = balance[msg.sender] - value;
+        payable(msg.sender).transfer(value);
 
         emit newWithdraw(msg.sender, value);
 
@@ -132,15 +120,15 @@ contract BinaryBet {
         updatePrice();
         updateBalance(msg.sender);
                     
-        require(betValue <= balance[msg.sender].add(msg.value), "not enough money to place this bet");
+        require(betValue <= balance[msg.sender] + msg.value, "not enough money to place this bet");
 
         //betValue <= balance + msg.value
         //0 <= balance + msg.value - betValue
-        balance[msg.sender] = balance[msg.sender].add(msg.value).sub(betValue);
+        balance[msg.sender] = balance[msg.sender] + msg.value - betValue;
 
         uint betFee = computeFee(betValue, fee); 
-        accumulatedFees = accumulatedFees.add(betFee);
-        uint value = betValue.sub(betFee);
+        accumulatedFees = accumulatedFees + betFee;
+        uint value = betValue - betFee;
 
         uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         if(!userBetted[msg.sender][windowNumber]) {
@@ -198,14 +186,23 @@ contract BinaryBet {
             Pool memory pool = pools[window];
             (uint windowGain, uint fees) = settleBet(stake.upValue, stake.downValue, pool.upValue, pool.downValue, result);
 
-            balance[msg.sender] = balance[msg.sender].add(windowGain);
-            accumulatedFees = accumulatedFees.add(fees);
+            balance[user] = balance[user] + windowGain;
+            accumulatedFees = accumulatedFees + fees;
+            
+            //KITTY token rewards
+            uint reward = calculateTokenReward(stake.upValue, stake.downValue, pool.upValue, pool.downValue);
+            if (token.balanceOf(address(this)) >= reward) {
+                token.transfer(user, reward);
+            }
+            else {
+                token.transfer(user, token.balanceOf(address(this)));
+            }
 
             emit betSettled(window, user, windowGain);
         }
 
         if(accumulatedFees > 0) {
-            staking.receiveFunds.value(accumulatedFees)();
+            staking.receiveFunds{value: accumulatedFees}();
             accumulatedFees = 0;
         }
 
@@ -213,21 +210,23 @@ contract BinaryBet {
 
     function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain, uint fees) {
         BetResult result = BetResult(betResult);
-        uint poolTotal = poolUp.add(poolDown);
+        uint poolTotal = poolUp + poolDown;
         if (result == BetResult.up && poolUp != 0) {
-            gain = (upStake.mul(poolTotal)).div(poolUp);
+            //(upStake/poolUp)*poolTotal
+            gain = sharePool(poolTotal, upStake, poolUp);
         } 
 
         else if (result == BetResult.down && poolDown != 0) {
-            gain = (downStake.mul(poolTotal)).div(poolDown);
+            //(downStake/poolDown)*poolTotal
+            gain = sharePool(poolTotal, downStake, poolDown);
         }
         else if (result == BetResult.tie) {
-            gain = upStake.add(downStake);
+            gain = upStake + downStake;
         }
         else {
             //If the winning pool is empty, all stake goes to the fees.
             gain = 0;
-            fees = upStake.add(downStake);
+            fees = upStake + downStake;
         }
     }
 
@@ -241,14 +240,28 @@ contract BinaryBet {
         return 2;
     }
 
+    function sharePool(uint value, uint shares, uint totalShares) internal pure returns (uint) {
+        uint valueRay = value.wadToRay();
+        uint sharesRay = shares.wadToRay();
+        uint totalSharesRay = totalShares.wadToRay();
+        
+        uint resultRay = ( sharesRay.rayMul(valueRay) ).rayDiv(totalSharesRay);
+        return resultRay.rayToWad();
+    }
+
+    function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
+        uint REWARD_PER_WINDOW = 665e18;
+        return sharePool(REWARD_PER_WINDOW, upStake + downStake, poolUp + poolDown);
+    }
+
 
     function updatePool(uint downValue, uint upValue, uint8 side, uint value) public pure returns(uint, uint){
         BetSide betSide = BetSide(side);
         if (betSide == BetSide.down) {
-            return (downValue.add(value), upValue);
+            return (downValue + value, upValue);
         }
         if (betSide == BetSide.up) {
-            return (downValue, upValue.add(value));
+            return (downValue, upValue + value);
         }
     }
 
@@ -258,18 +271,18 @@ contract BinaryBet {
         }
         else {
         //n = floor((block - first_block)/window_size  + 1)
-            windowNumber = ((currentBlock.sub(_firstBlock)).div(_windowDuration)).add(_windowOffset).add(1); //integer division => floor    
+            windowNumber = ((currentBlock - _firstBlock) / _windowDuration) + _windowOffset + 1; //integer division => floor    
         }
 
     }
 
     function getWindowStartingBlock (uint windowNumber, uint _windowDuration, uint _firstBlock, uint _windowOffset) public pure returns (uint startingBlock) {
         //firstBlock + (n-1 - (offset + 1))*window_size
-        startingBlock =  _firstBlock.add((windowNumber.sub(1).sub(_windowOffset)).mul(_windowDuration ));
+        startingBlock =  _firstBlock + (windowNumber - 1 - _windowOffset)*_windowDuration;
     }
 
     function computeFee(uint value, uint _fee) public pure returns (uint betFee) {
-        betFee = (value.mul(_fee)).div(100);
+        betFee = (value * _fee) / 100;
 
     }
 
@@ -283,7 +296,6 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256){
-        //IStdReference.ReferenceData memory data = oracle.getReferenceData("BNB","USD");
         (
              , 
             int price,
@@ -292,7 +304,6 @@ contract BinaryBet {
              
         ) = priceFeed.latestRoundData();
         return uint256(price);
-        //return data.rate;
     }
 
     //Getters

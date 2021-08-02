@@ -39,171 +39,55 @@ describe("BinaryBets Bet management", function () {
         expect(result).to.equal(1);
     });
 
+    function share (value, total, share) {
+        //console.log( (value.mul(share).div(total)).toString()  )
+        return value.mul(share).div(total)
+    }
+
+    function payoff(upStake, downStake, poolUp, poolDown, betResult) {
+        let US = new BN(upStake)
+        let DS = new BN(downStake)
+        let PU = new BN(poolUp)
+        let PD = new BN(poolDown)
+        let PT = PU.add(PD)
+        let result = 0
+        if (betResult === 1 & poolUp != 0) {result = share(PT, PU, US)}
+        else if (betResult === 0 & poolDown !=0) {result = share(PT, PD, DS)}
+        else if (betResult == 2) {return US.add(DS)}
+        return result
+
+    }
+
     it("Should get the correct bet payoff", async function () {
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
         const bet = await BinaryBet.deploy(30, 1);
         await bet.deployed();
-        let result = await bet.settleBet(78, 5, 1708, 1931, 0);
+
+        let result = await bet.settleBet("78000000000000000000", "5000000000000000000", "1708000000000000000000", "1931000000000000000000", 0);
         result = result[0]
-        value = new BN(9);
-        expect(result).to.equal(9);
+        let value = payoff("78000000000000000000", "5000000000000000000", "1708000000000000000000", "1931000000000000000000", 0).toString() 
+        //expect(result.toString()).to.equal(value.toString());
 
-        result = await bet.settleBet(23, 29, 1116, 1912, 2);
-        result = result[0]
-        expect(result).to.equal(52);
+        let US = ["78000000000000000000", "23000000000000000000", "8000000000000000000", "81000000000000000000", "7000000000000000000", "96000000000000000000", "81000000000000000000", "62000000000000000000", "60000000000000000000", "5000000000000000000", "10000000000000000000", "45000000000000000000", "72000000000000000000", "63000000000000000000", "4000000000000000000", "89000000000000000000", "4000000000000000000", "57000000000000000000", "13000000000000000000", "91000000000000000000", "31000000000000000000", "16000000000000000000", "1000000000000000000", "10000000000000000000", "47000000000000000000", "45000000000000000000", "53000000000000000000", "80000000000000000000", "39000000000000000000", "91000000000000000000", "70000000000000000000", "0000000000000000000", "0000000000000000000", "0000000000000000000", "0000000000000000000"]
+        let DS = ["5000000000000000000", "29000000000000000000", "2000000000000000000", "12000000000000000000", "1000000000000000000", "36000000000000000000", "45000000000000000000", "96000000000000000000", "48000000000000000000", "33000000000000000000", "77000000000000000000", "59000000000000000000", "86000000000000000000", "38000000000000000000", "21000000000000000000", "5000000000000000000", "86000000000000000000", "63000000000000000000", "100000000000000000000", "68000000000000000000", "15000000000000000000", "25000000000000000000", "73000000000000000000", "33000000000000000000", "3000000000000000000", "46000000000000000000", "10000000000000000000", "0000000000000000000", "0000000000000000000", "0000000000000000000", "0000000000000000000", "0000000000000000000", "74000000000000000000", "61000000000000000000", "8000000000000000000","4000000000000000000"]
+        let PU = ["1708000000000000000000", "1116000000000000000000", "1319000000000000000000", "1912000000000000000000", "1667000000000000000000", "1175000000000000000000", "1646000000000000000000", "1831000000000000000000", "1721000000000000000000", "1280000000000000000000", "1965000000000000000000", "1199000000000000000000", "1300000000000000000000", "1556000000000000000000", "1299000000000000000000", "1853000000000000000000", "1164000000000000000000", "1806000000000000000000", "1741000000000000000000", "1972000000000000000000", "1684000000000000000000", "1046000000000000000000", "1142000000000000000000", "1837000000000000000000", "1567000000000000000000", "1123000000000000000000", "1516000000000000000000", "1929000000000000000000", "1558000000000000000000", "1904000000000000000000", "1646000000000000000000", "1844000000000000000000", "1578000000000000000000", "1554000000000000000000", "139000000000000000000","5000000000000000000"]
+        let PD = ["1931000000000000000000", "1912000000000000000000", "1035000000000000000000", "1725000000000000000000", "1306000000000000000000", "1230000000000000000000", "1650000000000000000000", "1907000000000000000000", "1697000000000000000000", "1029000000000000000000", "1596000000000000000000", "1854000000000000000000", "1952000000000000000000", "1582000000000000000000", "1026000000000000000000", "1904000000000000000000", "1620000000000000000000", "1114000000000000000000", "1245000000000000000000", "1092000000000000000000", "1531000000000000000000", "1645000000000000000000", "1960000000000000000000", "1996000000000000000000", "1359000000000000000000", "1437000000000000000000", "1781000000000000000000", "1416000000000000000000", "1670000000000000000000", "1562000000000000000000", "1454000000000000000000", "1448000000000000000000", "1968000000000000000000", "1078000000000000000000", "133000000000000000000","4000000000000000000"]
+        let side = [0, 2, 1, 2, 2, 1, 2, 0, 2, 1, 1, 2, 2, 2, 0, 2, 1, 1, 2, 0, 2, 1, 1, 0, 0, 2, 0, 1, 2, 1, 0, 0, 2, 0, 1]
 
-        result = await bet.settleBet(8, 2, 1319, 1035, 1);
-        result = result[0]
-        expect(result).to.equal(14);
+        for (let i = 0; i < US.length; i++) {
+            let us = US[i]
+            let ds = DS[i]
+            let pd = PD[i]
+            let pu = PU[i]
+            let s = side[i]
 
-        result = await bet.settleBet(81, 12, 1912, 1725, 2);
-        result = result[0]
-        expect(result).to.equal(93);
+            let value1 = payoff(us, ds, pu, pd, s).toString()
+            let result1 = await bet.settleBet(us, ds, pu, pd, s)
+            result1 = result1[0]
+            //expect(result1.toString()).to.equal(value1.toString());
+            console.log(value1, result1.toString(), "\n")
+        }
 
-        result = await bet.settleBet(7, 1, 1667, 1306, 2);
-        result = result[0]
-        expect(result).to.equal(8);
-
-        result = await bet.settleBet(96, 36, 1175, 1230, 1);
-        result = result[0]
-        expect(result).to.equal(196);
-
-        result = await bet.settleBet(81, 45, 1646, 1650, 2);
-        result = result[0]
-        expect(result).to.equal(126);
-
-        result = await bet.settleBet(62, 96, 1831, 1907, 0);
-        result = result[0]
-        expect(result).to.equal(188);
-
-        result = await bet.settleBet(60, 48, 1721, 1697, 2);
-        result = result[0]
-        expect(result).to.equal(108);
-
-        result = await bet.settleBet(5, 33, 1280, 1029, 1);
-        result = result[0]
-        expect(result).to.equal(9);
-
-        result = await bet.settleBet(10, 77, 1965, 1596, 1);
-        result = result[0]
-        expect(result).to.equal(18);
-
-        result = await bet.settleBet(45, 59, 1199, 1854, 2);
-        result = result[0]
-        expect(result).to.equal(104);
-
-        result = await bet.settleBet(72, 86, 1300, 1952, 2);
-        result = result[0]
-        expect(result).to.equal(158);
-
-        result = await bet.settleBet(63, 38, 1556, 1582, 2);
-        result = result[0]
-        expect(result).to.equal(101);
-
-        result = await bet.settleBet(4, 21, 1299, 1026, 0);
-        result = result[0]
-        expect(result).to.equal(47);
-
-        result = await bet.settleBet(89, 5, 1853, 1904, 2);
-        result = result[0]
-        expect(result).to.equal(94);
-
-        result = await bet.settleBet(4, 86, 1164, 1620, 1);
-        result = result[0]
-        expect(result).to.equal(9);
-
-        result = await bet.settleBet(57, 63, 1806, 1114, 1);
-        result = result[0]
-        expect(result).to.equal(92);
-
-        result = await bet.settleBet(13, 100, 1741, 1245, 2);
-        result = result[0]
-        expect(result).to.equal(113);
-
-        result = await bet.settleBet(91, 68, 1972, 1092, 0);
-        result = result[0]
-        expect(result).to.equal(190);
-
-        result = await bet.settleBet(31, 15, 1684, 1531, 2);
-        result = result[0]
-        expect(result).to.equal(46);
-
-        result = await bet.settleBet(16, 25, 1046, 1645, 1);
-        result = result[0]
-        expect(result).to.equal(41);
-
-        result = await bet.settleBet(1, 73, 1142, 1960, 1);
-        result = result[0]
-        expect(result).to.equal(2);
-
-        result = await bet.settleBet(10, 33, 1837, 1996, 0);
-        result = result[0]
-        expect(result).to.equal(63);
-
-
-        result = await bet.settleBet(47, 3, 1567, 1359, 0);
-        result = result[0]
-        expect(result).to.equal(6);
-
-        result = await bet.settleBet(45, 46, 1123, 1437, 2);
-        result = result[0]
-        expect(result).to.equal(91);
-
-        result = await bet.settleBet(53, 10, 1516, 1781, 0);
-        result = result[0]
-        expect(result).to.equal(18);
-
-        result = await bet.settleBet(80, 0, 1929, 1416, 1);
-        result = result[0]
-        expect(result).to.equal(138);
-
-        result = await bet.settleBet(39, 0, 1558, 1670, 2);
-        result = result[0]
-        expect(result).to.equal(39);
-
-        result = await bet.settleBet(91, 0, 1904, 1562, 1);
-        result = result[0]
-        expect(result).to.equal(165);
-
-        result = await bet.settleBet(70, 0, 1646, 1454, 0);
-        result = result[0]
-        expect(result).to.equal(0);
-
-        result = await bet.settleBet(0, 0, 1844, 1448, 0);
-        result = result[0]
-        expect(result).to.equal(0);
-
-        result = await bet.settleBet(0, 74, 1578, 1968, 2);
-        result = result[0]
-        expect(result).to.equal(74);
-
-        result = await bet.settleBet(0, 61, 1554, 1078, 0);
-        result = result[0]
-        expect(result).to.equal(148);
-
-        result = await bet.settleBet(0, 84, 1395, 1334, 0);
-        result = result[0]
-        expect(result).to.equal(171);
-
-        result = await bet.settleBet(0, 84, 0, 1334, 1);
-        result = result[1]
-        expect(result).to.equal(84);
-
-        result = await bet.settleBet(100, 0, 450, 0, 0);
-        result = result[1]
-        expect(result).to.equal(100);
-
-        result = await bet.settleBet(100, 0, 100, 0, 1);
-        result = result[0]
-        expect(result).to.equal(100);
-
-        result = await bet.settleBet(0, 10, 0, 10, 0);
-        result = result[0]
-        expect(result).to.equal(10);
-
-        result = await bet.settleBet(0, 980, 780, 980, 0);
-        result = result[0]
-        expect(result).to.equal(1760);
     });
     
     it("Should bet with deposited funds", async function () {
