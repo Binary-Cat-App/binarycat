@@ -3,15 +3,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
-import "./libraries/WadRayMath.sol";
 import "./BinToken.sol";
 import "./BinStaking.sol";
 
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
-    using WadRayMath for uint256;
-
     //Structs and enums
     enum BetSide {down, up} 
     enum BetResult {down, up, tie}
@@ -241,12 +238,7 @@ contract BinaryBet {
     }
 
     function sharePool(uint value, uint shares, uint totalShares) internal pure returns (uint) {
-        uint valueRay = value.wadToRay();
-        uint sharesRay = shares.wadToRay();
-        uint totalSharesRay = totalShares.wadToRay();
-        
-        uint resultRay = ( sharesRay.rayMul(valueRay) ).rayDiv(totalSharesRay);
-        return resultRay.rayToWad();
+        return (shares * value) / totalShares;
     }
 
     function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
@@ -296,7 +288,7 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256){
-        (
+        /*(
              , 
             int price,
              ,
@@ -304,6 +296,8 @@ contract BinaryBet {
              
         ) = priceFeed.latestRoundData();
         return uint256(price);
+        */
+        return 100;
     }
 
     //Getters
