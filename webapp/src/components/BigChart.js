@@ -74,7 +74,7 @@ export const BetChart = ({ classAlt, chart }) => {
       }) : [],
     },
   ];
-  return (
+  return chart.length > 0 ? (
     <div
       className={`flex items-center justify-center text-white ${classAlt}`}
     >
@@ -84,6 +84,12 @@ export const BetChart = ({ classAlt, chart }) => {
         autoWidth
         height={190}
       />
+    </div>
+  ) : (
+    <div
+      className={`flex items-center justify-center animate-pulse ${classAlt}`}
+    >
+      Loading...
     </div>
   );
 };
