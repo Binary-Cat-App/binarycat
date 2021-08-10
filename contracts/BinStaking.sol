@@ -17,6 +17,7 @@ contract BinaryStaking {
 
     event Staked(address indexed user, uint amount);
     event Unstaked(address indexed user, uint amount);
+    event Release(address indexed user, uint amount);
 
     constructor(address token) public {
         owner = payable(msg.sender);
@@ -35,10 +36,7 @@ contract BinaryStaking {
 
     function stake(uint amount) external{
         require(amount > 0, "Amount should be greater than 0");
-        if (stakingBalance[msg.sender].stakedBin != 0) {
-            release();
-        }
-
+        release();
         binToken.transferFrom(msg.sender, address(this), amount);
         stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin + amount;
 
@@ -63,7 +61,10 @@ contract BinaryStaking {
         uint amount = ownedDividends(msg.sender);
         stakingBalance[msg.sender].valueWhenLastReleased = accumulatedRewards;                                                        
         
-        payable(msg.sender).transfer(amount);
+        if (amount > 0) {
+            payable(msg.sender).transfer(amount);
+            emit Release(msg.sender, amount);
+        }
     }
 
     function ownedDividends(address user) public view returns(uint) {

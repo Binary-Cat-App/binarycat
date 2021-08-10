@@ -143,7 +143,7 @@ describe("Staking",function () {
         expect(deltaBalance - (divValue1 + divValue2 + divValue3)).to.be.below(1);
     });
 
-    it("Should split dividends independent of release time", async function () {
+    it("Should split dividends between equal stakers", async function () {
         let divArray = Array.from({length: 40}, () => Math.floor(Math.random() * 1000000 + 10000000000000));
         let divSum = divArray.reduce((a, b) => a + b, 0);
         let initialBalance1 = await provider.getBalance(account1.address) 
@@ -167,6 +167,79 @@ describe("Staking",function () {
         expect(ownedDiv1.toString()).to.equal(ownedDiv2.toString())
         expect(ownedDiv1 - Math.floor(divSum/2)).to.be.below(1);
         expect(ownedDiv2 - Math.floor(divSum/2)).to.be.below(1);
+    });
+    function sharePool (value, shares, totalShares) {
+        return ethers.utils.parseEther((value*shares/totalShares).toString())
+    }
+
+    it("Should split dividends between multiple accounts", async function () {
+        let initialBalance1 = await provider.getBalance(account1.address) 
+        let initialBalance2 = await provider.getBalance(account2.address) 
+        let initialBalance3 = await provider.getBalance(account3.address) 
+
+        
+        let stakedValue = ethers.utils.parseEther("200")
+        await token.connect(account1).approve(stk.address, stakedValue, {gasPrice: 0})
+        await stk.connect(account1).stake(stakedValue,{gasPrice: 0})
+
+
+        let div = ethers.utils.parseEther("10")
+        await stk.connect(owner).receiveFunds({value: div})
+        let contractBal = await provider.getBalance(stk.address)
+        expect(contractBal.toString()).to.equal(div)
+        let ownedDiv1 = await stk.ownedDividends(account1.address);
+        expect(ownedDiv1.sub(div)).to.be.below(1);
+
+        stakedValue = ethers.utils.parseEther("210")
+        await token.connect(account2).approve(stk.address, stakedValue, {gasPrice: 0})
+        await stk.connect(account2).stake(stakedValue,{gasPrice: 0})
+        let ownedDiv2 = await stk.ownedDividends(account2.address);
+        expect(ownedDiv2).to.equal("0");
+
+        stakedValue = ethers.utils.parseEther("100")
+        await token.connect(account3).approve(stk.address, stakedValue, {gasPrice: 0})
+        await stk.connect(account3).stake(stakedValue,{gasPrice: 0})
+        let ownedDiv3 = await stk.ownedDividends(account3.address);
+        expect(ownedDiv3).to.equal("0")
+
+        div = ethers.utils.parseEther("20")
+        await stk.connect(owner).receiveFunds({value: div})
+        ownedDiv1 = await stk.ownedDividends(account1.address);
+        ownedDiv2 = await stk.ownedDividends(account2.address);
+        ownedDiv3 = await stk.ownedDividends(account3.address);
+
+        contractBal = await provider.getBalance(stk.address)
+        expect((ownedDiv1.add(ownedDiv2).add(ownedDiv3)).sub(contractBal)).to.be.below(1);
+        let expected1 = sharePool(20, 200,510)
+        let expected2 = sharePool(20, 210,510)
+        let expected3 = sharePool(20, 100,510)
+        expect(expected1.sub(ownedDiv1).add(ethers.utils.parseEther('10'))).to.be.below(1000);
+        expect(expected2.sub(ownedDiv2)).to.be.below(1000);
+        expect(expected3.sub(ownedDiv3)).to.be.below(1000);
+
+        stakedValue = ethers.utils.parseEther("100")
+        await stk.connect(account1).unstake(stakedValue,{gasPrice: 0})
+        let balance1 = await provider.getBalance(account1.address)
+        console.log(balance1.toString(), initialBalance1.toString())
+        expect(balance1.sub(initialBalance1).sub(expected1).sub(ethers.utils.parseEther('10'))).to.be.below(1000)
+        ownedDiv1 = await stk.ownedDividends(account1.address);
+        expect(ownedDiv1).to.equal("0")
+
+
+        div = ethers.utils.parseEther("30")
+        await stk.connect(owner).receiveFunds({value: div})
+        ownedDiv1 = await stk.ownedDividends(account1.address);
+        ownedDiv2 = await stk.ownedDividends(account2.address);
+        ownedDiv3 = await stk.ownedDividends(account3.address);
+        contractBal = await provider.getBalance(stk.address)
+        expect((ownedDiv1.add(ownedDiv2).add(ownedDiv3)).sub(contractBal)).to.be.below(1);
+
+        expected1 = sharePool(30, 100,410)
+        expected2 = expected2.add(sharePool(30, 210,410))
+        expected3 = expected3.add(sharePool(30, 100,410))
+        expect(expected1.sub(ownedDiv1)).to.be.below(1500);
+        expect(ownedDiv2.sub(expected2)).to.be.below(1500);
+        expect(ownedDiv3.sub(expected3)).to.be.below(1500);
     });
 
 });
