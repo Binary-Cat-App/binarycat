@@ -1,11 +1,21 @@
 const { expect } = require("chai");
+const {deployMockContract} = require('@ethereum-waffle/mock-contract');
+const { deployments, ethers } = require("hardhat");
+const AGGREGATOR = require('../build/contracts/AggregatorV3Interface.json')
 
 describe("BinaryBets Pool Creation", function () {
-    it("Should update the pool", async function () {
-        const BinaryBet = await ethers.getContractFactory("BinaryBet");
 
-        let bet = await BinaryBet.deploy(30, 1);
-        await bet.deployed();
+    beforeEach(async function () {
+        [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
+
+        mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
+
+        let aggregatorAddress = mockAggregator.address
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        let bet = await BinaryBet.deploy(30, 1, aggregatorAddress);
+    });
+
+    it("Should update the pool", async function () {
         let result = await bet.updatePool(100,150, 0, 10)
         expect(result[0]).to.equal(110);
         expect(result[1]).to.equal(150);

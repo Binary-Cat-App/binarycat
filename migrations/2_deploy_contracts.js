@@ -9,7 +9,7 @@ module.exports = async deployer => {
   await deployer.deploy(BinStake, token.address);
   stake = await BinStake.deployed();
 
-  await deployer.deploy(BinBet, 120, 2);
+  await deployer.deploy(BinBet, 120, 2, "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526");
   bet = await BinBet.deployed();
   await bet.setStakingAddress(stake.address);
   await bet.setTokenAddress(token.address);

@@ -3,6 +3,9 @@ const {
     BN,           // Big Number support
     expectRevert,
 } = require('@openzeppelin/test-helpers');
+const {deployMockContract} = require('@ethereum-waffle/mock-contract');
+const { deployments, ethers } = require("hardhat");
+const AGGREGATOR = require('../build/contracts/AggregatorV3Interface.json')
 
 describe("BinaryBets Bet management", function () {
     let owner;
@@ -13,18 +16,24 @@ describe("BinaryBets Bet management", function () {
     let BinaryBet
     let BinaryStaking
     let BinToken
+    let aggregatorAddress
+
 
       beforeEach(async function () {
-    // Get the ContractFactory and Signers here.
+        [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
+
+        mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
+        aggregatorAddress = mockAggregator.address
+
         BinaryBet = await ethers.getContractFactory("BinaryBet");
         BinaryStaking = await ethers.getContractFactory("BinaryStaking");
         BinToken = await ethers.getContractFactory("BinToken");
 
-        [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
-        bet = await BinaryBet.deploy(30, 1);
+        bet = await BinaryBet.deploy(30, 1, aggregatorAddress);
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
         await bet.setStakingAddress(stk.address);
+        await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);
   });
 
     it("Should get the correct bet result", async function () {
@@ -130,7 +139,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update pool", async function () {
-        bet = await BinaryBet.deploy(30, 0);
+        bet = await BinaryBet.deploy(30, 0, aggregatorAddress);
         await bet.connect(account1).placeBet(100, 0, {value: 100})
         let pool = await bet.getPoolValues(1)
         expect(pool[0]).to.equal(100);
@@ -148,7 +157,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update stake", async function () {
-        bet = await BinaryBet.deploy(30, 0);
+        bet = await BinaryBet.deploy(30, 0, aggregatorAddress);
         await bet.connect(account1).placeBet(100, 0, {value: 100})
         let stake = await bet.getUserStake(1, account1.address)
         expect(stake[0]).to.equal(100);
@@ -166,7 +175,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update last betted window", async function () {
-        const bet = await BinaryBet.deploy(100, 0);
+        const bet = await BinaryBet.deploy(100, 0, aggregatorAddress);
         await bet.deployed();
         await bet.connect(account1).placeBet(100, 0, {value: 100})
         let lastBet = await bet.userBets(account1.address, 0)

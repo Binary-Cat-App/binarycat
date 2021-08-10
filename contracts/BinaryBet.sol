@@ -58,9 +58,9 @@ contract BinaryBet {
         _;
     }
 
-    constructor(uint _windowDuration, uint _fee) public {
+    constructor(uint _windowDuration, uint _fee, address aggregator) public {
         require(_fee <= 100);
-        priceFeed = AggregatorV3Interface(0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526);
+        priceFeed = AggregatorV3Interface(aggregator);
         firstBlock = block.number;
         windowDuration = _windowDuration;
 
@@ -288,7 +288,7 @@ contract BinaryBet {
     }
 
     function priceOracle() internal returns (uint256){
-        /*(
+        (
              , 
             int price,
              ,
@@ -296,8 +296,6 @@ contract BinaryBet {
              
         ) = priceFeed.latestRoundData();
         return uint256(price);
-        */
-        return 100;
     }
 
     //Getters

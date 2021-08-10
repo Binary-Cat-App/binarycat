@@ -1,15 +1,21 @@
 const { expect } = require("chai");
-const { BN, expectEvent, expectRevert, time, balance } = require('@openzeppelin/test-helpers');
+const { BN, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const {deployMockContract} = require('@ethereum-waffle/mock-contract');
+const { deployments, ethers } = require("hardhat");
+const AGGREGATOR = require('../build/contracts/AggregatorV3Interface.json')
 
 describe("Staking",function () {
     beforeEach(async function () {
+        [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
+
+        mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
+
         provider = ethers.provider;
         BinaryBet = await ethers.getContractFactory("BinaryBet");
         BinaryStaking = await ethers.getContractFactory("BinaryStaking");
         BinToken = await ethers.getContractFactory("BinToken");
 
-        [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
-        bet = await BinaryBet.deploy(30, 1);
+        bet = await BinaryBet.deploy(30, 1, mockAggregator.address);
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
         await bet.setStakingAddress(stk.address);
@@ -220,7 +226,6 @@ describe("Staking",function () {
         stakedValue = ethers.utils.parseEther("100")
         await stk.connect(account1).unstake(stakedValue,{gasPrice: 0})
         let balance1 = await provider.getBalance(account1.address)
-        console.log(balance1.toString(), initialBalance1.toString())
         expect(balance1.sub(initialBalance1).sub(expected1).sub(ethers.utils.parseEther('10'))).to.be.below(1000)
         ownedDiv1 = await stk.ownedDividends(account1.address);
         expect(ownedDiv1).to.equal("0")
