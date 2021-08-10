@@ -196,6 +196,40 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzleReadinessState.drizzleState,
   ]);
 
+  // Gets Current Blockchain Block
+  useEffect(() => {
+    if (
+      drizzleReadinessState.loading === false &&
+      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
+    ) {
+      drizzle.web3.eth.getBlock('latest').then((data) => {
+        setCurrentBlock({ number: data.number, hash: data.hash });
+      });
+      var subscription = drizzle.web3.eth
+        .subscribe('newBlockHeaders')
+        .on('connected', function (subscriptionId) {
+          //console.log(subscriptionId);
+        })
+        .on('data', function (blockHeader) {
+          setCurrentBlock({
+            number: blockHeader.number,
+            hash: blockHeader.hash,
+            timestamp: blockHeader.timestamp,
+          });
+        })
+        .on('error', console.error);
+
+      // unsubscribes the subscription
+      return () => {
+        subscription.unsubscribe(function (error, success) {
+          if (success) {
+            console.log('Successfully unsubscribed!');
+          }
+        });
+      };
+    }
+  }, [drizzleReadinessState.loading]);
+
   // Balance Data
   useEffect(() => {
     if (
@@ -291,40 +325,6 @@ export const DrizzleProvider = ({ drizzle, children }) => {
     drizzle.web3,
     drizzleReadinessState.drizzleState,
   ]);
-
-  // Gets Current Blockchain Block
-  useEffect(() => {
-    if (
-      drizzleReadinessState.loading === false &&
-      Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0
-    ) {
-      drizzle.web3.eth.getBlock('latest').then((data) => {
-        setCurrentBlock({ number: data.number, hash: data.hash });
-      });
-      var subscription = drizzle.web3.eth
-        .subscribe('newBlockHeaders')
-        .on('connected', function (subscriptionId) {
-          //console.log(subscriptionId);
-        })
-        .on('data', function (blockHeader) {
-          setCurrentBlock({
-            number: blockHeader.number,
-            hash: blockHeader.hash,
-            timestamp: blockHeader.timestamp,
-          });
-        })
-        .on('error', console.error);
-
-      // unsubscribes the subscription
-      return () => {
-        subscription.unsubscribe(function (error, success) {
-          if (success) {
-            console.log('Successfully unsubscribed!');
-          }
-        });
-      };
-    }
-  }, [drizzleReadinessState.loading]);
 
   // Windows data
   useEffect(() => {

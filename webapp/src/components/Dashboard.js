@@ -48,7 +48,42 @@ export const Dashboard = () => {
   } = useDrizzle();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
-  const [bets, setBets] = useState([]);
+  const [bets, setBets] = useState(
+    [
+      {
+        ...openedWindowData,
+        ...openedPricesData,
+        ...openedPoolData,
+        ...openedAccountsData,
+        status: 'open',
+        id: uuid(),
+      },
+      {
+        ...ongoingWindowData,
+        ...ongoingPricesData,
+        ...ongoingPoolData,
+        ...ongoingAccountsData,
+        status: 'ongoing',
+        id: uuid(),
+      },
+      {
+        ...finalizedWindowData,
+        ...finalizedPricesData,
+        ...finalizedPoolData,
+        ...finalizedAccountsData,
+        status: 'finalized',
+        id: uuid(),
+      },
+      {
+        ...finalizedWindowData,
+        ...finalizedPricesData,
+        ...finalizedPoolData,
+        ...finalizedAccountsData,
+        status: 'finalized',
+        id: uuid(),
+      },
+    ]
+  );
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
 
@@ -58,8 +93,10 @@ export const Dashboard = () => {
 
   // Betting Cards Initialisation
   React.useEffect(() => {
+
     if (currentBlock) {
       if (isFirstLoad) {
+        
         // Initialize Cards
         setBets((prev) => [
           {
@@ -98,6 +135,7 @@ export const Dashboard = () => {
 
         setIsFirstLoad(false);
       } else {
+
         const updateBets = bets.slice(0);
         const opened = updateBets.find((el) => el.status === 'open');
         const ongoing = updateBets.find((el) => el.status === 'ongoing');
