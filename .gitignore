@@ -3,7 +3,7 @@ node_modules
 #Removing Lock file for Heroku
 package-lock.json
 
-/artifacts
+./artifacts
 bin
 cache
 coverage*
