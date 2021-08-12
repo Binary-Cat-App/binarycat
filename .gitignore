@@ -2,6 +2,7 @@ node_modules
 
 #Removing Lock file for Heroku
 package-lock.json
+
 /artifacts
 bin
 cache
@@ -11,7 +12,6 @@ deployments/localhost
 dist
 node_modules
 src/types
-test/*/
 .mnemonic
 .vscode
 .node*

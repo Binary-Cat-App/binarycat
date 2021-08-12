@@ -1,11 +1,11 @@
-module.exports = async ({getNamedAccounts, deployments}) => {
+const config = require('../config.js')
+module.exports = async ({getNamedAccounts, deployments, network}) => {
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
-    let a =  await getNamedAccounts();
 
-    const PRICE_FEED_ADDRESS = "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526"
-    const WINDOW_DURATION = 120;
-    const FEE = 2;
+    const PRICE_FEED_ADDRESS = config[network.name].price_feed_address
+    const WINDOW_DURATION = config[network.name].window_duration;
+    const FEE = config[network.name].fee;
 
     let token = await deploy('BinToken', {
     from: deployer,
