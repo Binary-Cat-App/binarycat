@@ -11,7 +11,7 @@ module.exports = {
       fee: 2
   },
 
-  polygon_mumbai: {
+  matic_testnet: {
       price_feed_address: "0x0715A7794a1dc8e42615F059dD6e406A6594651A", // ETH/USD price feed
       window_duration: 300,
       fee: 2

@@ -1,9 +1,11 @@
 require("@nomiclabs/hardhat-waffle");
 require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers")
+require('./tasks/update_price.js')
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
+const fs = require('fs');
+const mnemonic = fs.readFileSync(".mnemonic").toString().trim();
+
 task("accounts", "Prints the list of accounts", async () => {
   const accounts = await ethers.getSigners();
 
@@ -12,17 +14,20 @@ task("accounts", "Prints the list of accounts", async () => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
 module.exports = {
   solidity: "0.8.0",
   namedAccounts: {
     deployer: 0,
   },
+
+  networks: {
+    matic_testnet: {
+        url: "https://rpc-mumbai.matic.today",
+        chainId: 80001,
+        accounts: mnemonic ? { mnemonic } : undefined
+    }
+  },
+
 };
 
 
