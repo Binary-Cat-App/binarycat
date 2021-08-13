@@ -85,7 +85,7 @@ export const BetChart = ({ classAlt, chart, status }) => {
   const visibleFrom = (dataArr.length > 0) ? Math.min(...dataArr) : 0;
   const visibleTo = (dataArr.length > 0) ? Math.max(...dataArr) : 4102437600;
 
-  return (
+  return chart.length > 0 ? (
     <div
       className={`flex items-center justify-center text-white ${classAlt}`}
     >
@@ -98,5 +98,11 @@ export const BetChart = ({ classAlt, chart, status }) => {
         height={190}
       />
     </div>
-  );
+  ) : (
+    <div
+      className={`flex items-center justify-center animate-pulse ${classAlt}`}
+    >
+      Loading...
+    </div>
+  ); 
 };
