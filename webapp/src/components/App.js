@@ -6,6 +6,7 @@ import { Faq } from './Faq';
 import { NoMetamask } from './NoMetamask';
 import { LoadingMetamask } from './LoadingMetamask';
 import Dashboard from './Dashboard';
+import { Staking } from './Staking';
 import { Container } from './Container';
 
 import { DrizzleProvider, useDrizzle } from '../context/DrizzleContext';
@@ -25,6 +26,9 @@ const RoutesComponent = () => {
                   <Faq />
                 </Route>
                 <Route exact path="/">
+                  <NoMetamask />
+                </Route>
+                <Route path="/staking">
                   <NoMetamask />
                 </Route>
               </Switch>
@@ -51,6 +55,9 @@ const RoutesComponent = () => {
                 <Route exact path="/">
                   <LoadingMetamask />
                 </Route>
+                <Route path="/staking">
+                  <LoadingMetamask />
+                </Route>
               </Switch>
             </Container>
           </div>
@@ -70,6 +77,9 @@ const RoutesComponent = () => {
               </Route>
               <Route exact path="/">
                 <Dashboard />
+              </Route>
+              <Route path="/staking">
+                <Staking />
               </Route>
             </Switch>
           </Container>
