@@ -1,7 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers")
-require('./tasks/update_price.js')
+require('./tasks/tasks.js')
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".mnemonic").toString().trim();

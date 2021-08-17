@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 const { deployments, ethers } = require("hardhat");
 const {deployMockContract} = require('@ethereum-waffle/mock-contract');
-const AGGREGATOR = require('../build/contracts/AggregatorV3Interface.json')
+const AGGREGATOR = require('../artifacts/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol/AggregatorV3Interface.json')
 
 describe("BinaryBets Windows",function () {
     let BinaryBet
