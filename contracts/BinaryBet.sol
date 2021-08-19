@@ -2,16 +2,13 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
-import "./libraries/WadRayMath.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./BinToken.sol";
-import "./BinStaking.sol";
+import "./BinaryStaking.sol";
 
 
 //SPDX-License-Identifier: UNLICENSED
 contract BinaryBet {
-    using WadRayMath for uint256;
-
     //Structs and enums
     enum BetSide {down, up} 
     enum BetResult {down, up, tie}
@@ -61,9 +58,9 @@ contract BinaryBet {
         _;
     }
 
-    constructor(uint _windowDuration, uint _fee) public {
+    constructor(uint _windowDuration, uint _fee, address aggregator) public {
         require(_fee <= 100);
-        priceFeed = AggregatorV3Interface(0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526);
+        priceFeed = AggregatorV3Interface(aggregator);
         firstBlock = block.number;
         windowDuration = _windowDuration;
 
@@ -241,12 +238,7 @@ contract BinaryBet {
     }
 
     function sharePool(uint value, uint shares, uint totalShares) internal pure returns (uint) {
-        uint valueRay = value.wadToRay();
-        uint sharesRay = shares.wadToRay();
-        uint totalSharesRay = totalShares.wadToRay();
-        
-        uint resultRay = ( sharesRay.rayMul(valueRay) ).rayDiv(totalSharesRay);
-        return resultRay.rayToWad();
+        return (shares * value) / totalShares;
     }
 
     function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {

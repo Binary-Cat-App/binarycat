@@ -1,13 +1,21 @@
 const { expect } = require("chai");
 const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const { deployments, ethers } = require("hardhat");
+const {deployMockContract} = require('@ethereum-waffle/mock-contract');
+const AGGREGATOR = require('../artifacts/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol/AggregatorV3Interface.json')
 
 describe("BinaryBets Windows",function () {
-    it("Should find the correct starting block for the window", async function () {
+    let BinaryBet
+    let aggregatorAddress
+    beforeEach(async function () {
+        [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
+        mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        aggregatorAddress = mockAggregator.address
+        let bet = await BinaryBet.deploy(30, 1, aggregatorAddress);
+    });
 
-        let bet = await BinaryBet.deploy(30, 1);
-        await bet.deployed();
-
+    it("Should find the correct starting block for the window", async function () {
         let windowDuration = 30;
         let firstBlock = 10;
         
@@ -16,8 +24,8 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
         expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
 
-        bet = await BinaryBet.deploy(12, 1);
-        await bet.deployed();
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        bet = await BinaryBet.deploy(12, 1, aggregatorAddress);
         windowDuration = 12
         firstBlock = 5
         expect(await bet.getWindowStartingBlock(12, windowDuration, firstBlock,0)).to.equal(137);
@@ -26,11 +34,6 @@ describe("BinaryBets Windows",function () {
     });
 
     it("Should find the correct starting block for the window with offset", async function () {
-        const BinaryBet = await ethers.getContractFactory("BinaryBet");
-
-        let bet = await BinaryBet.deploy(30, 1);
-        await bet.deployed();
-
         let windowDuration = 50;
         let firstBlock = 100;
         
@@ -41,21 +44,17 @@ describe("BinaryBets Windows",function () {
     });
 
     it("Should find the correct window number for block", async function () {
-        const BinaryBet = await ethers.getContractFactory("BinaryBet");
-
-        let bet = await BinaryBet.deploy(30, 1);
-        await bet.deployed();
-
         let windowDuration = 30;
         let firstBlock = 10;
+
         expect(await bet.getWindowNumber(10, windowDuration, firstBlock, 0, 1)).to.equal(1);
         expect(await bet.getWindowNumber(10, windowDuration, firstBlock, 0, 1)).to.equal(1);
         expect(await bet.getWindowNumber(168, windowDuration, firstBlock, 0, 1)).to.equal(6);
         expect(await bet.getWindowNumber(330, windowDuration, firstBlock, 0, 1)).to.equal(11);
         expect(await bet.getWindowNumber(749, windowDuration, firstBlock, 0, 1)).to.equal(25);
 
-        bet = await BinaryBet.deploy(12, 1);
-        await bet.deployed();
+        const BinaryBet = await ethers.getContractFactory("BinaryBet");
+        bet = await BinaryBet.deploy(12, 1, aggregatorAddress);
         windowDuration = 12;
         firstBlock = 5;
         expect(await bet.getWindowNumber(5, windowDuration, firstBlock, 0, 1)).to.equal(1);
@@ -66,11 +65,6 @@ describe("BinaryBets Windows",function () {
     });
 
     it("Should find the correct window number for block with offset", async function () {
-        const BinaryBet = await ethers.getContractFactory("BinaryBet");
-
-        let bet = await BinaryBet.deploy(50, 1);
-        await bet.deployed();
-
         let windowDuration = 50;
         let firstBlock = 100;
         expect(await bet.getWindowNumber(125, windowDuration, firstBlock, 3, 3)).to.equal(4);
