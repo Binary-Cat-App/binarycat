@@ -1,5 +1,5 @@
 module.exports = global.config = {
-  currencyName: 'BNB',
+  currencyName: 'MATIC',
   currencyRequestValue: 'ether',
   currencyRatesNodeAPI: ''
 };
