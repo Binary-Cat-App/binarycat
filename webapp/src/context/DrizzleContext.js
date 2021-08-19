@@ -347,7 +347,7 @@ export const DrizzleProvider = ({ drizzle, children }) => {
         setIsBetPlaced(false);
       }
 
-      if (prevWindowNumber != openedWindow.windowNumber ) {
+      if (prevWindowNumber !== openedWindow.windowNumber ) {
         
         setWindowNumber(openedWindow.windowNumber);
         
