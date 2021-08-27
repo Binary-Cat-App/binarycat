@@ -1,4 +1,4 @@
-const config = require('../config.js')
+const config = require('../deploy_config.js')
 module.exports = async ({getNamedAccounts, deployments, network}) => {
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();

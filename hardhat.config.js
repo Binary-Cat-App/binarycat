@@ -1,7 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers")
-require('./tasks/tasks.js')
+require('./tasks')
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".mnemonic").toString().trim();
@@ -22,7 +22,7 @@ module.exports = {
 
   networks: {
     matic_testnet: {
-        url: "https://rpc-mumbai.matic.today",
+        url: "https://matic-mumbai.chainstacklabs.com",
         chainId: 80001,
         accounts: mnemonic ? { mnemonic } : undefined
     }
