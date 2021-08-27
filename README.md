@@ -46,7 +46,7 @@ Changes should be reflected on Ganache GUI:
 ### Starting the backend for prices data
 
 - NodeJS - Express - SocketIO - MongoDB
-- To start the server and get prices data for a specific interval from https://api-gm-lb.bandchain.org:
+- To start the server and get prices data for a specific interval from https://rpc-mumbai.maticvigil.com/:
 
 1. cd backend
 2. node index.js
@@ -57,9 +57,9 @@ Changes should be reflected on Ganache GUI:
 
 > MONGODB_URI=mongodb+srv://binarycatUser:7gb4NntHWlSHETjE@cluster0.a8hop.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 
-> CURRENCY_FEED_URL=https://data-seed-prebsc-1-s1.binance.org:8545
+> CURRENCY_FEED_URL=https://rpc-mumbai.maticvigil.com/
 
-> CURRENCY_FEED_CONTRACT_ADDRESS=0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526
+> CURRENCY_FEED_CONTRACT_ADDRESS=0x0715A7794a1dc8e42615F059dD6e406A6594651A
 
 > CURRENCY_FEED_INTERVAL=30000
 
