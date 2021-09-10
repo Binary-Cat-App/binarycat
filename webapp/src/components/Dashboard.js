@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
+
 import { Bet } from './Bet';
 import { Loading } from './Loading';
-import { UserSummary } from './UserSummary';
+//import { UserSummary } from './UserSummary';
 import { UserActions } from './UserActions';
 import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
-import { useDrizzle } from '../context/DrizzleContext';
+import { useBetting } from '../context/BettingContext';
 import _ from 'lodash';
 
 const MIN_BET_AMOUNT = 0;
@@ -17,10 +18,8 @@ export const Dashboard = () => {
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const {
-    drizzleReadinessState,
-    drizzle,
     currentBlock,
-    balance,
+    account,
     unsettledGains,
     progress,
     isOpenForBetting,
@@ -44,8 +43,11 @@ export const Dashboard = () => {
     finalizedWindowChartData,
     historicalChartData,
     weiToCurrency,
-    currencyToWei
-  } = useDrizzle();
+    currencyToWei,
+    web3Eth,
+    web3Utils,
+    contractObj
+  } = useBetting();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
   const [bets, setBets] = useState(
@@ -86,10 +88,6 @@ export const Dashboard = () => {
   );
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
-
-  const contract = React.useMemo(() => {
-    return drizzle.contracts.BinaryBet;
-  }, [drizzle.contracts]);
 
   // Betting Cards Initialisation
   React.useEffect(() => {
@@ -262,7 +260,7 @@ export const Dashboard = () => {
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
-    if (Object.keys(drizzleReadinessState.drizzleState.accounts).length > 0) {
+    if ( account ) {
       
       if (Number(value) <= MIN_BET_AMOUNT) {
         alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
@@ -270,15 +268,12 @@ export const Dashboard = () => {
       }
 
       const _bet = currencyToWei(value, true);
-      const _balance = BigInt(balance);
 
-      const overBalance = _bet > _balance ? _bet - _balance : 0;
-
-      contract.methods
-        .placeBet(_bet.toString(), direction)
+      contractObj.methods
+        .placeBet(direction)
         .send({
-          from: drizzleReadinessState.drizzleState.accounts[0],
-          value: overBalance.toString(),
+          from: account,
+          value: _bet.toString(),
         })
         .on('transactionHash', function (hash) {
           setIsOpenForBetting(false);
@@ -286,7 +281,7 @@ export const Dashboard = () => {
         });
     }
   };
-
+  //<UserSummary />
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
       <Loading />
@@ -294,7 +289,6 @@ export const Dashboard = () => {
   ) : (
     <>
       <div className="flex -mx-4 justify-between items-end mb-8">
-        <UserSummary />
         <UserActions />
       </div>
 

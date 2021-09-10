@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { StakingSummary } from './StakingSummary';
 import { Stake } from './Stake';
 import { Unstake } from './Unstake';
-import { useDrizzle } from '../context/DrizzleContext';
 
 export const Staking = () => {
 	return (

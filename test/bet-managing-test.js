@@ -105,34 +105,27 @@ describe("BinaryBets Bet management", function () {
 
     });
     
-    it("Should bet with deposited funds", async function () {
-        await bet.connect(account1).deposit({value:100});
-        let balance = await bet.getBalance(account1.address);
-        expect(balance).to.equal(100);
-        await bet.connect(account1).placeBet(100, 0);
-    });
 
     it("Should bet with sent funds", async function () {
-        await bet.connect(account1).placeBet(100, 0, {value: 100});
+        await bet.connect(account1).placeBet(0, {value: 100});
     });
 
-    it("Should revert without enough funds", async function () {
-        await bet.connect(account1).deposit({value:100});
+    it("Should revert zero value bet", async function () {
         await expect(
-            bet.connect(account1).placeBet(250, 0, {value: 100})
-      ).to.be.revertedWith("not enough money to place this bet");
+            bet.connect(account1).placeBet(0, {value: 0})
+      ).to.be.revertedWith("Only strictly positive values");
     });
 
     it("Should accumulate fees", async function () {
-        await bet.connect(account1).placeBet(100, 0, {value: 100})
+        await bet.connect(account1).placeBet(0, {value: 100})
         let fee = await bet.accumulatedFees()
         expect(fee).to.equal(1);
 
-        await bet.connect(account2).placeBet(200, 0, {value: 200})
+        await bet.connect(account2).placeBet(0, {value: 200})
         fee = await bet.accumulatedFees()
         expect(fee).to.equal(3);
         
-        await bet.connect(account3).placeBet(500, 0, {value: 500})
+        await bet.connect(account3).placeBet(0, {value: 500})
         fee = await bet.accumulatedFees()
         expect(fee).to.equal(8);
 
@@ -140,17 +133,17 @@ describe("BinaryBets Bet management", function () {
 
     it("Should update pool", async function () {
         bet = await BinaryBet.deploy(30, 0, aggregatorAddress);
-        await bet.connect(account1).placeBet(100, 0, {value: 100})
+        await bet.connect(account1).placeBet(0, {value: 100})
         let pool = await bet.getPoolValues(1)
         expect(pool[0]).to.equal(100);
         expect(pool[1]).to.equal(0);
 
-        await bet.connect(account2).placeBet(200, 0, {value: 200})
+        await bet.connect(account2).placeBet(0, {value: 200})
         pool = await bet.getPoolValues(1)
         expect(pool[0]).to.equal(300);
         expect(pool[1]).to.equal(0);
         
-        await bet.connect(account3).placeBet(500, 1, {value: 500})
+        await bet.connect(account3).placeBet(1, {value: 500})
         pool = await bet.getPoolValues(1)
         expect(pool[0]).to.equal(300);
         expect(pool[1]).to.equal(500);
@@ -158,17 +151,17 @@ describe("BinaryBets Bet management", function () {
 
     it("Should update stake", async function () {
         bet = await BinaryBet.deploy(30, 0, aggregatorAddress);
-        await bet.connect(account1).placeBet(100, 0, {value: 100})
+        await bet.connect(account1).placeBet(0, {value: 100})
         let stake = await bet.getUserStake(1, account1.address)
         expect(stake[0]).to.equal(100);
         expect(stake[1]).to.equal(0);
 
-        await bet.connect(account2).placeBet(200, 0, {value: 200})
+        await bet.connect(account2).placeBet(0, {value: 200})
         stake = await bet.getUserStake(1, account2.address)
         expect(stake[0]).to.equal(200);
         expect(stake[1]).to.equal(0);
         
-        await bet.connect(account3).placeBet(500, 1, {value: 500})
+        await bet.connect(account3).placeBet(1, {value: 500})
         stake = await bet.getUserStake(1, account3.address)
         expect(stake[0]).to.equal(0);
         expect(stake[1]).to.equal(500);
@@ -177,7 +170,7 @@ describe("BinaryBets Bet management", function () {
     it("Should update last betted window", async function () {
         const bet = await BinaryBet.deploy(100, 0, aggregatorAddress);
         await bet.deployed();
-        await bet.connect(account1).placeBet(100, 0, {value: 100})
+        await bet.connect(account1).placeBet(0, {value: 100})
         let lastBet = await bet.userBets(account1.address, 0)
         expect(lastBet).to.equal(1);
 

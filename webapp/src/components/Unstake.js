@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from './Button';
 import NumberFormat from 'react-number-format';
-import { useDrizzle } from '../context/DrizzleContext';
 
 export const Unstake = () => {
 

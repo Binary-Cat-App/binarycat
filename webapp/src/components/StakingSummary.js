@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button } from './Button';
-import { useDrizzle } from '../context/DrizzleContext';
 
 export const StakingSummary = () => {
 

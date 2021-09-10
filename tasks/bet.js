@@ -1,6 +1,6 @@
 
 task("bet:update_price", "Updates the price for the window", async function (
-  taskArguments,
+  _,
   hre,
 ) {
         const { deployments, ethers } = hre;
@@ -27,11 +27,6 @@ task("bet:update_price", "Updates the price for the window", async function (
 task("bet:place", "Place bet")
   .addPositionalParam("side", "down|up")
   .addPositionalParam("bet", "Value to bet in Matic")
-  .addOptionalParam(
-      "value", 
-      "value to send with transaction in Matic",
-      "0",
-      types.str)
   .setAction(async (taskArgs) => {
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
@@ -42,14 +37,13 @@ task("bet:place", "Place bet")
             BinaryBet.address
         );
       let betValue = ethers.utils.parseEther(taskArgs.bet)
-      let txValue = ethers.utils.parseEther(taskArgs.value)
       sideEncoded = taskArgs.side == "up"? "1":"0" 
-      await bet.connect(signer).placeBet(betValue, sideEncoded, {value: txValue})
+      await bet.connect(signer).placeBet(sideEncoded, {value: betValue})
       console.log("Betted %s Matic in %s", taskArgs.bet, taskArgs.side)
 });
 
 task("bet:window", "Prints current betting window", async function (
-  taskArguments,
+  _,
   hre,
 ) {
         let windowNumber = await hre.run("current_window")
@@ -57,11 +51,10 @@ task("bet:window", "Prints current betting window", async function (
 });
 
 subtask("current_window", "Gets current betting window", async function (
-  taskArguments,
+  _,
   hre,
 ) {
         const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
         let BinaryBet = await deployments.get("BinaryBet");
         let bet = await ethers.getContractAt(
             BinaryBet.abi,
@@ -85,7 +78,6 @@ task("bet:pool", "Get window pool size")
   )
   .setAction(async (taskArgs) => {
         const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
         let BinaryBet = await deployments.get("BinaryBet");
 
         let window = taskArgs.window

@@ -7,9 +7,7 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
     const WINDOW_DURATION = config[network.name].window_duration;
     const FEE = config[network.name].fee;
 
-    console.log(network.name)
     if (network.name === 'hardhat' || network.name === 'localhost') {
-        console.log('here')
         let mock = await deploy('OracleMock', {
             from: deployer,
             args: [],

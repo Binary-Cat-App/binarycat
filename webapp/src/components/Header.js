@@ -13,10 +13,9 @@ export const Header = () => {
       <Container>
         <div className="flex items-center justify-between">
           <span className="mr-4">
-            <a 
-              href="/">
+            <Link to="/">
               <Logo />
-            </a>
+            </Link>
           </span>
           <div>
             <ul className="flex items-center text-sm">

@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useWeb3React } from "@web3-react/core";
+import { injected } from "./Connectors";
+
 import { Button } from './Button';
-import { useState } from 'react';
 import MetaMaskLogo from '../assets/images/metamask.svg';
 
-export const LoadingMetamask = () => {
+export const ConnectMetamask = () => {
+  
   const [isLoading] = useState(false);
+  const { active, account, library, connector, activate, deactivate } = useWeb3React();
+
+  async function connect() {
+    try {
+      await activate(injected)
+    } catch (ex) {
+      console.log(ex)
+    }
+  }
 
   return (
   	<div className="w-full px-4 max-w-xl mx-auto">
@@ -23,9 +35,7 @@ export const LoadingMetamask = () => {
           variant="default"
           size="normal"
           className="py-3 text-xl w-full"
-          handleClick={() => {
-            window.location.reload();
-          }}
+          handleClick={connect}
           isLoading={isLoading}
         >
           Connect my wallet

@@ -1,47 +1,21 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { useWeb3React } from "@web3-react/core";
 
 import { Header } from './Header';
 import { Faq } from './Faq';
-import { NoMetamask } from './NoMetamask';
-import { LoadingMetamask } from './LoadingMetamask';
+import { ConnectMetamask } from './ConnectMetamask';
 import Dashboard from './Dashboard';
 import { Staking } from './Staking';
 import { Container } from './Container';
 
-import { DrizzleProvider, useDrizzle } from '../context/DrizzleContext';
+import { BettingProvider } from '../context/BettingContext';
 
 const RoutesComponent = () => {
-  const { drizzleReadinessState } = useDrizzle();
   
-  if(!window.ethereum)
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Router>
-          <Header />
-          <div className="py-6 sm:py-12 flex-grow flex flex-col">
-            <Container>
-              <Switch>
-                <Route path="/faq">
-                  <Faq />
-                </Route>
-                <Route exact path="/">
-                  <NoMetamask />
-                </Route>
-                <Route path="/staking">
-                  <NoMetamask />
-                </Route>
-              </Switch>
-            </Container>
-          </div>
-        </Router>
-      </div>
-    );
+  const { active } = useWeb3React();
 
-  if (
-    drizzleReadinessState.loading === true ||
-    Object.keys(drizzleReadinessState.drizzleState.accounts).length === 0
-  )
+  if ( !active )
     return (
       <div className="min-h-screen flex flex-col">
         <Router>
@@ -53,10 +27,10 @@ const RoutesComponent = () => {
                   <Faq />
                 </Route>
                 <Route exact path="/">
-                  <LoadingMetamask />
+                  <ConnectMetamask />
                 </Route>
                 <Route path="/staking">
-                  <LoadingMetamask />
+                  <ConnectMetamask />
                 </Route>
               </Switch>
             </Container>
@@ -76,7 +50,9 @@ const RoutesComponent = () => {
                 <Faq />
               </Route>
               <Route exact path="/">
-                <Dashboard />
+                <BettingProvider>
+                  <Dashboard />
+                </BettingProvider>
               </Route>
               <Route path="/staking">
                 <Staking />
@@ -93,9 +69,7 @@ const ConnectedRoutesComponent = RoutesComponent;
 
 export const App = (props) => {
   return (
-    <DrizzleProvider drizzle={props.drizzle}>
-      <ConnectedRoutesComponent />
-    </DrizzleProvider>
+    <ConnectedRoutesComponent />
   );
 };
 

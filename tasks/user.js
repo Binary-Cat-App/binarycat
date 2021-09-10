@@ -33,76 +33,7 @@ task("user:bets", "Get user bets in window")
         return stake;
   });
 
-task("user:deposit", "Deposits Matic")
-  .addPositionalParam(
-    "amount", 
-    "Amount to deposit",
-  )
-  .setAction(async (taskArgs) => {
-        const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
-
-        let BinaryBet = await deployments.get("BinaryBet");
-        let bet = await ethers.getContractAt(
-            BinaryBet.abi,
-            BinaryBet.address
-        );
-
-        let value = ethers.utils.parseEther(taskArgs.amount)
-        await bet.connect(signer).deposit({value: value})
-        console.log("Deposited %s Matic", taskArgs.amount)
-  });
-
-task("user:withdraw", "Withdraw Matic")
-  .addPositionalParam(
-    "amount", 
-    "Amount to withdraw",
-  )
-  .setAction(async (taskArgs) => {
-        const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
-
-        let BinaryBet = await deployments.get("BinaryBet");
-        let bet = await ethers.getContractAt(
-            BinaryBet.abi,
-            BinaryBet.address
-        );
-
-        let value = ethers.utils.parseEther(taskArgs.amount)
-        await bet.connect(signer).withdraw(value)
-        console.log("Withdrew %s Matic", taskArgs.amount)
-  });
-
-task("user:balance", "Prints user balance")
-  .addOptionalParam(
-    "user", 
-    "Address of the user"
-  )
-  .setAction(async (taskArgs) => {
-        const { deployments, ethers } = hre;
-
-        let user = taskArgs.user
-        if (typeof user == 'undefined') {
-            const [signer] = await ethers.getSigners();
-            user = await signer.getAddress(); 
-        }
-
-        let BinaryBet = await deployments.get("BinaryBet");
-        let bet = await ethers.getContractAt(
-            BinaryBet.abi,
-            BinaryBet.address
-        );
-
-        let balance = await bet.balance(user)
-        console.log("Balance: %s Matic", ethers.utils.formatEther(balance))
-  });
-
-
-task("user:update", "Updates user balance in chain")
-  .addOptionalParam(
-    "user", 
-    "Address of the user"
-  )
+task("user:claim", "Updates user balance in chain")
   .setAction(async (taskArgs) => {
         const { deployments, ethers } = hre;
         const [signer] = await ethers.getSigners();
@@ -117,6 +48,7 @@ task("user:update", "Updates user balance in chain")
             BinaryBet.abi,
             BinaryBet.address
         );
-      await bet.connect(signer).updateBalance(user)
+      await bet.connect(signer).updateBalance()
   });
+
 module.exports = {};

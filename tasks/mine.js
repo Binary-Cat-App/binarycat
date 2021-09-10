@@ -1,6 +1,5 @@
 task("mine:basic", "Mine KITTY tokens by betting in both sides each window")
   .addParam("bet", "Value to bet in each side")
-  .addParam("value", "value to send with transaction for each side")
   .addParam("timeout", "time in miliseconds between checks")
   .addOptionalParam(
     "onlyfirst", 
@@ -10,7 +9,6 @@ task("mine:basic", "Mine KITTY tokens by betting in both sides each window")
   )
   .setAction(async (taskArgs) => {
         const { deployments, ethers } = hre;
-        const [signer] = await ethers.getSigners();
         let BinaryBet = await deployments.get("BinaryBet");
 
         let bet = await ethers.getContractAt(
@@ -34,12 +32,16 @@ task("mine:basic", "Mine KITTY tokens by betting in both sides each window")
         let stakeDown = stake[0]
         let stakeUp = stake[1]
 
-        if (betValue >= stakeUp) {
-            await hre.run("bet:place", {side: 'up', bet:  ethers.utils.formatEther(betValue.sub(stakeUp)), value: taskArgs.value} )
+        console.log(betValue);
+        console.log(stakeDown);
+        console.log(betValue.gt(stakeDown))
+
+        if (betValue.gt(stakeUp)) {
+            await hre.run("bet:place", {side: 'up', bet:  ethers.utils.formatEther(betValue.sub(stakeUp))} )
         }
 
-        if (betValue >= stakeDown) {
-            await hre.run("bet:place", {side: 'down', bet: ethers.utils.formatEther(betValue.sub(stakeDown)), value: taskArgs.value} )
+        if (betValue.gt(stakeDown)) {
+            await hre.run("bet:place", {side: 'down', bet: ethers.utils.formatEther(betValue.sub(stakeDown))} )
         }
 
       }
