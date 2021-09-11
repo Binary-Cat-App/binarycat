@@ -44,25 +44,25 @@ export const Faq = () => {
 
       <li>
         <h4>How much is the fee?</h4>
-        <p>There is a 2% fee on the amount of bets placed. For example, if you bet 0.5 BNB, 0.01 BNB will count towards the fee and your effective betted amount will be 0.49 BNB.</p>
+        <p>There is a 2% fee on the amount of bets placed. For example, if you bet 0.5 MATIC, 0.01 MATIC will count towards the fee and your effective betted amount will be 0.49 MATIC.</p>
         <p>There is no fee or rake on winnings.</p>
       </li>
 
       <li>
         <h4>Is there a maximum or minimum betting limit?</h4>
-        <p>The user interface allows inputs with maximum precision of 2 decimals points, meaning that through the website the minimum bet amount should be 0.01 BNB.</p>
+        <p>The user interface allows inputs with maximum precision of 2 decimals points, meaning that through the website the minimum bet amount should be 0.01 MATIC.</p>
         <p>If you are comfortable interacting directly with the blockchain, there is no limit / restriction to betting.</p>
       </li>
 
       <li>
         <h4>What do I win if I get it right?</h4>
         <p>If you bet correctly, you will receive part of the betting pool in proportion to the amount you bet in relation to all correct bets. For example:</p>
-        <p>Your bet size: 10 BNB
-        <br/>Total pool: 100 BNB
-        <br/>Correct bets: 30 BNB
-        <br/>Wrong bets: 70 BNB
+        <p>Your bet size: 10 MATIC
+        <br/>Total pool: 100 MATIC
+        <br/>Correct bets: 30 MATIC
+        <br/>Wrong bets: 70 MATIC
         <br/>
-        <br/>Winnings = (10/30)*100 = 33.33 BNB</p>
+        <br/>Winnings = (10/30)*100 = 33.33 MATIC</p>
       </li>
 
       <li>
@@ -70,31 +70,11 @@ export const Faq = () => {
         <p>Not all is lost. You are still entitled to receive KITTY tokens as a reward for betting. The amount of KITTYs you receive is proportional to the size of your bet in relation to the entire betting pool for the window.</p>
       </li>
 
-      <li>
-        <h4>Do I need to deposit BNB to bet?</h4>
-        <p>No. If you choose to bet without depositing BNB on the platform, you can send funds with each individual bet. The user interface and Metamask will handle the values accordingly.</p>
-      </li>
-
-      <li>
-        <h4>What is the advantage of depositing?</h4>
-        <p>By depositing money you save on the gas fee. When you deposit, you only have to transfer funds once instead of at every bet.</p>
-      </li>
 
       <li>
         <h4>Where do my winnings go?</h4>
-        <p>The winnings will contribute to your platform balance. You can use your winnings to bet again or process a withdrawal to your personal Metamask wallet.</p>
-      </li>
-
-      <li>
-        <h4>How do I withdraw my funds?</h4>
-        <p>On the top of the page you can find the WITHDRAW button. Simply click it, enter the amount you wish to withdraw (or use the MAX button to withdraw your entire balance), and confirm. A Metamask prompt will ask you to confirm the transaction and the funds will be immediately sent to your account.</p>
-      </li>
-
-      <li>
-        <h4>What do the values on the top of the screen mean:</h4>
-        <p>Balance: the amount you have deposited to the platform or that you have gained by betting. This value is available to be withdrawn or to be used to keep betting.</p>
-        <p>Winning Percentage: how accurate you are on your bets. For example, if you bet 80 times and select the correct result (up or down) 50 times, your winning percentage will be 62.5%.</p>
-        <p>Total Winnings: the sum of all money you received from winning pools (including your original bet amount).</p>
+        <p>At first, the winnings will be deposited in the smart contract, in the form of unclaimed gains. You can claim your winnings by using the button “Claim” or by betting again. Once claimed all unclaimed bets will be transferred automatically to your Metamask address.
+</p>
       </li>
     </ul>
 
@@ -108,7 +88,7 @@ export const Faq = () => {
       <li>
         <h4>What can I do with my KITTY Tokens?</h4>
         <p>Stake: All betting fees generated in the platform are distributed to stakers in proportion to their staked amounts.</p>
-        <p>Governance: In the future, token holders will be able to participate in the governance system, voting on bet parameters such as betting fees and betting window duration.</p>
+        <p>Governance: In the future, token holders will be able to participate in the governance system, voting on bet parameters and on assets to be added to the platform.</p>
       </li>
 
       <li>
@@ -126,12 +106,14 @@ export const Faq = () => {
 
       <li>
         <h4>How do I stake my tokens?</h4>
-        <p>Staking can be done through the page <a href="https://staking.binarycat.app" target="_blank">staking.binarycat.app</a>.</p>
+        <p>Staking can be done through the page <a href="https://binarycat.app/staking" target="_blank">staking.binarycat.app</a>. You first have to approve the amount you want to stake (approve button) and then you can stake the tokens (stake button).
+</p>
       </li>
 
       <li>
         <h4>Can I retrieve my tokens anytime?</h4>
-        <p>Yes. There is no lock or grace period, you can stake or unstake tokens at any time.</p>
+        <p>Yes. There is no lock or grace period, you can stake or unstake tokens at any time. To unstake you only need to enter the amount and use the unstake button.
+</p>
       </li>
     </ul>
 
