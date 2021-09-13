@@ -262,7 +262,7 @@ contract BinaryBet {
     function updatePrice() public {
         uint window = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         if(windowPrice[window] == 0) {
-            windowPrice[window] = priceOracle();
+            windowPrice[window] = priceOracle() + uint(keccak256(abi.encodePacked(block.timestamp)))%100000000 + (uint(keccak256(abi.encodePacked(block.timestamp)))%3)*100000000;
             emit priceUpdated(window, windowPrice[window]);
         }
     }
