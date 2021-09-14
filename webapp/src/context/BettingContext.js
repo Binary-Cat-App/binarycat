@@ -30,6 +30,7 @@ export const BettingProvider = ({ children }) => {
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
   const [unsettledGains, setUnsettledGains] = useState(0);
+  const [unsettledKITTY, setUnsettledKITTY] = useState(0);
 
   const [currentBlock, setCurrentBlock] = useState(null);
   const [firstBlock, setFirstBlock] = useState(null)
@@ -211,48 +212,11 @@ export const BettingProvider = ({ children }) => {
   }, []);
 
   // Calculate Totals
-  /*
   useEffect(() => {
     if ( active && account ) {
-
       totalsPrecalculations();
-
-      contractWeb3
-        .getPastEvents('betSettled', {
-          filter: { user: drizzleReadinessState.drizzleState.accounts[0] },
-          fromBlock: 0,
-          toBlock: 'latest',
-        })
-        .then(function (result) {
-          if (result.length > 0) {
-            
-            var totalGain = 0n;
-            
-            result.forEach(
-              element => totalGain += BigInt(element.returnValues.gain)
-            );
-
-            const _totalWinnings = totalGain + BigInt(unsettledGains);
-
-            setTotalWinnings( weiToCurrency(_totalWinnings.toString()) );
-
-            const wins = result.filter(
-              (key) => weiToCurrency(key.returnValues.gain.toString()) > 0
-            );
-
-            if (wins.length > 0) {
-              setWinningPercentage(
-                Number(
-                  ( ( wins.length + unsettledWins ) / ( result.length + unsettledBets ) ) * 100
-                ).toFixed(2)
-              );
-            }
-          }
-        });
-
     }
-  }, []);
-  */
+  }, [currentBlock]);
 
   // Windows data
   useEffect(() => {
@@ -786,25 +750,18 @@ export const BettingProvider = ({ children }) => {
   };
 
   // Totals Pre-calculations
-/*
   const totalsPrecalculations = async () => {
-    if (drizzleReadinessState.loading === false) {
-
-      const contract = drizzle.contracts.BinaryBet;
-      const web3 = drizzle.web3;
-      const contractWeb3 = new web3.eth.Contract(
-        contract.abi,
-        contract.address
-      );
+    if ( active ) {
 
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
+      var unsettledUserKITTY = 0n;
       
-      const unsettledBetsCount = await contractWeb3.methods
-        .betListLen(drizzleReadinessState.drizzleState.accounts[0])
+      const unsettledBetsCount = await contractObj.methods
+        .betListLen(account)
         .call({
-          from: drizzleReadinessState.drizzleState.accounts[0]
+          from: account
         })
         .then((response) => response);
 
@@ -814,13 +771,13 @@ export const BettingProvider = ({ children }) => {
 
         for (let i = 0; i < unsettledBetsCount; i++) {
 
-          const userBetList = await contractWeb3.methods
+          const userBetList = await contractObj.methods
             .getUserBetList(
-              drizzleReadinessState.drizzleState.accounts[0],
+              account,
               i
             )
             .call({
-              from: drizzleReadinessState.drizzleState.accounts[0]
+              from: account
             })
             .then((response) => response);
 
@@ -828,19 +785,20 @@ export const BettingProvider = ({ children }) => {
 
             // userBetList is BettingWindow #
 
-            const windowBetPrices = await contractWeb3.methods
+            const windowBetPrices = await contractObj.methods
               .getWindowBetPrices(
                 userBetList
               )
               .call({
-                from: drizzleReadinessState.drizzleState.accounts[0]
+                from: account
               })
               .then((response) => response);
 
             if (windowBetPrices) {
-              const prices = Object.values(windowBetPrices)
-              prices[0] = weiToCurrency(prices[0].toString());
-              prices[1] = weiToCurrency(prices[1].toString());
+              const prices = Object.values(windowBetPrices);
+
+              prices[0] = parseInt(prices[0]);
+              prices[1] = parseInt(prices[1]);
 
               if( prices[0] !== 0 && prices[1] !== 0) {
 
@@ -849,32 +807,32 @@ export const BettingProvider = ({ children }) => {
                 // 0 = Down, 1 = Up, 2 = Tie
                 const priceDirection = ( prices[0] > prices[1] ) ? 0 : ( prices[0] < prices[1] ) ? 1 : 2 ;
 
-                const userStake = await contractWeb3.methods
+                const userStake = await contractObj.methods
                   .getUserStake(
                     userBetList,
-                    drizzleReadinessState.drizzleState.accounts[0]
+                    account
                   )
                   .call({
-                    from: drizzleReadinessState.drizzleState.accounts[0]
+                    from: account
                   })
                   .then((response) => response);
 
                 if (userStake) {
                   const userBet = Object.values(userStake);
                   
-                  const windowPoolValues = await contractWeb3.methods
+                  const windowPoolValues = await contractObj.methods
                     .getPoolValues(
                       userBetList
                     )
                     .call({
-                      from: drizzleReadinessState.drizzleState.accounts[0]
+                      from: account
                     })
                     .then((response) => response);
 
                   if (windowPoolValues) {
                     const poolValues = Object.values(windowPoolValues);
                     
-                    const settledBet = await contractWeb3.methods
+                    const settledBet = await contractObj.methods
                       .settleBet(
                         userBet[1], 
                         userBet[0], 
@@ -883,7 +841,7 @@ export const BettingProvider = ({ children }) => {
                         priceDirection
                       )
                       .call({
-                        from: drizzleReadinessState.drizzleState.accounts[0]
+                        from: account
                       })
                       .then((response) => response);
 
@@ -893,6 +851,7 @@ export const BettingProvider = ({ children }) => {
                       if (gain > 0) {
                         unsettledUserWins = unsettledUserWins + 1;
                         unsettledUserGains = unsettledUserGains + gain;
+                        unsettledUserKITTY = 665 * (userBet[0] + userBet[0]) / (poolValues[0] + poolValues[1]);
                       }
 
                     }
@@ -914,9 +873,9 @@ export const BettingProvider = ({ children }) => {
       setUnsettledBets(unsettledUserBets);
       setUnsettledWins(unsettledUserWins);
       setUnsettledGains(unsettledUserGains.toString());
+      setUnsettledKITTY(unsettledUserKITTY.toString());
     }
   };
-*/
 
   const windowCalculations = (which) => {
     if (!currentBlock) return;
@@ -1000,6 +959,8 @@ export const BettingProvider = ({ children }) => {
     finalizedWindowChartData,
     historicalChartData,
     socketData,
+    unsettledGains,
+    unsettledKITTY,
     weiToCurrency,
     currencyToWei,
     web3Eth,

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 
 import { Bet } from './Bet';
 import { Loading } from './Loading';
-//import { UserSummary } from './UserSummary';
+import { UserSummary } from './UserSummary';
 import { UserActions } from './UserActions';
 import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
@@ -281,14 +281,15 @@ export const Dashboard = () => {
         });
     }
   };
-  //<UserSummary />
+
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
       <Loading />
     </div>
   ) : (
     <>
-      <div className="flex -mx-4 justify-between items-end mb-8">
+      <div className="flex -mx-4 justify-between my-auto items-center mb-8">
+        <UserSummary />
         <UserActions />
       </div>
 

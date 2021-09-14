@@ -6,6 +6,7 @@ import { ReactComponent as IconSupport } from '../assets/images/icon-support.svg
 import { ReactComponent as IconHelp } from '../assets/images/icon-help.svg';
 import { ReactComponent as IconTwitter } from '../assets/images/icon-twitter.svg';
 import { ReactComponent as IconReddit } from '../assets/images/icon-reddit.svg';
+import { ReactComponent as IconMedium } from '../assets/images/icon-medium.svg';
 
 export const Header = () => {
   return (
@@ -30,7 +31,7 @@ export const Header = () => {
               </li>
               <li className="mr-4">
                 <a 
-                  href="https://discord.gg/9svxUjmq"
+                  href="https://t.me/BinaryCatChat"
                   className="text-gray-500 hover:text-gray-800 flex items-center"
                   target="_blank"
                 >
@@ -48,14 +49,24 @@ export const Header = () => {
                   Twitter
                 </a>
               </li>
-              <li>
+              <li className="mr-4">
                 <a 
-                  href="#"
+                  href="https://www.reddit.com/user/BinaryCatApp"
                   className="text-gray-500 hover:text-gray-800 flex items-center"
                   target="_blank"
                 >
                   <IconReddit className="icon mr-2" />
                   Reddit
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://medium.com/@BinaryCat"
+                  className="text-gray-500 hover:text-gray-800 flex items-center"
+                  target="_blank"
+                >
+                  <IconMedium className="icon mr-2" />
+                  Medium
                 </a>
               </li>
             </ul>
