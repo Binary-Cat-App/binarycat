@@ -32,7 +32,7 @@ export const UserActions = () => {
   };
 
   return (
-    <div className="px-4 ml-auto">
+    <div className="px-4">
       <div className="flex">
         <Button 
           className="w-full"

@@ -15,7 +15,7 @@ export const UserSummary = () => {
   const _unsettledKITTY = unsettledKITTY ? weiToCurrency(unsettledKITTY) : 0.00;
 
   return (
-    <div className="flex mr-auto">
+    <>
       <div className="px-4">
         <div className="flex items-center">
           <span className="-mr-8 rounded-full bg-white p-4 shadow-xl w-20 h-20 flex items-center justify-center flex-shrink-0 z-10 relative">
@@ -46,6 +46,6 @@ export const UserSummary = () => {
           </dl>
         </div>
       </div>
-    </div>
+    </>
   );
 };

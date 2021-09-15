@@ -851,8 +851,9 @@ export const BettingProvider = ({ children }) => {
                       if (gain > 0) {
                         unsettledUserWins = unsettledUserWins + 1;
                         unsettledUserGains = unsettledUserGains + gain;
-                        unsettledUserKITTY = 665 * (userBet[0] + userBet[0]) / (poolValues[0] + poolValues[1]);
                       }
+
+                      unsettledUserKITTY = unsettledUserKITTY + ( BigInt(665) * (BigInt(userBet[0]) + BigInt(userBet[1])) / (BigInt(poolValues[0]) + BigInt(poolValues[1])) );
 
                     }
 

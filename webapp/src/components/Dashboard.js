@@ -288,7 +288,7 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
-      <div className="flex -mx-4 justify-between my-auto items-center mb-8">
+      <div className="flex -mx-4 my-auto items-center mb-8">
         <UserSummary />
         <UserActions />
       </div>
