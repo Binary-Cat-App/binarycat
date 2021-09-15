@@ -365,7 +365,25 @@ export const BettingProvider = ({ children }) => {
         .then((res) => res.json())
         .then((result) => {
           if(result.result.length > 0) {
-            setFinalizedWindowChartData(result.result);
+            
+            var _priceRange = [];
+            if ( parseFloat(finalizedPricesData.initialPrice) !== 0 && parseFloat(finalizedPricesData.finalPrice) !== 0 && ongoingWindowTimestamps )
+            {
+              _priceRange = [
+                {
+                  "_id": "initial",
+                  "time": ongoingWindowTimestamps.startingBlockTimestamp,
+                  "rate": finalizedPricesData.initialPrice
+                },
+                {
+                  "_id": "final",
+                  "time": ongoingWindowTimestamps.endingBlockTimestamp,
+                  "rate": finalizedPricesData.finalPrice
+                }
+              ];
+            }
+
+            setFinalizedWindowChartData([...result.result, ..._priceRange]);
           }
         });
     }
