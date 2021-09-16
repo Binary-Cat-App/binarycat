@@ -1,6 +1,6 @@
 import React from 'react';
 import { ReactComponent as IconWinningPercentage } from '../assets/images/icon-winning-percantage.svg';
-import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-total-winnings.svg';
+import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-ballance.svg';
 import { useBetting } from '../context/BettingContext';
 
 export const UserSummary = () => {
