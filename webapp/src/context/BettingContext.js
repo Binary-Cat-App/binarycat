@@ -338,11 +338,28 @@ export const BettingProvider = ({ children }) => {
         .then((res) => res.json())
         .then((result) => {
           if (result.result.length > 0) {
-            setOngoingWindowChartData(result.result);
+
+            var _priceRange = [];
+
+            if ( 
+              parseFloat(ongoingPricesData.initialPrice) !== 0 && 
+              openedWindowTimestamps ) {
+
+              _priceRange = [
+                {
+                  "_id": "initial",
+                  "time": openedWindowTimestamps.startingBlockTimestamp,
+                  "rate": ongoingPricesData.initialPrice
+                }
+              ];
+            }
+
+            setOngoingWindowChartData([...result.result, ..._priceRange]);
+
           }
         });
     }
-  }, [windowNumber, openedWindowTimestamps]);
+  }, [windowNumber, openedWindowTimestamps, ongoingPricesData]);
 
   useEffect(() => {
     if (
@@ -367,8 +384,12 @@ export const BettingProvider = ({ children }) => {
           if(result.result.length > 0) {
             
             var _priceRange = [];
-            if ( parseFloat(finalizedPricesData.initialPrice) !== 0 && parseFloat(finalizedPricesData.finalPrice) !== 0 && ongoingWindowTimestamps )
-            {
+            
+            if ( 
+                parseFloat(finalizedPricesData.initialPrice) !== 0 && 
+                parseFloat(finalizedPricesData.finalPrice) !== 0 && 
+                ongoingWindowTimestamps ) {
+
               _priceRange = [
                 {
                   "_id": "initial",
@@ -384,10 +405,11 @@ export const BettingProvider = ({ children }) => {
             }
 
             setFinalizedWindowChartData([...result.result, ..._priceRange]);
+
           }
         });
     }
-  }, [windowNumber, ongoingWindowTimestamps]);
+  }, [windowNumber, ongoingWindowTimestamps, finalizedPricesData]);
 
   // Combined Chart Data
   React.useEffect(() => {
