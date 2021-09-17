@@ -12,7 +12,7 @@ export const UserSummary = () => {
   } = useBetting();
 
   const _unsettledGains = unsettledGains ? weiToCurrency(unsettledGains) : 0.00;
-  const _unsettledKITTY = unsettledKITTY ? weiToCurrency(unsettledKITTY) : 0.00;
+  const _unsettledKITTY = unsettledKITTY ? unsettledKITTY : 0.00;
 
   return (
     <>

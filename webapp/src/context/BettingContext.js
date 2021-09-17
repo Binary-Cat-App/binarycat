@@ -796,7 +796,7 @@ export const BettingProvider = ({ children }) => {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
-      var unsettledUserKITTY = 0n;
+      var unsettledUserKITTY = 0;
       
       const unsettledBetsCount = await contractObj.methods
         .betListLen(account)
@@ -893,7 +893,12 @@ export const BettingProvider = ({ children }) => {
                         unsettledUserGains = unsettledUserGains + gain;
                       }
 
-                      unsettledUserKITTY = unsettledUserKITTY + ( BigInt(665) * (BigInt(userBet[0]) + BigInt(userBet[1])) / (BigInt(poolValues[0]) + BigInt(poolValues[1])) );
+                      let userBet0 = weiToCurrency(userBet[0]);
+                      let userBet1 = weiToCurrency(userBet[1]);
+                      let poolValues0 = weiToCurrency(poolValues[0]);
+                      let poolValues1 = weiToCurrency(poolValues[1]);
+
+                      unsettledUserKITTY = unsettledUserKITTY + ( 665 * (userBet0 + userBet1) / (poolValues0 + poolValues1) );
 
                     }
 
@@ -914,7 +919,7 @@ export const BettingProvider = ({ children }) => {
       setUnsettledBets(unsettledUserBets);
       setUnsettledWins(unsettledUserWins);
       setUnsettledGains(unsettledUserGains.toString());
-      setUnsettledKITTY(unsettledUserKITTY.toString());
+      setUnsettledKITTY(unsettledUserKITTY);
     }
   };
 
