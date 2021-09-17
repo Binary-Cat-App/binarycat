@@ -294,7 +294,7 @@ export const Dashboard = () => {
       </div>
 
       <div className={`flex flex-row p-5 text-xs text-gray-300`}>
-        <span className={`mr-2`}>*</span><span>The values are transfered to your account by using the claim button or automatically on your next bet.</span>
+        <span className={`mr-2`}>*</span><span>Unclaimed gains and KITTY tokens are transferred to your MetaMask wallet by using the claim button or automatically on your next bet.</span>
       </div>
 
       <BetProgressBar completed={progress} />
