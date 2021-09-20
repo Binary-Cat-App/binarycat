@@ -30,7 +30,7 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
 
     let bet = await deploy('BinaryBet', {
         from: deployer,
-        args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS],
+        args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address],
         log: true,
     });
 }

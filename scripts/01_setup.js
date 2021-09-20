@@ -12,16 +12,9 @@ async function main() {
     const [signer] = await ethers.getSigners();
 
     deployedContracts = await deployments.all()
-    BinaryStaking = deployedContracts['BinaryStaking']
     BinaryBet = deployedContracts['BinaryBet']
-    Token = deployedContracts['BinToken']
 
-    const token = await hre.ethers.getContractAt(Token.abi, Token.address);
-    const stk = await hre.ethers.getContractAt(BinaryStaking.abi, BinaryStaking.address);
     const bet = await hre.ethers.getContractAt(BinaryBet.abi, BinaryBet.address);
-
-    await bet.setStakingAddress(BinaryStaking.address, {from: deployer})
-    await bet.setTokenAddress(Token.address, {from: deployer})
 
     //Transfer tokens for bet rewards
     const initialSupply = await token.INITIAL_SUPPLY()

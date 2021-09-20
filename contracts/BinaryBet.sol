@@ -56,7 +56,7 @@ contract BinaryBet {
         _;
     }
 
-    constructor(uint _windowDuration, uint _fee, address aggregator) public {
+    constructor(uint _windowDuration, uint _fee, address aggregator, address stakingContract, address tokenContract) public {
         require(_fee <= 100);
         priceFeed = AggregatorV3Interface(aggregator);
         firstBlock = block.number;
@@ -65,6 +65,9 @@ contract BinaryBet {
         fee = _fee;
         governance = msg.sender;
         firstWindow = 1;
+
+        stakingAddress = payable(stakingContract);
+        token = BinToken(tokenAddress); 
     }
 //=============GOVERNANCE FUNCTIONS=============================================
     function changeGovernance(address newGovernance) onlyGovernance public{
@@ -80,20 +83,6 @@ contract BinaryBet {
         windowDuration = windowSize;
     }
 //==============================================================================
-
-    function setStakingAddress(address stakingContract) external {
-        require(stakingAddress == address(0), "staking address already set");
-        stakingAddress = payable(stakingContract);
-        staking = BinaryStaking(stakingAddress); 
-    }
-
-    function setTokenAddress(address tokenContract) external {
-        require(tokenAddress == address(0), "token address already set");
-        tokenAddress = tokenContract;
-        token = BinToken(tokenAddress); 
-    }
-
-
     function placeBet (uint8 side) payable external {
         require(msg.value > 0, "Only strictly positive values");
         updatePrice();

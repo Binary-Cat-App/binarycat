@@ -29,10 +29,9 @@ describe("BinaryBets Bet management", function () {
         BinaryStaking = await ethers.getContractFactory("BinaryStaking");
         BinToken = await ethers.getContractFactory("BinToken");
 
-        bet = await BinaryBet.deploy(30, 1, aggregatorAddress);
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
-        await bet.setStakingAddress(stk.address);
+        bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address);
         await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);
   });
 
@@ -132,7 +131,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update pool", async function () {
-        bet = await BinaryBet.deploy(30, 0, aggregatorAddress);
+        bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address);
         await bet.connect(account1).placeBet(0, {value: 100})
         let pool = await bet.getPoolValues(1)
         expect(pool[0]).to.equal(100);
@@ -150,7 +149,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update stake", async function () {
-        bet = await BinaryBet.deploy(30, 0, aggregatorAddress);
+        bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address);
         await bet.connect(account1).placeBet(0, {value: 100})
         let stake = await bet.getUserStake(1, account1.address)
         expect(stake[0]).to.equal(100);
@@ -168,7 +167,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update last betted window", async function () {
-        const bet = await BinaryBet.deploy(100, 0, aggregatorAddress);
+        bet = await BinaryBet.deploy(100, 0, aggregatorAddress, stk.address, token.address);
         await bet.deployed();
         await bet.connect(account1).placeBet(0, {value: 100})
         let lastBet = await bet.userBets(account1.address, 0)

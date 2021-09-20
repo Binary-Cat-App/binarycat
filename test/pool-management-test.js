@@ -11,8 +11,14 @@ describe("BinaryBets Pool Creation", function () {
         mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
 
         let aggregatorAddress = mockAggregator.address
-        const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        let bet = await BinaryBet.deploy(30, 1, aggregatorAddress);
+
+        BinaryBet = await ethers.getContractFactory("BinaryBet");
+        BinaryStaking = await ethers.getContractFactory("BinaryStaking");
+        BinToken = await ethers.getContractFactory("BinToken");
+
+        token = await BinToken.deploy();
+        stk = await BinaryStaking.deploy(token.address);
+        bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address);
     });
 
     it("Should update the pool", async function () {

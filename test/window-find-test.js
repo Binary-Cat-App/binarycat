@@ -5,14 +5,19 @@ const {deployMockContract} = require('@ethereum-waffle/mock-contract');
 const AGGREGATOR = require('../artifacts/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol/AggregatorV3Interface.json')
 
 describe("BinaryBets Windows",function () {
-    let BinaryBet
-    let aggregatorAddress
+
     beforeEach(async function () {
         [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
         mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
-        const BinaryBet = await ethers.getContractFactory("BinaryBet");
         aggregatorAddress = mockAggregator.address
-        let bet = await BinaryBet.deploy(30, 1, aggregatorAddress);
+
+        BinaryBet = await ethers.getContractFactory("BinaryBet");
+        BinaryStaking = await ethers.getContractFactory("BinaryStaking");
+        BinToken = await ethers.getContractFactory("BinToken");
+
+        token = await BinToken.deploy();
+        stk = await BinaryStaking.deploy(token.address);
+        bet = await BinaryBet.deploy(30, 1, mockAggregator.address, stk.address, token.address);
     });
 
     it("Should find the correct starting block for the window", async function () {
@@ -25,7 +30,7 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
 
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        bet = await BinaryBet.deploy(12, 1, aggregatorAddress);
+        bet = await BinaryBet.deploy(12, 1, mockAggregator.address, stk.address, token.address);
         windowDuration = 12
         firstBlock = 5
         expect(await bet.getWindowStartingBlock(12, windowDuration, firstBlock,0)).to.equal(137);
@@ -54,7 +59,7 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowNumber(749, windowDuration, firstBlock, 0, 1)).to.equal(25);
 
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        bet = await BinaryBet.deploy(12, 1, aggregatorAddress);
+        bet = await BinaryBet.deploy(12, 1, mockAggregator.address, stk.address, token.address);
         windowDuration = 12;
         firstBlock = 5;
         expect(await bet.getWindowNumber(5, windowDuration, firstBlock, 0, 1)).to.equal(1);
