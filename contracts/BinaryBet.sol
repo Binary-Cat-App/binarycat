@@ -21,6 +21,7 @@ contract BinaryBet {
     //Betting parameters
     AggregatorV3Interface internal priceFeed;  
     address governance;
+    uint public constant REWARD_PER_WINDOW = 665e18;
     uint public fee;
     uint public windowDuration; //in blocks
     uint public firstBlock;
@@ -96,7 +97,7 @@ contract BinaryBet {
     function placeBet (uint8 side) payable external {
         require(msg.value > 0, "Only strictly positive values");
         updatePrice();
-        updateBalance();
+        updateBalance(msg.sender);
 
         uint betFee = computeFee(msg.value, fee); 
         accumulatedFees = accumulatedFees + betFee;
@@ -122,8 +123,8 @@ contract BinaryBet {
         emit newBet(msg.sender, windowNumber, value, side);
     }
 
-    function updateBalance() public {
-        uint[] storage userWindowsList = userBets[msg.sender];
+    function updateBalance(address user) public {
+        uint[] storage userWindowsList = userBets[user];
         if(userWindowsList.length == 0) {
             //No bets to settle
             return;
@@ -155,7 +156,7 @@ contract BinaryBet {
             userWindowsList[i-1] = userWindowsList[userWindowsList.length -1];
             userWindowsList.pop();
 
-            Pool memory stake = userStake[msg.sender][window];
+            Pool memory stake = userStake[user][window];
             Pool memory pool = pools[window];
             (uint windowGain, uint fees) = settleBet(stake.upValue, stake.downValue, pool.upValue, pool.downValue, result);
 
@@ -165,17 +166,17 @@ contract BinaryBet {
             //KITTY token rewards
             uint reward = calculateTokenReward(stake.upValue, stake.downValue, pool.upValue, pool.downValue);
             if (token.balanceOf(address(this)) >= reward) {
-                token.transfer(msg.sender, reward);
+                token.transfer(user, reward);
             }
             else {
-                token.transfer(msg.sender, token.balanceOf(address(this)));
+                token.transfer(user, token.balanceOf(address(this)));
             }
 
-            emit betSettled(window, msg.sender, windowGain);
+            emit betSettled(window, user, windowGain);
         }
 
         if (totalGain >= 0) {
-            payable(msg.sender).transfer(totalGain);
+            payable(user).transfer(totalGain);
         }
 
         if(accumulatedFees > 0) {
@@ -222,7 +223,6 @@ contract BinaryBet {
     }
 
     function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
-        uint REWARD_PER_WINDOW = 665e18;
         return sharePool(REWARD_PER_WINDOW, upStake + downStake, poolUp + poolDown);
     }
 
