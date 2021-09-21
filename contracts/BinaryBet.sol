@@ -222,7 +222,7 @@ contract BinaryBet {
     }
 
     function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
-        uint REWARD_PER_WINDOW = 665e18;
+        uint REWARD_PER_WINDOW = 332e18;
         return sharePool(REWARD_PER_WINDOW, upStake + downStake, poolUp + poolDown);
     }
 
