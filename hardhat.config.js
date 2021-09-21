@@ -21,6 +21,10 @@ module.exports = {
   },
 
   networks: {
+    hardhat: {
+          gasPrice: 'auto',
+          initialBaseFeePerGas: 0,
+      },
     matic_testnet: {
         url: "https://matic-mumbai.chainstacklabs.com",
         chainId: 80001,
