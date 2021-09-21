@@ -22,14 +22,14 @@ module.exports = {
 
   networks: {
     hardhat: {
-          gasPrice: 'auto',
+          gasPrice: 3000000000,
           initialBaseFeePerGas: 0,
       },
     matic_testnet: {
         url: "https://matic-mumbai.chainstacklabs.com",
         chainId: 80001,
         accounts: mnemonic ? { mnemonic } : undefined,
-        gasPrice: 'auto',
+        gasPrice: 3000000000,
     }
   },
 
