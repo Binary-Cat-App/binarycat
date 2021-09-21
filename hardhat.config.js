@@ -25,7 +25,7 @@ module.exports = {
         url: "https://matic-mumbai.chainstacklabs.com",
         chainId: 80001,
         accounts: mnemonic ? { mnemonic } : undefined,
-        gasPrice: 8000000000,
+        gasPrice: 'auto',
     }
   },
 
