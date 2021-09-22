@@ -3,12 +3,13 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./BinToken.sol";
 import "./BinaryStaking.sol";
 
 
 //SPDX-License-Identifier: UNLICENSED
-contract BinaryBet {
+contract BinaryBet is Ownable {
     //Structs and enums
     enum BetSide {down, up} 
     enum BetResult {down, up, tie}
@@ -20,8 +21,7 @@ contract BinaryBet {
 
     //Betting parameters
     AggregatorV3Interface internal priceFeed;  
-    address governance;
-    uint public constant REWARD_PER_WINDOW = 665e18;
+    uint public constant REWARD_PER_WINDOW = 332e18;
     uint public fee;
     uint public windowDuration; //in blocks
     uint public firstBlock;
@@ -50,12 +50,6 @@ contract BinaryBet {
     event betSettled(uint indexed windowNumber, address indexed user, uint gain);
     event priceUpdated(uint indexed windowNumber, uint256 price);
 
-    
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "only governance can call this method");
-        _;
-    }
-
     constructor(uint _windowDuration, uint _fee, address aggregator, address stakingContract, address tokenContract) public {
         require(_fee <= 100);
         priceFeed = AggregatorV3Interface(aggregator);
@@ -63,18 +57,13 @@ contract BinaryBet {
         windowDuration = _windowDuration;
 
         fee = _fee;
-        governance = msg.sender;
         firstWindow = 1;
 
         stakingAddress = payable(stakingContract);
         token = BinToken(tokenAddress); 
     }
 //=============GOVERNANCE FUNCTIONS=============================================
-    function changeGovernance(address newGovernance) onlyGovernance public{
-        governance = newGovernance;
-    }
-
-    function changeWindowSize(uint windowSize) onlyGovernance public {
+    function changeWindowSize(uint windowSize) onlyOwner public {
         require(windowSize > 0, "window size should be strictly positive");
         uint currentWindow = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         firstBlock = getWindowStartingBlock(currentWindow + 1, windowDuration, firstBlock, windowOffset);
