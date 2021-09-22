@@ -33,12 +33,6 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address],
         log: true,
     });
-
-    bet = await deploy('BinaryBet', {
-        from: deployer,
-        args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address],
-        log: true,
-    });
 }
 
-module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'BinaryBet2'];
+module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken'];
