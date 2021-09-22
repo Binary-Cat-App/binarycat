@@ -898,7 +898,7 @@ export const BettingProvider = ({ children }) => {
                       let poolValues0 = weiToCurrency(poolValues[0]);
                       let poolValues1 = weiToCurrency(poolValues[1]);
 
-                      unsettledUserKITTY = unsettledUserKITTY + ( 665 * (userBet0 + userBet1) / (poolValues0 + poolValues1) );
+                      unsettledUserKITTY = unsettledUserKITTY + ( 332 * (userBet0 + userBet1) / (poolValues0 + poolValues1) );
 
                     }
 
