@@ -13,7 +13,7 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BinToken.sol";
-//SPDX-License-Identifier: UNLICENSED
+
 contract BinaryStaking {
     IERC20 public binToken;
 
@@ -30,8 +30,9 @@ contract BinaryStaking {
     event Staked(address indexed user, uint amount);
     event Unstaked(address indexed user, uint amount);
     event Release(address indexed user, uint amount);
+    event Reward(uint amount);
 
-    constructor(address token) public {
+    constructor(address token) {
         owner = payable(msg.sender);
         binToken = BinToken(token);
     }
@@ -44,6 +45,7 @@ contract BinaryStaking {
         else {
             owner.transfer(value);
         }
+        emit Reward(value);
     }
 
     function stake(uint amount) external{

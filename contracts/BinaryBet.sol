@@ -39,8 +39,6 @@ contract BinaryBet is Ownable {
     address payable stakingAddress;
 
     BinToken token;
-    address tokenAddress;
-
 
     //Window management
     mapping (uint => Pool) public pools; //windowNumber => Pool
@@ -60,7 +58,7 @@ contract BinaryBet is Ownable {
     event betSettled(uint indexed windowNumber, address indexed user, uint gain);
     event priceUpdated(uint indexed windowNumber, uint256 price);
 
-    constructor(uint _windowDuration, uint _fee, address aggregator, address stakingContract, address tokenContract) public {
+    constructor(uint _windowDuration, uint _fee, address aggregator, address stakingContract, address tokenContract) {
         require(_fee <= 100);
         priceFeed = AggregatorV3Interface(aggregator);
         firstBlock = block.number;
@@ -70,7 +68,8 @@ contract BinaryBet is Ownable {
         firstWindow = 1;
 
         stakingAddress = payable(stakingContract);
-        token = BinToken(tokenAddress); 
+        staking = BinaryStaking(stakingAddress);
+        token = BinToken(tokenContract); 
     }
 //=============GOVERNANCE FUNCTIONS=============================================
     function changeWindowSize(uint windowSize) onlyOwner public {
@@ -121,8 +120,10 @@ contract BinaryBet is Ownable {
         uint totalGain = 0;
         for(uint i = userWindowsList.length; i > 0; i--) {
             //Maximum number of itens in list is 2, when the user bets on 2 subsequent windows and the first window is not yet settled.
+          
             uint window = userWindowsList[i-1];
             uint currentWindow = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
+
             if(currentWindow < window + 2) {
                 //window not yet settled
                 continue;
@@ -153,29 +154,35 @@ contract BinaryBet is Ownable {
             
             //KITTY token rewards
             uint reward = calculateTokenReward(stake.upValue, stake.downValue, pool.upValue, pool.downValue);
-            if (token.balanceOf(address(this)) >= reward) {
-                token.transfer(user, reward);
-            }
-            else {
-                token.transfer(user, token.balanceOf(address(this)));
-            }
-
+            transferRewards(user, reward);
+            transferFees();
             emit betSettled(window, user, windowGain);
         }
 
         if (totalGain >= 0) {
             payable(user).transfer(totalGain);
         }
-
-        if(accumulatedFees > 0) {
-            staking.receiveFunds{value: accumulatedFees}();
-            accumulatedFees = 0;
-        }
-
     }
 
-    function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 betResult) public pure returns (uint gain, uint fees) {
-        BetResult result = BetResult(betResult);
+    function transferRewards(address user, uint amount) internal {
+            if (token.balanceOf(address(this)) >= amount) {
+                token.transfer(user, amount);
+            }
+            else {
+                token.transfer(user, token.balanceOf(address(this)));
+            }
+    }
+
+    function transferFees() internal {
+            if(accumulatedFees > 0) {
+                staking.receiveFunds{value: accumulatedFees}();
+                accumulatedFees = 0;
+            }
+    }
+
+
+    function settleBet(uint upStake, uint downStake, uint poolUp, uint poolDown, uint8 res) public pure returns (uint gain, uint fees) {
+        BetResult result = BetResult(res);
         uint poolTotal = poolUp + poolDown;
         if (result == BetResult.up && poolUp != 0) {
             //(upStake/poolUp)*poolTotal
@@ -220,7 +227,7 @@ contract BinaryBet is Ownable {
         if (betSide == BetSide.down) {
             return (downValue + value, upValue);
         }
-        if (betSide == BetSide.up) {
+        else { 
             return (downValue, upValue + value);
         }
     }
@@ -255,7 +262,7 @@ contract BinaryBet is Ownable {
         }
     }
 
-    function priceOracle() internal returns (uint256){
+    function priceOracle() internal view returns (uint256){
         (
              , 
             int price,

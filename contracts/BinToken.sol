@@ -27,7 +27,7 @@ contract BinToken is ERC20{
     mapping (address => mapping(address => uint)) allowed;
 
     constructor()
-        ERC20(NAME, SYMBOL) public
+        ERC20(NAME, SYMBOL) 
     {
         _mint(msg.sender, INITIAL_SUPPLY);
     }

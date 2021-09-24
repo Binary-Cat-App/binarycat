@@ -1,8 +1,7 @@
 const { expect } = require("chai");
 const {
     BN,           // Big Number support
-    expectRevert,
-} = require('@openzeppelin/test-helpers');
+    } = require('@openzeppelin/test-helpers');
 const {deployMockContract} = require('@ethereum-waffle/mock-contract');
 const { deployments, ethers } = require("hardhat");
 const AGGREGATOR = require('../artifacts/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol/AggregatorV3Interface.json')
@@ -21,6 +20,7 @@ describe("BinaryBets Bet management", function () {
 
       beforeEach(async function () {
         [owner, account1, account2, account3, ...addrs] = await ethers.getSigners();
+        provider = ethers.provider;
 
         mockAggregator = await deployMockContract(owner, AGGREGATOR.abi);
         aggregatorAddress = mockAggregator.address
@@ -34,6 +34,12 @@ describe("BinaryBets Bet management", function () {
         bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address);
         await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);
   });
+
+    async function mine(blocks) {
+        for (i = 0; i <= blocks; i++) {
+            await network.provider.send("evm_mine");
+        }
+    }
 
     it("Should get the correct bet result", async function () {
         // function betResult(uint referencePrice, uint settlementPrice) public pure returns(BetResult)
@@ -166,13 +172,73 @@ describe("BinaryBets Bet management", function () {
         expect(stake[1]).to.equal(500);
     });
 
+
     it("Should update last betted window", async function () {
-        bet = await BinaryBet.deploy(100, 0, aggregatorAddress, stk.address, token.address);
+        bet = await BinaryBet.deploy(10, 0, aggregatorAddress, stk.address, token.address);
         await bet.deployed();
         await bet.connect(account1).placeBet(0, {value: 100})
         let lastBet = await bet.userBets(account1.address, 0)
         expect(lastBet).to.equal(1);
 
+        mine(5)
+        await bet.connect(account1).placeBet(0, {value: 100})
+        lastBet = await bet.userBets(account1.address, 0)
+        expect(lastBet).to.equal(1);
+
+        mine(5)
+        await bet.connect(account1).placeBet(0, {value: 100})
+        lastBet = await bet.userBets(account1.address, 0)
+        let lastBet_1 = await bet.userBets(account1.address, 1)
+        expect(lastBet_1).to.equal(2);
+
+        mine(10)
+        await bet.connect(account1).placeBet(0, {value: 100})
+        lastBet = await bet.userBets(account1.address, 0)
+        lastBet_1 = await bet.userBets(account1.address, 1)
+        expect(lastBet).to.equal(2);
+        expect(lastBet_1).to.equal(3);
+
     });
+
+    it("Should transfer fees to staking", async function () {
+        let value = ethers.utils.parseEther("100")
+        await token.connect(owner).approve(stk.address, value)
+        await stk.connect(owner).stake(value)
+
+        bet = await BinaryBet.deploy(10, 2, aggregatorAddress, stk.address, token.address);
+        await bet.connect(account3).placeBet(0, {value: 200})
+        
+        let fees = await bet.accumulatedFees()
+        expect(fees.toString()).to.equal('4')
+
+        await mine(300)
+        await bet.updateBalance(account3.getAddress())
+        fees = await bet.accumulatedFees()
+        expect(fees.toString()).to.equal('0')
+
+        let stakingBalance = await provider.getBalance(stk.address);
+        expect(stakingBalance.toString()).to.equal('4')
+    });
+
+    it("Should reward KITTY", async function () {
+        let value = ethers.utils.parseEther("100")
+        await token.connect(owner).approve(stk.address, value)
+        await stk.connect(owner).stake(value)
+
+        bet = await BinaryBet.deploy(10, 2, aggregatorAddress, stk.address, token.address);
+        await bet.connect(account3).placeBet(0, {value: 200})
+        
+        let fees = await bet.accumulatedFees()
+        expect(fees.toString()).to.equal('4')
+
+        await mine(300)
+        await bet.updateBalance(account3.getAddress())
+        fees = await bet.accumulatedFees()
+        expect(fees.toString()).to.equal('0')
+
+        let stakingBalance = await provider.getBalance(stk.address);
+        expect(stakingBalance.toString()).to.equal('4')
+    });
+
 
 });
