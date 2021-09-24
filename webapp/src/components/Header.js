@@ -51,7 +51,7 @@ export const Header = () => {
               </li>
               <li className="mr-4">
                 <a 
-                  href="https://www.reddit.com/user/BinaryCatApp"
+                  href="https://www.reddit.com/r/BinaryCat/"
                   className="text-gray-500 hover:text-gray-800 flex items-center"
                   target="_blank"
                 >
