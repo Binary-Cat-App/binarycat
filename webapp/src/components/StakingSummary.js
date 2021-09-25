@@ -1,7 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from './Button';
+import { ReactComponent as IconSpinner } from '../assets/images/icon-spinner.svg';
+import { useStaking } from '../context/StakingContext';
 
 export const StakingSummary = () => {
+	const { 
+		active,
+    	account,
+		totalStaked,
+		totalRewards,
+		walletBalance,
+		weiToCurrency,
+		stakingObj
+	} = useStaking();
+
+	const [effect, setEffect] = useState(false);
+	
+	const _totalStaked = totalStaked ? weiToCurrency(totalStaked) : 0.00;
+	const _totalRewards = totalRewards ? weiToCurrency(totalRewards) : 0.00;
+	const _walletBalance = walletBalance ? weiToCurrency(walletBalance) : 0.00;
+
+	const handleWithdraw = async () => {
+
+		setEffect(true);
+	
+		if ( active && account ) {
+			const withdraw = await stakingObj.methods
+				.release()
+				.send({
+					from: account
+				});
+	
+			if( withdraw ) setEffect(false);
+		}
+	};
 
 	return (
 		<>
@@ -11,8 +43,8 @@ export const StakingSummary = () => {
 				  		Total Staked
 					</dt>
 					<dd className="text-3xl font-black text-green-500 leading-none text-center">
-				  		100,000.00
-				  		<span className="block text-2xl">KITTY</span>
+						{_totalStaked.toFixed(2)}
+						<span className="block text-2xl">{global.config.tokenName}</span>
 					</dd>
 				</dl>
 			</div>
@@ -22,8 +54,8 @@ export const StakingSummary = () => {
 			    		Wallet Balance
 			    	</dt>
 			    	<dd className="text-3xl font-black text-green-500 leading-none text-center">
-						200.00
-						<span className="block text-2xl">KITTY</span>		      		
+						{_walletBalance.toFixed(2)}
+						<span className="block text-2xl">{global.config.tokenName}</span>
 			    	</dd>
 			  	</dl>
 			</div>
@@ -33,8 +65,8 @@ export const StakingSummary = () => {
 			    		Staked Balance
 			    	</dt>
 			    	<dd className="text-3xl font-black text-green-500 leading-none text-center">
-			      		5000.00
-			      		<span className="block text-2xl">KITTY</span>
+			      		N/A
+			      		<span className="block text-2xl">{global.config.tokenName}</span>
 			    	</dd>
 			  	</dl>
 			</div>
@@ -44,15 +76,18 @@ export const StakingSummary = () => {
 						Total Rewards
 					</dt>
 					<dd className="text-2xl font-black text-green-500 leading-none text-center">
-				  		4.5 BNB
+						{_totalRewards.toFixed(2)} {global.config.currencyName}
 					</dd>
 				</dl>
 				<Button
 				    variant="blue"
 					outline
 					className="mt-4 w-full"
+					handleClick={handleWithdraw}
+					onAnimationEnd={() => setEffect(false)}
 				>
 				    Withdraw
+					{ effect && <IconSpinner className="spinner animate-spin ml-2 h-5 w-5 text-gray" /> }
 				</Button>
 			</div>
 		</>

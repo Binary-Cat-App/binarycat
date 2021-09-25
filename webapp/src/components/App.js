@@ -10,6 +10,7 @@ import { Staking } from './Staking';
 import { Container } from './Container';
 
 import { BettingProvider } from '../context/BettingContext';
+import { StakingProvider } from '../context/StakingContext';
 
 const RoutesComponent = () => {
   
@@ -55,7 +56,9 @@ const RoutesComponent = () => {
                 </BettingProvider>
               </Route>
               <Route path="/staking">
-                <Staking />
+                <StakingProvider>
+                  <Staking />
+                </StakingProvider>
               </Route>
             </Switch>
           </Container>
