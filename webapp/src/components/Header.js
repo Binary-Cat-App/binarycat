@@ -21,6 +21,16 @@ export const Header = () => {
           <div>
             <ul className="flex items-center text-sm">
               <li className="mr-4">
+                <a 
+                  href="https://medium.com/@BinaryCat/binary-cat-app-walkthrough-2939db9c506e"
+                  className="text-gray-500 hover:text-gray-800 flex items-center"
+                  target="_blank"
+                >
+                  <IconHelp className="icon mr-2" />
+                  Instructions
+                </a>
+              </li>
+              <li className="mr-4">
                 <Link
                   to="/faq"
                   className="text-gray-500 hover:text-gray-800 flex items-center"
