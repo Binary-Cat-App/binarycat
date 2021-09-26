@@ -34,6 +34,7 @@ export const StakingProvider = ({ children }) => {
   const [totalStaked, setTotalStaked] = useState(0);
   const [totalRewards, setTotalRewards] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [stakedBalance, setStakedBalance] = useState(0);
   const [userAllowance, setUserAllowance] = useState(0);
 
   // Gets Current Blockchain Block
@@ -107,6 +108,16 @@ export const StakingProvider = ({ children }) => {
           (response) => setTotalRewards(response)
         );
 
+      // Staked Balance
+      stakingObj.methods
+        .stakingBalance(account)
+        .call({
+          from: account
+        })
+        .then(
+          (response) => setStakedBalance(response.stakedBin)
+        );
+
       // User Allowance
       tokenObj.methods
         .allowance(account, staking.address)
@@ -116,21 +127,6 @@ export const StakingProvider = ({ children }) => {
         .then(
           (response) => setUserAllowance(response)
         );
-      
-      // Stakes
-      /*
-      stakingObj
-        .getPastEvents('Staked', {
-          filter: { user: account },
-          fromBlock: 0,
-          toBlock: 'latest',
-        })
-        .then(function (result) {
-          if (result.length > 0) {
-            console.log(result);
-          }
-        });
-      */
 
     }
   }, [currentBlock]);
@@ -154,6 +150,7 @@ export const StakingProvider = ({ children }) => {
     totalStaked,
     totalRewards,
     walletBalance,
+    stakedBalance,
     userAllowance,
     weiToCurrency,
     currencyToWei,

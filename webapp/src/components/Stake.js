@@ -20,6 +20,7 @@ export const Stake = () => {
     	tokenObj
 	} = useStaking();
 	
+	const _walletBalance = walletBalance ? weiToCurrency(walletBalance) : 0.00;
 	const _userAllowance = userAllowance ? weiToCurrency( userAllowance ) : 0.00;
 
 	const handleAllowance = async (val) => {
@@ -46,7 +47,10 @@ export const Stake = () => {
 					from: account
 				});
 
-			if ( stake ) setValue(0);
+			if ( stake ) {
+				setValue(0);
+				setError(false);
+			}
 		}
 
 	};
@@ -77,6 +81,7 @@ export const Stake = () => {
 	              onValueChange={(values) => {
 					const val = values.formattedValue.replace(/\s/gi, '');
 	                setValue(Number(val));
+					setError(false);
 	              }}
 				  disabled={_userAllowance !== 0}
 	            />
@@ -93,7 +98,7 @@ export const Stake = () => {
 					className="w-full py-3 text-xl"
 					outline
 					handleClick={() => {
-						if ( value > walletBalance ) {
+						if ( value > _walletBalance ) {
 							setError(true);
 						} else {
 							handleAllowance(value);

@@ -10,6 +10,7 @@ export const StakingSummary = () => {
 		totalStaked,
 		totalRewards,
 		walletBalance,
+		stakedBalance,
 		weiToCurrency,
 		stakingObj
 	} = useStaking();
@@ -19,6 +20,7 @@ export const StakingSummary = () => {
 	const _totalStaked = totalStaked ? weiToCurrency(totalStaked) : 0.00;
 	const _totalRewards = totalRewards ? weiToCurrency(totalRewards) : 0.00;
 	const _walletBalance = walletBalance ? weiToCurrency(walletBalance) : 0.00;
+	const _stakedBalance = stakedBalance ? weiToCurrency(stakedBalance) : 0.00;
 
 	const handleWithdraw = async () => {
 
@@ -65,7 +67,7 @@ export const StakingSummary = () => {
 			    		Staked Balance
 			    	</dt>
 			    	<dd className="text-3xl font-black text-green-500 leading-none text-center">
-			      		N/A
+						{_stakedBalance.toFixed(2)}
 			      		<span className="block text-2xl">{global.config.tokenName}</span>
 			    	</dd>
 			  	</dl>
@@ -76,7 +78,7 @@ export const StakingSummary = () => {
 						Total Rewards
 					</dt>
 					<dd className="text-2xl font-black text-green-500 leading-none text-center">
-						{_totalRewards.toFixed(2)} {global.config.currencyName}
+						{_totalRewards.toFixed(6)} {global.config.currencyName}
 					</dd>
 				</dl>
 				<Button

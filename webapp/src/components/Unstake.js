@@ -11,16 +11,18 @@ export const Unstake = () => {
 	const { 
 		active,
     	account,
-		walletBalance,
+		stakedBalance,
 		weiToCurrency,
 		currencyToWei,
 		stakingObj,
     	tokenObj
 	} = useStaking();
 
+	const _stakedBalance = stakedBalance ? weiToCurrency(stakedBalance) : 0.00;
+
 	const handleUnstake = async (val) => {
 		
-		if ( active && account && val > 0 ) {
+		if ( active && account && val > 0 && val <= _stakedBalance ) {
 
 			const amount = currencyToWei(val);
 
@@ -30,7 +32,10 @@ export const Unstake = () => {
 					from: account
 				});
 			
-			if (unstake) setValue(0);
+			if (unstake) {
+				setValue(0);
+				setError(false);
+			}
 		}
 
 	};
@@ -61,6 +66,7 @@ export const Unstake = () => {
 	              onValueChange={(values) => {
 					const val = values.formattedValue.replace(/\s/gi, '');
 	                setValue(Number(val));
+					setError(false);
 	              }}
 	            />
 
@@ -75,9 +81,13 @@ export const Unstake = () => {
 					size="normal"
 					className="w-full py-3 text-xl"
 					handleClick={() => {
-						handleUnstake(value);
+						if ( value > _stakedBalance ) {
+							setError(true);
+						} else {
+							handleUnstake(value);
+						}
 					}}
-					isDisabled={value === 0}
+					isDisabled={_stakedBalance === 0 || value === 0}
 				>
 					Unstake
 				</Button>
