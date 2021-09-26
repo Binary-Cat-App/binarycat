@@ -17,7 +17,7 @@ describe("BinaryBets Windows",function () {
 
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
-        bet = await BinaryBet.deploy(30, 1, mockAggregator.address, stk.address, token.address);
+        bet = await BinaryBet.deploy(30, 1, mockAggregator.address, stk.address, token.address, 332);
     });
 
     it("Should find the correct starting block for the window", async function () {
@@ -30,7 +30,7 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowStartingBlock(21, windowDuration, firstBlock,0)).to.equal(610);
 
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        bet = await BinaryBet.deploy(12, 1, mockAggregator.address, stk.address, token.address);
+        bet = await BinaryBet.deploy(12, 1, mockAggregator.address, stk.address, token.address, 332);
         windowDuration = 12
         firstBlock = 5
         expect(await bet.getWindowStartingBlock(12, windowDuration, firstBlock,0)).to.equal(137);
@@ -59,7 +59,7 @@ describe("BinaryBets Windows",function () {
         expect(await bet.getWindowNumber(749, windowDuration, firstBlock, 0, 1)).to.equal(25);
 
         const BinaryBet = await ethers.getContractFactory("BinaryBet");
-        bet = await BinaryBet.deploy(12, 1, mockAggregator.address, stk.address, token.address);
+        bet = await BinaryBet.deploy(12, 1, mockAggregator.address, stk.address, token.address, 332);
         windowDuration = 12;
         firstBlock = 5;
         expect(await bet.getWindowNumber(5, windowDuration, firstBlock, 0, 1)).to.equal(1);

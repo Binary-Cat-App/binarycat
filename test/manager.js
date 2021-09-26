@@ -33,9 +33,9 @@ describe("BinaryBets Bet management", function () {
 
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
-        bet1 = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address);
-        bet2 = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address);
-        bet3 = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address);
+        bet1 = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address, 332);
+        bet2 = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address, 332);
+        bet3 = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address, 332);
         manager = await Manager.deploy();
 
         await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);

@@ -18,7 +18,7 @@ describe("BinaryBets Pool Creation", function () {
 
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
-        bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address);
+        bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address, 332);
     });
 
     it("Should update the pool", async function () {

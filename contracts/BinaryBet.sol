@@ -23,6 +23,7 @@ contract BinaryBet is Ownable {
     //Structs and enums
     enum BetSide {down, up} 
     enum BetResult {down, up, tie}
+    enum WindowStatus {notFinalized, waitingPrice, failedUpdate, finalized}
 
     struct Pool {
         uint downValue;
@@ -31,7 +32,7 @@ contract BinaryBet is Ownable {
 
     //Betting parameters
     AggregatorV3Interface internal priceFeed;  
-    uint public constant REWARD_PER_WINDOW = 332e18;
+    uint public immutable REWARD_PER_WINDOW;
     uint public fee;
     uint public windowDuration; //in blocks
     uint public firstBlock;
@@ -58,7 +59,7 @@ contract BinaryBet is Ownable {
     event betSettled(uint indexed windowNumber, address indexed user, uint gain);
     event priceUpdated(uint indexed windowNumber, uint256 price);
 
-    constructor(uint _windowDuration, uint _fee, address aggregator, address stakingContract, address tokenContract) {
+    constructor(uint _windowDuration, uint _fee, address aggregator, address stakingContract, address tokenContract, uint reward) {
         require(_fee <= 100);
         priceFeed = AggregatorV3Interface(aggregator);
         firstBlock = block.number;
@@ -70,6 +71,8 @@ contract BinaryBet is Ownable {
         stakingAddress = payable(stakingContract);
         staking = BinaryStaking(stakingAddress);
         token = BinToken(tokenContract); 
+
+        REWARD_PER_WINDOW = reward*1e18;
     }
 //=============GOVERNANCE FUNCTIONS=============================================
     function changeWindowSize(uint windowSize) onlyOwner public {
@@ -123,22 +126,19 @@ contract BinaryBet is Ownable {
           
             uint window = userWindowsList[i-1];
             uint currentWindow = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
-
-            if(currentWindow < window + 2) {
-                //window not yet settled
+            (uint256 referencePrice, uint256 settlementPrice) = getWindowBetPrices(window);
+            
+            WindowStatus status = windowStatus(window, currentWindow, referencePrice, settlementPrice);
+            if (status == WindowStatus.notFinalized || status == WindowStatus.waitingPrice) {
                 continue;
             }
 
-            (uint256 referencePrice, uint256 settlementPrice) = getWindowBetPrices(window);
-            if (settlementPrice == 0 && currentWindow < window + 3) {
-                //price not updated but update still possible.
-                continue;
-            } 
-
-            uint8 result = betResult(referencePrice, settlementPrice);
-            if (referencePrice == 0 || settlementPrice == 0) {
-                //if the price was not updated for the window it is considered a tie and players can get their money back.
-                result = 2;
+            uint8 result;
+            if (status == WindowStatus.finalized) {
+               result = betResult(referencePrice, settlementPrice);
+            }
+            else if (status == WindowStatus.failedUpdate) {
+               result = 2;
             }
 
             //Remove window from list of unsettled bets.
@@ -162,6 +162,24 @@ contract BinaryBet is Ownable {
         if (totalGain >= 0) {
             payable(user).transfer(totalGain);
         }
+    }
+
+    function windowStatus(uint window, uint currentWindow, uint initialPrice, uint finalPrice) public pure returns(WindowStatus status) {
+        if (currentWindow < window + 2) {
+            //window not yet settled
+            return WindowStatus.notFinalized;
+        }
+        else if (currentWindow < window + 3 && finalPrice == 0) {
+            //price not updated but update still possible.
+            return WindowStatus.waitingPrice;
+        }
+        else if (initialPrice == 0 || finalPrice == 0) {
+            return WindowStatus.failedUpdate;
+        }
+        else {
+            return WindowStatus.finalized;
+        }
+
     }
 
     function transferRewards(address user, uint amount) internal {
@@ -217,7 +235,7 @@ contract BinaryBet is Ownable {
         return (shares * value) / totalShares;
     }
 
-    function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public pure returns (uint) {
+    function calculateTokenReward(uint upStake, uint downStake, uint poolUp, uint poolDown) public view returns (uint) {
         return sharePool(REWARD_PER_WINDOW, upStake + downStake, poolUp + poolDown);
     }
 

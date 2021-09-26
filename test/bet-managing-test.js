@@ -31,7 +31,7 @@ describe("BinaryBets Bet management", function () {
 
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
-        bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address);
+        bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address, 332);
         await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);
   });
 
@@ -106,6 +106,14 @@ describe("BinaryBets Bet management", function () {
             //console.log(value, result.toString(), "\n")
             //expect(result.toString()).to.equal(value.toString());
             expect(result - value).to.be.below(1);
+
+            result = await bet.settleBet(0, 100, 0, 200, 1)
+            expect(result[0]).to.equal(0)
+            expect(result[1]).to.equal(100)
+
+            result = await bet.settleBet(1221, 0, 2323232, 0, 0)
+            expect(result[0]).to.equal(0)
+            expect(result[1]).to.equal(1221)
         }
 
     });
@@ -137,7 +145,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update pool", async function () {
-        bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address);
+        bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address, 332);
         await bet.connect(account1).placeBet(0, {value: 100})
         let pool = await bet.getPoolValues(1)
         expect(pool[0]).to.equal(100);
@@ -155,7 +163,7 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should update stake", async function () {
-        bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address);
+        bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address, 332);
         await bet.connect(account1).placeBet(0, {value: 100})
         let stake = await bet.getUserStake(1, account1.address)
         expect(stake[0]).to.equal(100);
@@ -173,39 +181,12 @@ describe("BinaryBets Bet management", function () {
     });
 
 
-    it("Should update last betted window", async function () {
-        bet = await BinaryBet.deploy(10, 0, aggregatorAddress, stk.address, token.address);
-        await bet.deployed();
-        await bet.connect(account1).placeBet(0, {value: 100})
-        let lastBet = await bet.userBets(account1.address, 0)
-        expect(lastBet).to.equal(1);
-
-        mine(5)
-        await bet.connect(account1).placeBet(0, {value: 100})
-        lastBet = await bet.userBets(account1.address, 0)
-        expect(lastBet).to.equal(1);
-
-        mine(5)
-        await bet.connect(account1).placeBet(0, {value: 100})
-        lastBet = await bet.userBets(account1.address, 0)
-        let lastBet_1 = await bet.userBets(account1.address, 1)
-        expect(lastBet_1).to.equal(2);
-
-        mine(10)
-        await bet.connect(account1).placeBet(0, {value: 100})
-        lastBet = await bet.userBets(account1.address, 0)
-        lastBet_1 = await bet.userBets(account1.address, 1)
-        expect(lastBet).to.equal(2);
-        expect(lastBet_1).to.equal(3);
-
-    });
-
     it("Should transfer fees to staking", async function () {
         let value = ethers.utils.parseEther("100")
         await token.connect(owner).approve(stk.address, value)
         await stk.connect(owner).stake(value)
 
-        bet = await BinaryBet.deploy(10, 2, aggregatorAddress, stk.address, token.address);
+        bet = await BinaryBet.deploy(10, 2, aggregatorAddress, stk.address, token.address, 332);
         await bet.connect(account3).placeBet(0, {value: 200})
         
         let fees = await bet.accumulatedFees()
@@ -221,24 +202,100 @@ describe("BinaryBets Bet management", function () {
     });
 
     it("Should reward KITTY", async function () {
-        let value = ethers.utils.parseEther("100")
-        await token.connect(owner).approve(stk.address, value)
-        await stk.connect(owner).stake(value)
+        let tokenValue = ethers.utils.parseEther("1000")
+        let reward = await bet.REWARD_PER_WINDOW()
+        await token.connect(owner).transfer(bet.address, tokenValue)
 
-        bet = await BinaryBet.deploy(10, 2, aggregatorAddress, stk.address, token.address);
-        await bet.connect(account3).placeBet(0, {value: 200})
-        
-        let fees = await bet.accumulatedFees()
-        expect(fees.toString()).to.equal('4')
+        await bet.connect(account1).placeBet(0, {value: 100})
 
         await mine(300)
-        await bet.updateBalance(account3.getAddress())
-        fees = await bet.accumulatedFees()
-        expect(fees.toString()).to.equal('0')
+        await bet.updateBalance(account1.getAddress())
 
-        let stakingBalance = await provider.getBalance(stk.address);
-        expect(stakingBalance.toString()).to.equal('4')
+        let kittyBalance = await token.balanceOf(account1.getAddress());
+        expect(kittyBalance.toString()).to.equal(reward)
+    });
+
+    it("Should reward KITTY with partial amount", async function () {
+        let tokenValue = ethers.utils.parseEther("150")
+        await token.connect(owner).transfer(bet.address, tokenValue)
+
+        await bet.connect(account1).placeBet(0, {value: 100})
+
+        await mine(300)
+        await bet.updateBalance(account1.getAddress())
+
+        let kittyBalance = await token.balanceOf(account1.getAddress());
+        expect(kittyBalance.toString()).to.equal(tokenValue)
+    });
+
+    it("Should reward KITTY with zero", async function () {
+        await bet.connect(account1).placeBet(0, {value: 100})
+
+        await mine(300)
+        await bet.updateBalance(account1.getAddress())
+
+        let kittyBalance = await token.balanceOf(account1.getAddress());
+        expect(kittyBalance.toString()).to.equal('0')
+    });
+
+    it("Should return correct window status", async function () {
+        let initial = 100
+        let final = 150
+        let current = 1
+        let window = 1
+        
+        state = await bet.windowStatus(window, current, initial, final)
+        expect(state).to.equal(0)
+
+        initial = 100
+        final = 150
+        current = 11
+        window = 10
+        
+        state = await bet.windowStatus(window, current, initial, final)
+        expect(state).to.equal(0)
+
+        initial = 100
+        final = 150
+        current = 12
+        window = 10
+        
+        state = await bet.windowStatus(window, current, initial, 0)
+        expect(state).to.equal(1)
+
+        initial = 100
+        final = 150
+        current = 13
+        window = 10
+        
+        state = await bet.windowStatus(window, current, initial, 0)
+        expect(state).to.equal(2)
+
+        initial = 100
+        final = 150
+        current = 12
+        window = 10
+        
+        state = await bet.windowStatus(window, current, 0, final)
+        expect(state).to.equal(2)
+
+        initial = 100
+        final = 150
+        current = 12
+        window = 10
+        
+        state = await bet.windowStatus(window, current, initial, final)
+        expect(state).to.equal(3)
+
+        initial = 100
+        final = 150
+        current = 67
+        window = 14
+        
+        state = await bet.windowStatus(window, current, initial, final)
+        expect(state).to.equal(3)
     });
 
 
 });
+

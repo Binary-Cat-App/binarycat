@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers")
+require("solidity-coverage");
 require('./tasks')
 
 const fs = require('fs');

@@ -17,7 +17,7 @@ describe("Staking",function () {
 
         token = await BinToken.deploy();
         stk = await BinaryStaking.deploy(token.address);
-        bet = await BinaryBet.deploy(30, 1, mockAggregator.address, stk.address, token.address);
+        bet = await BinaryBet.deploy(30, 1, mockAggregator.address, stk.address, token.address, 332);
 
         await token.connect(owner).transfer(account1.address, ethers.utils.parseEther("1000"));
         await token.connect(owner).transfer(account2.address, ethers.utils.parseEther("1000"));
