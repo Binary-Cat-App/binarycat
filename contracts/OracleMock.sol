@@ -10,7 +10,8 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
      * Returns the latest price
      */
     function latestRoundData() public override view returns (uint80, int, uint, uint, uint80) {
-        return (1,1000000000,1,1,1);
+        uint price = 300000000 + uint(keccak256(abi.encodePacked(block.timestamp)))%100000000 + (uint(keccak256(abi.encodePacked(block.timestamp)))%3)*100000000;
+        return (1,int(price),1,1,1);
     }
 
     function decimals() override
