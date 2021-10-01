@@ -4,10 +4,12 @@ import { useWeb3React } from "@web3-react/core";
 
 import { Header } from './Header';
 import { Faq } from './Faq';
+import { Help } from './Help';
 import { ConnectMetamask } from './ConnectMetamask';
 import Dashboard from './Dashboard';
 import { Staking } from './Staking';
 import { Container } from './Container';
+import { Footer } from './Footer';
 
 import { BettingProvider } from '../context/BettingContext';
 import { StakingProvider } from '../context/StakingContext';
@@ -18,14 +20,17 @@ const RoutesComponent = () => {
 
   if ( !active )
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col">
         <Router>
           <Header />
-          <div className="py-6 sm:py-12 flex-grow flex flex-col">
+          <div className="pt-6 sm:pt-12 flex-grow flex flex-col">
             <Container>
               <Switch>
                 <Route path="/faq">
                   <Faq />
+                </Route>
+                <Route path="/help">
+                  <Help />
                 </Route>
                 <Route exact path="/">
                   <ConnectMetamask />
@@ -36,19 +41,23 @@ const RoutesComponent = () => {
               </Switch>
             </Container>
           </div>
+          <Footer />
         </Router>
       </div>
     );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       <Router>
         <Header />
-        <div className="py-6 sm:py-12 flex-grow flex flex-col">
+        <div className="pt-6 sm:pt-12 flex-grow flex flex-col">
           <Container>
             <Switch>
               <Route path="/faq">
                 <Faq />
+              </Route>
+              <Route path="/help">
+                <Help />
               </Route>
               <Route exact path="/">
                 <BettingProvider>
@@ -63,6 +72,7 @@ const RoutesComponent = () => {
             </Switch>
           </Container>
         </div>
+        <Footer />
       </Router>
     </div>
   );
