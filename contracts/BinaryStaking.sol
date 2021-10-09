@@ -51,7 +51,7 @@ contract BinaryStaking {
     function stake(uint amount) external{
         require(amount > 0, "Amount should be greater than 0");
         release();
-        binToken.transferFrom(msg.sender, address(this), amount);
+        require(binToken.transferFrom(msg.sender, address(this), amount));
         stakingBalance[msg.sender].stakedBin = stakingBalance[msg.sender].stakedBin + amount;
 
         emit Staked(msg.sender, amount);
