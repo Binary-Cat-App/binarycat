@@ -26,8 +26,8 @@ contract BinaryBet is Ownable {
     enum WindowStatus {notFinalized, waitingPrice, failedUpdate, finalized}
 
     struct Pool {
-        uint downValue;
-        uint upValue;
+        uint64 downValue;
+        uint64 upValue;
     }
 
     //Betting parameters
@@ -43,7 +43,7 @@ contract BinaryBet is Ownable {
 
     //Window management
     mapping (uint => Pool) public pools; //windowNumber => Pool
-    mapping(uint => uint256) public  windowPrice; //first price collection at the window.
+    mapping(uint => uint) public  windowPrice; //first price collection at the window.
     uint public firstWindow = 1; //Any bet before first block of betting is directed to the first window.
     uint public windowOffset; //used make window continuous and monotonically increasing when window duration and first block changes.
     uint public accumulatedFees;
@@ -91,7 +91,7 @@ contract BinaryBet is Ownable {
 
         uint betFee = computeFee(msg.value, fee); 
         accumulatedFees = accumulatedFees + betFee;
-        uint value = msg.value - betFee;
+        uint64 value = uint64(msg.value - betFee);
 
         uint windowNumber = getWindowNumber(block.number, windowDuration, firstBlock, windowOffset, firstWindow);
         if(!userBetted[msg.sender][windowNumber]) {
@@ -102,7 +102,7 @@ contract BinaryBet is Ownable {
         
         //Update the pool for the window.
         Pool memory oldPool = pools[windowNumber];
-        (uint newDown, uint newUp) = updatePool(oldPool.downValue, oldPool.upValue, side, value);
+        (uint64 newDown, uint64 newUp) = updatePool(oldPool.downValue, oldPool.upValue, side, value);
         pools[windowNumber] = Pool(newDown, newUp);
 
         //Update the user stake for the window.
@@ -240,7 +240,7 @@ contract BinaryBet is Ownable {
     }
 
 
-    function updatePool(uint downValue, uint upValue, uint8 side, uint value) public pure returns(uint, uint){
+    function updatePool(uint64 downValue, uint64 upValue, uint8 side, uint64 value) public pure returns(uint64, uint64){
         BetSide betSide = BetSide(side);
         if (betSide == BetSide.down) {
             return (downValue + value, upValue);
@@ -280,7 +280,7 @@ contract BinaryBet is Ownable {
         }
     }
 
-    function priceOracle() internal view returns (uint256){
+    function priceOracle() internal view returns (uint){
         (
              , 
             int price,
@@ -288,7 +288,7 @@ contract BinaryBet is Ownable {
              ,
              
         ) = priceFeed.latestRoundData();
-        return uint256(price);
+        return  uint(price);
     }
 
     //Getters
