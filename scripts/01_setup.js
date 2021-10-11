@@ -13,8 +13,10 @@ async function main() {
 
     deployedContracts = await deployments.all()
     BinaryBet = deployedContracts['BinaryBet']
+    BinToken = deployedContracts['BinToken']
 
     const bet = await hre.ethers.getContractAt(BinaryBet.abi, BinaryBet.address);
+    const token = await hre.ethers.getContractAt(BinToken.abi, BinToken.address);
 
     //Transfer tokens for bet rewards
     const initialSupply = await token.INITIAL_SUPPLY()
