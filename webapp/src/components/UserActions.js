@@ -22,7 +22,7 @@ export const UserActions = () => {
 
     if ( active && account ) {
       const update = await contractObj.methods
-        .updateBalance()
+        .updateBalance(account)
         .send({
           from: account
         });

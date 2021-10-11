@@ -49,11 +49,17 @@ module.exports = {
           initialBaseFeePerGas: 0,
       },
       matic_testnet: {
-        url: "https://matic-mumbai.chainstacklabs.com",
-        chainId: 80001,
-        accounts: mnemonic ? { mnemonic } : undefined,
-        gasPrice: 8000000000,
-    }
+          url: "https://matic-mumbai.chainstacklabs.com",
+          chainId: 80001,
+          accounts: mnemonic ? { mnemonic } : undefined,
+          gasPrice: 3000000000,
+      },
+      avax_fuji: {
+          url: 'https://api.avax-test.network/ext/bc/C/rpc',
+          gasPrice: 225000000000,
+          chainId: 43113,
+          accounts: []
+      }
   },
 
 };

@@ -106,7 +106,7 @@ export const Faq = () => {
 
       <li>
         <h4>How do I stake my tokens?</h4>
-        <p>Staking can be done through the page <a href="https://binarycat.app/staking" target="_blank">staking.binarycat.app</a>. You first have to approve the amount you want to stake (approve button) and then you can stake the tokens (stake button).
+        <p>Staking can be done through the page <a href="https://www.binarycat.app/staking" target="_blank">staking.binarycat.app</a>. You first have to approve the amount you want to stake (approve button) and then you can stake the tokens (stake button).
 </p>
       </li>
 

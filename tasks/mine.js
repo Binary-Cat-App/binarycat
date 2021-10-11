@@ -32,10 +32,6 @@ task("mine:basic", "Mine KITTY tokens by betting in both sides each window")
         let stakeDown = stake[0]
         let stakeUp = stake[1]
 
-        console.log(betValue);
-        console.log(stakeDown);
-        console.log(betValue.gt(stakeDown))
-
         if (betValue.gt(stakeUp)) {
             await hre.run("bet:place", {side: 'up', bet:  ethers.utils.formatEther(betValue.sub(stakeUp))} )
         }
