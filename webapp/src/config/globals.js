@@ -1,5 +1,5 @@
 module.exports = global.config = {
-  currencyName: 'MATIC',
+  currencyName: 'AVAX',
   tokenName: 'KITTY',
   pricesLabel: 'USD/ETH',
   currencyRequestValue: 'ether',
