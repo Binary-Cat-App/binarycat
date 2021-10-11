@@ -44,25 +44,25 @@ export const Faq = () => {
 
       <li>
         <h4>How much is the fee?</h4>
-        <p>There is a 2% fee on the amount of bets placed. For example, if you bet 0.5 MATIC, 0.01 MATIC will count towards the fee and your effective betted amount will be 0.49 MATIC.</p>
+        <p>There is a 2% fee on the amount of bets placed. For example, if you bet 0.5 AVAX, 0.01 AVAX will count towards the fee and your effective betted amount will be 0.49 AVAX.</p>
         <p>There is no fee or rake on winnings.</p>
       </li>
 
       <li>
         <h4>Is there a maximum or minimum betting limit?</h4>
-        <p>The user interface allows inputs with maximum precision of 2 decimals points, meaning that through the website the minimum bet amount should be 0.01 MATIC.</p>
+        <p>The user interface allows inputs with maximum precision of 2 decimals points, meaning that through the website the minimum bet amount should be 0.01 AVAX.</p>
         <p>If you are comfortable interacting directly with the blockchain, there is no limit / restriction to betting.</p>
       </li>
 
       <li>
         <h4>What do I win if I get it right?</h4>
         <p>If you bet correctly, you will receive part of the betting pool in proportion to the amount you bet in relation to all correct bets. For example:</p>
-        <p>Your bet size: 10 MATIC
-        <br/>Total pool: 100 MATIC
-        <br/>Correct bets: 30 MATIC
-        <br/>Wrong bets: 70 MATIC
+        <p>Your bet size: 10 AVAX
+        <br/>Total pool: 100 AVAX
+        <br/>Correct bets: 30 AVAX
+        <br/>Wrong bets: 70 AVAX
         <br/>
-        <br/>Winnings = (10/30)*100 = 33.33 MATIC</p>
+        <br/>Winnings = (10/30)*100 = 33.33 AVAX</p>
       </li>
 
       <li>
