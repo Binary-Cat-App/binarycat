@@ -19,8 +19,16 @@ module.exports = {
       fee: 2,
       reward: 332
   },
+
   avax_fuji: {
       price_feed_address: "0x86d67c3D38D2bCeE722E601025C25a575021c6EA", // ETH/USD price feed
+      window_duration: 75,
+      fee: 2,
+      reward: 332
+  },
+
+  avax_mainet: {
+      price_feed_address: "0x976B3D034E162d8bD72D6b9C989d545b839003b0", // ETH/USD price feed
       window_duration: 150,
       fee: 2,
       reward: 332

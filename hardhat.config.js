@@ -59,6 +59,12 @@ module.exports = {
           gasPrice: 225000000000,
           chainId: 43113,
           accounts: mnemonic ? { mnemonic } : undefined,
+      },
+      avax_mainnet: {
+          url: 'https://api.avax.network/ext/bc/C/rpc',
+          gasPrice: 225000000000,
+          chainId: 43114,
+          accounts: mnemonic ? { mnemonic } : undefined,
       }
   },
 
