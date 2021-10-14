@@ -1,64 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import MetaMaskLogo from '../assets/images/metamask.svg';
-import { ModalDeposit } from './ModalDeposit';
-import { ModalWithdraw } from './ModalWithdraw';
-import { useDrizzle } from '../context/DrizzleContext';
-import { useMetaMask } from '../context/MataMaskContext';
+import { useBetting } from '../context/BettingContext';
 import { Button } from './Button';
+import { ReactComponent as IconSpinner } from '../assets/images/icon-spinner.svg';
 
 export const UserActions = () => {
-  const { ethAccount } = useMetaMask();
   const {
-    drizzleReadinessState,
-    drizzle,
     currentBlock,
-    balance,
-  } = useDrizzle();
+    account,
+    active,
+    weiToCurrency,
+    currencyToWei,
+    contractObj
+  } = useBetting();
 
-  const contract = React.useMemo(() => {
-    return drizzle.contracts.BinaryBet;
-  }, [drizzle.contracts]);
+  const [effect, setEffect] = useState(false);
 
-  const handleDeposit = (value) => {
-    const eth = parseInt(
-      drizzle.web3.utils.toWei(value, global.config.currencyRequestValue)
-    );
-    contract.methods['deposit'].cacheSend({
-      from: ethAccount,
-      value: eth,
-    });
-  };
-  const handleWithdraw = (value) => {
-    const eth = drizzle.web3.utils.toWei(
-      value,
-      global.config.currencyRequestValue
-    );
-    contract.methods['withdraw'].cacheSend(eth, {
-      from: ethAccount,
-    });
+  const handleUpdateBalance = async () => {
+
+    setEffect(true);
+
+    if ( active && account ) {
+      const update = await contractObj.methods
+        .updateBalance(account)
+        .send({
+          from: account
+        });
+
+      if( update )setEffect(false);
+    }
   };
 
   return (
-    <div className="px-4 ml-auto">
-      <div className="flex items-center mb-1">
-        <span className="text-xxs text-gray-300 mr-1">Connect with</span>
-        <span className="flex-shrink-0">
-          <img src={MetaMaskLogo} className="w-24" alt="" />
-        </span>
-      </div>
+    <div className="px-4">
       <div className="flex">
-        <ModalDeposit
-          onDeposit={(value) => {
-            handleDeposit(value);
-          }}
-        />
-        <ModalWithdraw
-          balance={balance}
-          onWithdraw={(value) => {
-            handleWithdraw(value);
-          }}
-        />
+        <Button 
+          className="w-full"
+          variant="green" 
+          handleClick={handleUpdateBalance}
+          onAnimationEnd={() => setEffect(false)}
+          >
+          Claim
+          { effect && <IconSpinner className="spinner animate-spin ml-2 h-5 w-5 text-gray" /> }
+        </Button>
       </div>
     </div>
   );

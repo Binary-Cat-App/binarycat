@@ -1,27 +1,26 @@
 import React, { useEffect, useState, useRef } from 'react';
+
 import { Bet } from './Bet';
 import { Loading } from './Loading';
-import { UserArea } from './UserArea';
+import { UserSummary } from './UserSummary';
+import { UserActions } from './UserActions';
 import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
-import { useDrizzle } from '../context/DrizzleContext';
-import { useMetaMask } from '../context/MataMaskContext';
+import { useBetting } from '../context/BettingContext';
 import _ from 'lodash';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
 
 export const Dashboard = () => {
-  const { ethAccount } = useMetaMask();
-
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const {
-    drizzle,
     currentBlock,
-    balance,
+    account,
+    unsettledGains,
     progress,
     isOpenForBetting,
     setIsOpenForBetting,
@@ -42,22 +41,60 @@ export const Dashboard = () => {
     finalizedPoolData,
     finalizedAccountsData,
     finalizedWindowChartData,
-    historicalChartData
-  } = useDrizzle();
+    historicalChartData,
+    weiToCurrency,
+    currencyToWei,
+    web3Eth,
+    web3Utils,
+    contractObj
+  } = useBetting();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
-  const [bets, setBets] = useState([]);
+  const [bets, setBets] = useState(
+    [
+      {
+        ...openedWindowData,
+        ...openedPricesData,
+        ...openedPoolData,
+        ...openedAccountsData,
+        status: 'open',
+        id: uuid(),
+      },
+      {
+        ...ongoingWindowData,
+        ...ongoingPricesData,
+        ...ongoingPoolData,
+        ...ongoingAccountsData,
+        status: 'ongoing',
+        id: uuid(),
+      },
+      {
+        ...finalizedWindowData,
+        ...finalizedPricesData,
+        ...finalizedPoolData,
+        ...finalizedAccountsData,
+        status: 'finalized',
+        id: uuid(),
+      },
+      {
+        ...finalizedWindowData,
+        ...finalizedPricesData,
+        ...finalizedPoolData,
+        ...finalizedAccountsData,
+        status: 'finalized',
+        id: uuid(),
+      },
+    ]
+  );
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
 
-  const contract = React.useMemo(() => {
-    return drizzle.contracts.BinaryBet;
-  }, [drizzle.contracts]);
-
   // Betting Cards Initialisation
   React.useEffect(() => {
+
     if (currentBlock) {
       if (isFirstLoad) {
+        
         // Initialize Cards
         setBets((prev) => [
           {
@@ -96,6 +133,7 @@ export const Dashboard = () => {
 
         setIsFirstLoad(false);
       } else {
+
         const updateBets = bets.slice(0);
         const opened = updateBets.find((el) => el.status === 'open');
         const ongoing = updateBets.find((el) => el.status === 'ongoing');
@@ -145,7 +183,12 @@ export const Dashboard = () => {
     selected.poolTotalDown = openedPoolData.poolTotalDown;
     selected.poolSize = openedPoolData.poolSize;
     selected.accounts = openedAccountsData.accounts;
-  }, [currentBlock, openedWindowData, openedPoolData, openedAccountsData]);
+  }, [
+    currentBlock, 
+    openedWindowData, 
+    openedPoolData, 
+    openedAccountsData
+  ]);
 
   // Ongoing window (Card): Update data
   React.useEffect(() => {
@@ -160,7 +203,13 @@ export const Dashboard = () => {
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
     selected.accounts = ongoingAccountsData.accounts;
-  }, [windowNumber, ongoingWindowData, ongoingPoolData, ongoingAccountsData]);
+  }, [
+    windowNumber, 
+    ongoingWindowData, 
+    ongoingPoolData, 
+    ongoingAccountsData,
+    ongoingPricesData
+  ]);
 
   // Finalized window (Card): Update data
   React.useEffect(() => {
@@ -181,6 +230,7 @@ export const Dashboard = () => {
     finalizedWindowData,
     finalizedPoolData,
     finalizedAccountsData,
+    finalizedPricesData
   ]);
 
   // Train animation on every new betting window
@@ -210,42 +260,42 @@ export const Dashboard = () => {
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
-    if (Number(value) <= MIN_BET_AMOUNT) {
-      alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
-      return;
+    if ( account ) {
+      
+      if (Number(value) <= MIN_BET_AMOUNT) {
+        alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
+        return;
+      }
+
+      const _bet = currencyToWei(value, true);
+
+      contractObj.methods
+        .placeBet(direction)
+        .send({
+          from: account,
+          value: _bet.toString(),
+        })
+        .on('transactionHash', function (hash) {
+          setIsOpenForBetting(false);
+          setIsBetPlaced(true);
+        });
     }
-
-    const eth = drizzle.web3.utils.toWei(
-      value,
-      global.config.currencyRequestValue
-    );
-
-    const overBalance = Number(value) > balance ? Number(value) - balance : 0;
-
-    const over = drizzle.web3.utils.toWei(
-      `${overBalance}`,
-      global.config.currencyRequestValue
-    );
-
-    contract.methods
-      .placeBet(eth, direction)
-      .send({
-        from: ethAccount,
-        value: over,
-      })
-      .on('transactionHash', function (hash) {
-        setIsOpenForBetting(false);
-        setIsBetPlaced(true);
-      });
   };
-  
+
   return isLoading ? (
     <div className="h-64 flex flex-col items-center justify-center">
       <Loading />
     </div>
   ) : (
     <>
-      <UserArea />
+      <div className="flex -mx-4 my-auto items-center">
+        <UserSummary />
+        <UserActions />
+      </div>
+
+      <div className={`flex flex-row p-5 text-xs text-gray-300`}>
+        <span className={`mr-2`}>*</span><span>Unclaimed gains and KITTY tokens are transferred to your MetaMask wallet by using the claim button or automatically on your next bet.</span>
+      </div>
 
       <BetProgressBar completed={progress} />
 
@@ -285,7 +335,11 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl mt-6 px-4">
+      <div className={`flex flex-row p-5 text-xs text-gray-300`}>
+        <span className={`mr-2`}>*</span><span>There may be a discrepancy between initial/final prices and prices shown on the graph. The graph is just for illustration purpose, the official prices, used to settle the bets, are the initial/final prices collected from the Chainlink onchain API</span>
+      </div>
+
+      <div className="bg-white rounded-3xl mt-2 px-4">
         <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>
     </>

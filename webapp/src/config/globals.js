@@ -1,5 +1,7 @@
 module.exports = global.config = {
-  currencyName: 'BNB',
+  currencyName: 'AVAX',
+  tokenName: 'KITTY',
+  pricesLabel: 'USD/ETH',
   currencyRequestValue: 'ether',
-  currencyRatesNodeAPI: 'http://localhost:5000'
+  currencyRatesNodeAPI: ''
 };

@@ -36,19 +36,39 @@ Now contracts are deployed on Ganache simulated blockchain and contracts artifac
 > npx truffle exec ./scripts/new_bet.js <account number (int)> <value of bet (uint)> <value sent with tx (uint)> <bet side (0 or 1)>
 
 Changes should be reflected on Ganache GUI:
-
-* Already deployed, addresses available at './artifacts'
-* To redeploy, $ npx truffle migrate --network testnet
-
-#### BSC Testnet
-
 - Add link to truffle-config.js to 'settings/workspace' so Ganache can get detailed information from the contract.
 - Select automine = off in 'settings/server' if you want the blockchain to be incremented automatically (new block every x seconds)
+
+#### BSC Testnet
+* Already deployed, addresses available at './artifacts'
+* To redeploy, $ npx truffle migrate --network testnet
 
 ### Starting the backend for prices data
 
 - NodeJS - Express - SocketIO - MongoDB
-- To start the server and get prices data for a specific interval from https://api-gm-lb.bandchain.org:
+- To start the server and get prices data for a specific interval from https://api.avax-test.network/ext/bc/C/rpc
 
 1. cd backend
 2. node index.js
+
+### Local Development
+
+1. In the project root folder, create '.env' file with the following content. The file is excluded from the GH repo.
+
+> MONGODB_URI=mongodb+srv://binarycatUser:7gb4NntHWlSHETjE@cluster0.a8hop.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
+
+> CURRENCY_FEED_URL=https://api.avax-test.network/ext/bc/C/rpc
+
+> CURRENCY_FEED_CONTRACT_ADDRESS=0x86d67c3D38D2bCeE722E601025C25a575021c6EA
+
+> CURRENCY_FEED_INTERVAL=30000
+
+> UPDATE_DB=off
+
+2. Make sure to 'npm install' both in the project root and webapp folders
+
+3. No need to deploy contracts or running local blockchain server. The local app is connecting to the test net. Just make sure you have MetaMask Binance Network and Account configured.
+
+4. Start local node.js server by running 'npm run start_local' in the project root folder
+
+5. Start webapp server by running 'webapp/yarn start'

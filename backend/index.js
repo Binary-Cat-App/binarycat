@@ -1,12 +1,12 @@
 const app = require("express")();
 const http = require("http").Server(app);
 const settings = require("./config/settings");
-const { Client } = require("@bandprotocol/bandchain.js");
+const Web3 = require("web3");
 const socketIo = require("socket.io");
 
-// BandChain's Proof-of-Authority REST endpoint
-const endpoint = "https://api-gm-lb.bandchain.org";
-const client = new Client(endpoint);
+const web3 = new Web3( settings.CURRENCY_FEED_URL );
+const aggregatorV3InterfaceABI = [{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"description","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint80","name":"_roundId","type":"uint80"}],"name":"getRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"latestRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"version","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+const priceFeed = new web3.eth.Contract(aggregatorV3InterfaceABI, settings.CURRENCY_FEED_CONTRACT_ADDRESS);
 
 const io = socketIo(http, {
   cors: {
@@ -16,13 +16,8 @@ const io = socketIo(http, {
 });
 
 var MongoClient = require("mongodb").MongoClient;
-var url = settings.db;
-// const socketController = require('./controllers').socket
 
-// require("./config/database")(global.settings);
 require("./config/express")(app);
-// require("./config/socket")(http);
-
 require("./routes")(app);
 
 const sockets = [];
@@ -33,29 +28,81 @@ io.on("connect", socket => {
   socket.on("client-message", ({ action, payload }) => {});
 });
 
-async function getPrice() {
-  const rate = await client.getReferenceData([settings.PAIR]);
-  return rate;
-}
-
-async function updateDB() {
-  let price = await getPrice();
-  var obj = { rate: price[0].rate, time: price[0].updatedAt.base };
-  MongoClient.connect(url, function(err, db) {
-    if (err) throw err;
-    var dbo = db.db("pricedb");
-    dbo.collection("BNBUSD").insertOne(obj, async (err, cursor) => {
-      if (err) throw err;
-      console.log("1 document inserted");
-      db.close();
-      sockets.forEach(s => {
-        s.emit("socket-message", { data: obj });
+function getPrice() {
+  try {    
+    priceFeed.methods.latestRoundData().call()
+      .then(( roundData ) => {
+        updateDB( roundData );
       });
-    });
-  });
+  } catch (e) {
+    console.log(e.message)
+    return null
+  }
 }
 
-var timer = setInterval(updateDB, settings.INTERVAL);
+function updateDB( data ) {
+  if (data === null || typeof data === 'undefined') return;
+
+  const price = data.answer / 100000000;
+  const time = data.startedAt;
+  
+  var obj = { rate: parseFloat(price.toFixed(4)), time: parseInt(time) };
+
+  if ( process.env.UPDATE_DB === 'off' ) {
+    sockets.forEach(s => {
+      s.emit("socket-message", { data: obj });
+    });
+  }
+  else {
+    MongoClient.connect(
+      settings.dbURL,
+      { useUnifiedTopology: true, useNewUrlParser: true },
+      (err, db) => {
+        if (err) throw err;
+        var dbo = db.db(settings.database);
+        dbo
+          .collection(settings.collection)
+          .find(
+            obj,
+            async (err, cursor) => {
+              
+              if (err) throw err;
+              
+              const result = await cursor.toArray();
+
+              if( result.length == 0) {
+                MongoClient.connect(
+                  settings.dbURL, 
+                  function(err, db) {
+                    
+                    if (err) throw err;
+                    var dbo = db.db(settings.database);
+                    
+                    dbo
+                      .collection(settings.collection)
+                      .insertOne(obj, async (err, cursor) => {
+                        
+                        if (err) throw err;
+                        console.log("1 document inserted");
+                        db.close();
+                        
+                        sockets.forEach(s => {
+                          s.emit("socket-message", { data: obj });
+                        });
+
+                    });
+                });
+              }
+
+              db.close();
+            }
+          );
+      }
+    );
+  }
+}
+
+var timer = setInterval(getPrice, settings.INTERVAL);
 
 http.listen(settings.port, () =>
   console.log(`Server listening on port ${settings.port}...`)

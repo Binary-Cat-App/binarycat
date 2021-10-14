@@ -1,7 +1,10 @@
 module.exports = {
-  port: 5000,
-  db:
-    "mongodb+srv://img_bank:Poznai12@images.fnm4n.mongodb.net/pricedb?retryWrites=true&w=majority",
-  PAIR: "BNB/USD",
-  INTERVAL: 10000 //milliseconds
+  port: process.env.PORT || 5000,
+  dbURL: process.env.MONGODB_URI,
+  database: "pricedb",
+  collection: "BNBUSD",
+  currencyResultLimit: 2000,
+  CURRENCY_FEED_URL: process.env.CURRENCY_FEED_URL,
+  CURRENCY_FEED_CONTRACT_ADDRESS: process.env.CURRENCY_FEED_CONTRACT_ADDRESS,
+  INTERVAL: process.env.CURRENCY_FEED_INTERVAL //milliseconds
 };

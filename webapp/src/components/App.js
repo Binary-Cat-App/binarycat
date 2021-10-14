@@ -1,38 +1,78 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { useWeb3React } from "@web3-react/core";
 
 import { Header } from './Header';
-import { Support } from './Support';
 import { Faq } from './Faq';
+import { Help } from './Help';
+import { ConnectMetamask } from './ConnectMetamask';
 import Dashboard from './Dashboard';
+import { Staking } from './Staking';
 import { Container } from './Container';
+import { Footer } from './Footer';
 
-import { MetaMaskProvider } from '../context/MataMaskContext';
-import { DrizzleProvider, useDrizzle } from '../context/DrizzleContext';
+import { BettingProvider } from '../context/BettingContext';
+import { StakingProvider } from '../context/StakingContext';
 
 const RoutesComponent = () => {
-  const { drizzleReadinessState } = useDrizzle();
-  if (drizzleReadinessState.loading)
-    return <div className="min-h-screen flex flex-col"> LOADING...</div>;
+  
+  const { active } = useWeb3React();
+
+  if ( !active )
+    return (
+      <div className="flex flex-col">
+        <Router>
+          <Header />
+          <div className="pt-6 sm:pt-12 flex-grow flex flex-col">
+            <Container>
+              <Switch>
+                <Route path="/faq">
+                  <Faq />
+                </Route>
+                <Route path="/help">
+                  <Help />
+                </Route>
+                <Route exact path="/">
+                  <ConnectMetamask />
+                </Route>
+                <Route path="/staking">
+                  <ConnectMetamask />
+                </Route>
+              </Switch>
+            </Container>
+          </div>
+          <Footer />
+        </Router>
+      </div>
+    );
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       <Router>
         <Header />
-        <div className="py-6 sm:py-12 flex-grow flex flex-col">
+        <div className="pt-6 sm:pt-12 flex-grow flex flex-col">
           <Container>
             <Switch>
               <Route path="/faq">
                 <Faq />
               </Route>
-              <Route path="/support">
-                <Support />
+              <Route path="/help">
+                <Help />
               </Route>
               <Route exact path="/">
-                <Dashboard />
+                <BettingProvider>
+                  <Dashboard />
+                </BettingProvider>
+              </Route>
+              <Route path="/staking">
+                <StakingProvider>
+                  <Staking />
+                </StakingProvider>
               </Route>
             </Switch>
           </Container>
         </div>
+        <Footer />
       </Router>
     </div>
   );
@@ -42,11 +82,7 @@ const ConnectedRoutesComponent = RoutesComponent;
 
 export const App = (props) => {
   return (
-    <MetaMaskProvider>
-      <DrizzleProvider drizzle={props.drizzle}>
-        <ConnectedRoutesComponent />
-      </DrizzleProvider>
-    </MetaMaskProvider>
+    <ConnectedRoutesComponent />
   );
 };
 

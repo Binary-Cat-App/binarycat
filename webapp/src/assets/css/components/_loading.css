@@ -17,3 +17,11 @@
     }
   }
 }
+
+.spinner circle {
+  @apply opacity-25;
+}
+
+.spinner path {
+  @apply opacity-75;
+}

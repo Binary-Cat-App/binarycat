@@ -1,44 +1,41 @@
+const path = require('path');
+const express = require('express');
 var MongoClient = require("mongodb").MongoClient;
 const moment = require("moment");
 const settings = require("../config/settings");
-var url = settings.db;
 
 module.exports = app => {
-  app.get("/", (req, res) => {
-    res
-      .status(200)
-      .send("Hello")
-      .end();
-  });
+  // Serve static files from the React app
+  app.use(express.static(path.join(__dirname, '../../webapp/build')));
 
-  app.post("/", (req, res) => {
+  app.post("/api/prices", (req, res) => {
     const { from, to } = req.body;
-    console.log(from, to);
     MongoClient.connect(
-      url,
+      settings.dbURL,
       { useUnifiedTopology: true, useNewUrlParser: true },
       (err, db) => {
+        
         if (err) throw err;
-        var dbo = db.db("pricedb");
+        var dbo = db.db(settings.database);
+        
         dbo
-          .collection("BNBUSD")
-          .find(
-            { time: { $gte: Number(from), $lte: Number(to) } },
-            async (err, cursor) => {
+          .collection(settings.collection)
+          .find( { time: { $gte: Number(from), $lte: Number(to) } } )
+          .sort( { time: -1 } )
+          .limit(settings.currencyResultLimit)
+          .toArray(function (err, result) {
               if (err) throw err;
-              const result = await cursor.toArray();
               db.close();
               res.json({ success: true, result });
-            }
-          );
+          });
+      
       }
     );
   });
 
-  app.all("*", (req, res) => {
-    res
-      .status(404)
-      .send("404 Not Found!")
-      .end();
+  // The "catchall" handler: for any request that doesn't
+  // match one above, send back React's index.html file.
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../webapp/build/index.html'));
   });
 };
