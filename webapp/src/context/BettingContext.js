@@ -4,7 +4,7 @@ import { useWeb3React } from "@web3-react/core";
 import { differenceInDays } from 'date-fns';
 import _ from 'lodash';
 
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 
 import BinaryBet from '../contracts/BinaryBet.json';
 const contract = BinaryBet;
