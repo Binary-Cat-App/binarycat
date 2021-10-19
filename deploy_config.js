@@ -21,14 +21,14 @@ module.exports = {
   },
 
   avax_fuji: {
-      price_feed_address: "0x86d67c3D38D2bCeE722E601025C25a575021c6EA", // ETH/USD price feed
+      price_feed_address: "0x5498BB86BC934c8D34FDA08E81D444153d0D06aD", // AVAX/USD price feed
       window_duration: 75,
       fee: 2,
       reward: 332
   },
 
   avax_mainet: {
-      price_feed_address: "0x976B3D034E162d8bD72D6b9C989d545b839003b0", // ETH/USD price feed
+      price_feed_address: "0x0A77230d17318075983913bC2145DB16C7366156", // AVAX/USD price feed
       window_duration: 150,
       fee: 2,
       reward: 332
