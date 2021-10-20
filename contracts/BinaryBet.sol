@@ -42,28 +42,37 @@ contract BinaryBet is Ownable {
         uint64 upValue;
     }
 
-    //Betting parameters
+    //Other contracts interactions
     AggregatorV3Interface internal priceFeed;
-    uint256 public immutable REWARD_PER_WINDOW;
-    uint256 public fee;
-    uint256 public windowDuration; //in blocks
-    uint256 public firstBlock;
+    BinToken token;
     BinaryStaking staking;
     address payable stakingAddress;
 
-    BinToken token;
+    //Betting variables
+    uint256 public immutable REWARD_PER_WINDOW;
+    mapping(uint256 => Pool) public pools; //windowNumber => Pool
+    uint256 public accumulatedFees;
+    uint256 public fee;
+    uint256 public firstBlock;
+
 
     //Window management
-    mapping(uint256 => Pool) public pools; //windowNumber => Pool
-    mapping(uint256 => uint256) public windowPrice; //first price collection at the window.
-    uint256 public firstWindow = 1; //Any bet before first block of betting is directed to the first window.
-    uint256 public windowOffset; //used make window continuous and monotonically increasing when window duration and first block changes.
-    uint256 public accumulatedFees;
+    uint256 public windowDuration; //in blocks
+    mapping(uint256 => uint256) public windowPrice; /*first price collection
+                                                      at the window.*/
+    uint256 public firstWindow = 1; /*Any bet before first block of betting 
+                                    is directed to the first window.
+                                    */
+    uint256 public windowOffset; /*used make window continuous and monotonically
+                                   increasing when window duration and first 
+                                   block changes.*/
 
     //User variables
-    mapping(address => mapping(uint256 => Pool)) public userStake;
-    mapping(address => uint256[]) public userBets;
-    mapping(address => mapping(uint256 => bool)) userBetted;
+    struct User {
+        mapping(uint256 => Pool) stake;
+        uint256[] bets;
+    }
+    mapping(address => User) user;
 
     //EVENTS
     event NewBet(
@@ -118,11 +127,6 @@ contract BinaryBet is Ownable {
             windowOffset,
             firstWindow
         );
-        if (!userBetted[msg.sender][windowNumber]) {
-            //only adds the bet to the list if it is the first time the user bets at the window
-            userBets[msg.sender].push(windowNumber);
-            userBetted[msg.sender][windowNumber] = true;
-        }
 
         //Update the pool for the window.
         Pool memory oldPool = pools[windowNumber];
@@ -134,31 +138,42 @@ contract BinaryBet is Ownable {
         );
         pools[windowNumber] = Pool(newDown, newUp);
 
+        User storage sender = user[msg.sender];
+        if (sender.bets.length == 0 ||
+            windowNumber != sender.bets[sender.bets.length - 1]) {
+            /*
+               Only adds to the list if its the first user bet on the window.
+               If length is zero, the code only evaluates the first condition,
+               avoiding the possible underflow length - 1.
+               */
+            sender.bets.push(windowNumber);
+        }
+
         //Update the user stake for the window.
-        Pool memory oldStake = userStake[msg.sender][windowNumber];
         (newDown, newUp) = updatePool(
-            oldStake.downValue,
-            oldStake.upValue,
+            sender.stake[windowNumber].downValue,
+            sender.stake[windowNumber].upValue,
             side,
             value
         );
-        userStake[msg.sender][windowNumber] = Pool(newDown, newUp);
+        sender.stake[windowNumber] = Pool(newDown, newUp);
 
         emit NewBet(msg.sender, windowNumber, value, side);
     }
 
-    function updateBalance(address user) public {
-        uint256[] storage userWindowsList = userBets[user];
-        if (userWindowsList.length == 0) {
+    function updateBalance(address _user) public {
+        User storage userData = user[_user];
+        if (userData.bets.length == 0) {
             //No bets to settle
             return;
         }
 
         uint256 totalGain = 0;
-        for (uint256 i = userWindowsList.length; i > 0; i--) {
-            //Maximum number of itens in list is 2, when the user bets on 2 subsequent windows and the first window is not yet settled.
-
-            uint256 window = userWindowsList[i - 1];
+        for (uint256 i = userData.bets.length; i > 0; i--) {
+            /*Maximum number of itens in list is 2, when the user bets
+              on 2 subsequent windows and the first window is not yet settled.
+            */
+            uint256 window = userData.bets[i - 1];
             uint256 currentWindow = getWindowNumber(
                 block.number,
                 windowDuration,
@@ -192,12 +207,12 @@ contract BinaryBet is Ownable {
             }
 
             //Remove window from list of unsettled bets.
-            userWindowsList[i - 1] = userWindowsList[
-                userWindowsList.length - 1
+            userData.bets[i - 1] = userData.bets[
+                userData.bets.length - 1
             ];
-            userWindowsList.pop();
+            userData.bets.pop();
 
-            Pool memory stake = userStake[user][window];
+            Pool memory stake = userData.stake[window];
             Pool memory pool = pools[window];
             (uint256 windowGain, uint256 fees) = settleBet(
                 stake.upValue,
@@ -217,13 +232,13 @@ contract BinaryBet is Ownable {
                 pool.upValue,
                 pool.downValue
             );
-            transferRewards(user, reward);
+            transferRewards(_user, reward);
             transferFees();
-            emit BetSettled(window, user, windowGain);
+            emit BetSettled(window, _user, windowGain);
         }
 
         if (totalGain >= 0) {
-            payable(user).transfer(totalGain);
+            payable(_user).transfer(totalGain);
         }
     }
 
@@ -402,12 +417,12 @@ contract BinaryBet is Ownable {
         return (pool.downValue, pool.upValue);
     }
 
-    function getUserStake(uint256 windowNumber, address user)
+    function getUserStake(uint256 windowNumber, address _user)
         public
         view
         returns (uint256, uint256)
     {
-        Pool memory stake = userStake[user][windowNumber];
+        Pool memory stake = user[_user].stake[windowNumber];
         return (stake.downValue, stake.upValue);
     }
 
@@ -419,16 +434,16 @@ contract BinaryBet is Ownable {
         return (windowPrice[window + 1], windowPrice[window + 2]);
     }
 
-    function getUserBetList(address user, uint256 index)
+    function getUserBetList(address _user, uint256 index)
         public
         view
         returns (uint256)
     {
-        return userBets[user][index];
+        return user[_user].bets[index];
     }
 
-    function betListLen(address user) public view returns (uint256) {
-        return userBets[user].length;
+    function betListLen(address _user) public view returns (uint256) {
+        return user[_user].bets.length;
     }
 
     //Governance
