@@ -59,7 +59,8 @@ contract BinaryBet is Ownable {
     //Window management
     uint256 public windowDuration; //in blocks
     mapping(uint256 => uint256) public windowPrice; /*first price collection
-                                                      at the window.*/
+                                                      at the window.
+                                                    */
     uint256 public firstWindow = 1; /*Any bet before first block of betting 
                                     is directed to the first window.
                                     */
@@ -145,7 +146,7 @@ contract BinaryBet is Ownable {
                Only adds to the list if its the first user bet on the window.
                If length is zero, the code only evaluates the first condition,
                avoiding the possible underflow length - 1.
-               */
+            */
             sender.bets.push(windowNumber);
         }
 
