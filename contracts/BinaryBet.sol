@@ -129,16 +129,6 @@ contract BinaryBet is Ownable {
             firstWindow
         );
 
-        //Update the pool for the window.
-        Pool memory oldPool = pools[windowNumber];
-        (uint64 newDown, uint64 newUp) = updatePool(
-            oldPool.downValue,
-            oldPool.upValue,
-            side,
-            value
-        );
-        pools[windowNumber] = Pool(newDown, newUp);
-
         User storage sender = user[msg.sender];
         if (sender.bets.length == 0 ||
             windowNumber != sender.bets[sender.bets.length - 1]) {
@@ -150,14 +140,17 @@ contract BinaryBet is Ownable {
             sender.bets.push(windowNumber);
         }
 
-        //Update the user stake for the window.
-        (newDown, newUp) = updatePool(
-            sender.stake[windowNumber].downValue,
-            sender.stake[windowNumber].upValue,
-            side,
-            value
-        );
-        sender.stake[windowNumber] = Pool(newDown, newUp);
+        //Update the user stake and pool for the window.
+        if (BetSide(side) == BetSide.up) {
+            sender.stake[windowNumber].upValue += value;
+            pools[windowNumber].upValue += value;
+
+        }
+        else {
+            sender.stake[windowNumber].downValue += value;
+            pools[windowNumber].downValue += value;
+
+        }
 
         emit NewBet(msg.sender, windowNumber, value, side);
     }
@@ -334,20 +327,6 @@ contract BinaryBet is Ownable {
                 upStake + downStake,
                 poolUp + poolDown
             );
-    }
-
-    function updatePool(
-        uint64 downValue,
-        uint64 upValue,
-        uint8 side,
-        uint64 value
-    ) public pure returns (uint64, uint64) {
-        BetSide betSide = BetSide(side);
-        if (betSide == BetSide.down) {
-            return (downValue + value, upValue);
-        } else {
-            return (downValue, upValue + value);
-        }
     }
 
     function getWindowNumber(
