@@ -4,6 +4,7 @@ import { Bet } from './Bet';
 import { Loading } from './Loading';
 import { UserSummary } from './UserSummary';
 import { UserActions } from './UserActions';
+import { DismissableAlert } from './DismissableAlert';
 import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
@@ -288,18 +289,18 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
-      <div className="flex -mx-4 my-auto items-center">
+      <div className="flex mb-6 -mx-4 my-auto items-center">
         <UserSummary />
         <UserActions />
       </div>
 
-      <div className={`flex flex-row p-5 text-xs text-gray-300`}>
-        <span className={`mr-2`}>*</span><span>Unclaimed gains and KITTY tokens are transferred to your MetaMask wallet by using the claim button or automatically on your next bet.</span>
-      </div>
+      <DismissableAlert name="alert-unclaimed-gains">
+        <span className="text-sm text-gray-300">Unclaimed gains and KITTY tokens are transferred to your MetaMask wallet by using the claim button or automatically on your next bet.</span>
+      </DismissableAlert>
 
       <BetProgressBar completed={progress} />
 
-      <div className="-mx-4 overflow-x-hidden">
+      <div className="-mx-4 mb-6 overflow-x-hidden">
         <style children={transformAnimation} />
         <div
           className="transition-all duration-1000 ease-in-out"
@@ -335,9 +336,9 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <div className={`flex flex-row p-5 text-xs text-gray-300`}>
-        <span className={`mr-2`}>*</span><span>There may be a discrepancy between initial/final prices and prices shown on the graph. The graph is just for illustration purpose, the official prices, used to settle the bets, are the initial/final prices collected from the Chainlink onchain API</span>
-      </div>
+      <DismissableAlert name="alert-prices">
+        <span className="text-sm text-gray-300">There may be a discrepancy between initial/final prices and prices shown on the graph. The graph is just for illustration purpose, the official prices, used to settle the bets, are the initial/final prices collected from the Chainlink onchain API</span>
+      </DismissableAlert>
 
       <div className="bg-white rounded-3xl mt-2 px-4">
         <BetChart classAlt="h-64" chart={historicalChartData} />
