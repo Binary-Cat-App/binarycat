@@ -1,10 +1,15 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom'
 import { Link } from 'react-router-dom';
 import { Container } from './Container';
 import { ReactComponent as Logo } from '../assets/images/logo.svg';
 import { ReactComponent as IconHelp } from '../assets/images/icon-help.svg';
 
 export const Header = () => {
+
+  const location = useLocation();
+  const stakingBtn = location.pathname === '/staking' ? 'btn--green' : 'btn--outline';
+
   return (
     <div className="pt-8 flex-shrink-0">
       <Container>
@@ -28,7 +33,7 @@ export const Header = () => {
               <li>
                 <Link 
                   to="/staking"
-                  className="btn btn--outline">
+                  className={`btn ${stakingBtn}`}>
                   Staking
                 </Link>
               </li>
