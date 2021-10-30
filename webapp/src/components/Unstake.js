@@ -22,7 +22,7 @@ export const Unstake = () => {
 
 	const handleUnstake = async (val) => {
 		
-		if ( active && account && val > 0 && val <= _stakedBalance ) {
+		if ( active && account && _stakedBalance > 0 && val > 0 && val <= _stakedBalance ) {
 
 			const amount = currencyToWei(val);
 
@@ -49,11 +49,23 @@ export const Unstake = () => {
 
 			{error && (
             	<Alert color="red">
-              		<span>Not enough staked balance!</span>
+              		<span>Insufficient staked balance!</span>
             	</Alert>
           	)}
 
 			<div className="min-w-0 flex items-center mb-8 py-2 px-4 bg-gray-100 rounded">
+				<Button 
+					variant="gray"
+					outline
+					className="text-gray-800 font-normal py-1 px-2 border border-gray-400 rounded shadow"
+					handleClick={() => {
+						setValue(_stakedBalance);
+					}}
+					isDisabled={_stakedBalance === 0}
+				>
+				max
+				</Button>
+
 	            <NumberFormat
 	              thousandSeparator=" "
 	              decimalSeparator="."
