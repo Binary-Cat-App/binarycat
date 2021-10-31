@@ -15,11 +15,10 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./BinToken.sol";
 import "./BinaryStaking.sol";
 
-contract BinaryBet is Ownable {
+contract BinaryBet {
     //Structs and enums
     enum BetSide {
         down,
@@ -44,30 +43,23 @@ contract BinaryBet is Ownable {
 
     //Other contracts interactions
     AggregatorV3Interface internal priceFeed;
-    BinToken token;
-    BinaryStaking staking;
-    address payable stakingAddress;
+    BinToken immutable token;
+    BinaryStaking immutable staking;
+    address payable immutable stakingAddress;
 
     //Betting variables
     uint256 public immutable REWARD_PER_WINDOW;
     mapping(uint256 => Pool) public pools; //windowNumber => Pool
     uint256 public accumulatedFees;
-    uint256 public fee;
-    uint256 public firstBlock;
+    uint256 public immutable fee;
+    uint256 public immutable firstBlock;
 
 
     //Window management
-    uint256 public windowDuration; //in blocks
+    uint256 public immutable windowDuration; //in blocks
     mapping(uint256 => uint256) public windowPrice; /*first price collection
                                                       at the window.
-                                                    */
-    uint256 public firstWindow = 1; /*Any bet before first block of betting 
-                                    is directed to the first window.
-                                    */
-    uint256 public windowOffset; /*used make window continuous and monotonically
-                                   increasing when window duration and first 
-                                   block changes.*/
-
+                                                     */
     //User variables
     struct User {
         mapping(uint256 => Pool) stake;
@@ -103,7 +95,6 @@ contract BinaryBet is Ownable {
         windowDuration = _windowDuration;
 
         fee = _fee;
-        firstWindow = 1;
 
         stakingAddress = payable(stakingContract);
         staking = BinaryStaking(stakingAddress);
@@ -124,9 +115,7 @@ contract BinaryBet is Ownable {
         uint256 windowNumber = getWindowNumber(
             block.number,
             windowDuration,
-            firstBlock,
-            windowOffset,
-            firstWindow
+            firstBlock
         );
 
         User storage sender = user[msg.sender];
@@ -144,12 +133,10 @@ contract BinaryBet is Ownable {
         if (BetSide(side) == BetSide.up) {
             sender.stake[windowNumber].upValue += value;
             pools[windowNumber].upValue += value;
-
         }
         else {
             sender.stake[windowNumber].downValue += value;
             pools[windowNumber].downValue += value;
-
         }
 
         emit NewBet(msg.sender, windowNumber, value, side);
@@ -163,6 +150,7 @@ contract BinaryBet is Ownable {
         }
 
         uint256 totalGain = 0;
+        uint256 totalRewards = 0;
         for (uint256 i = userData.bets.length; i > 0; i--) {
             /*Maximum number of itens in list is 2, when the user bets
               on 2 subsequent windows and the first window is not yet settled.
@@ -171,9 +159,7 @@ contract BinaryBet is Ownable {
             uint256 currentWindow = getWindowNumber(
                 block.number,
                 windowDuration,
-                firstBlock,
-                windowOffset,
-                firstWindow
+                firstBlock
             );
             (
                 uint256 referencePrice,
@@ -226,14 +212,18 @@ contract BinaryBet is Ownable {
                 pool.upValue,
                 pool.downValue
             );
-            transferRewards(_user, reward);
-            transferFees();
+            totalRewards = totalRewards + reward;
             emit BetSettled(window, _user, windowGain);
         }
 
         if (totalGain >= 0) {
             payable(_user).transfer(totalGain);
         }
+
+        if (totalRewards >= 0) {
+            transferRewards(_user, totalRewards);
+        }
+        transferFees();
     }
 
     function windowStatus(
@@ -332,31 +322,23 @@ contract BinaryBet is Ownable {
     function getWindowNumber(
         uint256 currentBlock,
         uint256 _windowDuration,
-        uint256 _firstBlock,
-        uint256 _windowOffset,
-        uint256 _firstWindow
+        uint256 _firstBlock
     ) public pure returns (uint256 windowNumber) {
-        if (currentBlock < _firstBlock) {
-            windowNumber = _firstWindow;
-        } else {
-            //n = floor((block - first_block)/window_size  + 1)
-            windowNumber =
-                ((currentBlock - _firstBlock) / _windowDuration) +
-                _windowOffset +
-                1; //integer division => floor
-        }
+        //n = floor((block - first_block)/window_size  + 1)
+        windowNumber =
+            ((currentBlock - _firstBlock) / _windowDuration)
+            + 1; //integer division => floor
     }
 
     function getWindowStartingBlock(
         uint256 windowNumber,
         uint256 _windowDuration,
-        uint256 _firstBlock,
-        uint256 _windowOffset
+        uint256 _firstBlock
     ) public pure returns (uint256 startingBlock) {
         //firstBlock + (n-1 - (offset + 1))*window_size
         startingBlock =
             _firstBlock +
-            (windowNumber - 1 - _windowOffset) *
+            (windowNumber - 1) *
             _windowDuration;
     }
 
@@ -372,9 +354,7 @@ contract BinaryBet is Ownable {
         uint256 window = getWindowNumber(
             block.number,
             windowDuration,
-            firstBlock,
-            windowOffset,
-            firstWindow
+            firstBlock
         );
         if (windowPrice[window] == 0) {
             windowPrice[window] = priceOracle();
@@ -424,26 +404,5 @@ contract BinaryBet is Ownable {
 
     function betListLen(address _user) public view returns (uint256) {
         return user[_user].bets.length;
-    }
-
-    //Governance
-    function changeWindowSize(uint256 windowSize) public onlyOwner {
-        require(windowSize > 0, "window size should be strictly positive");
-        uint256 currentWindow = getWindowNumber(
-            block.number,
-            windowDuration,
-            firstBlock,
-            windowOffset,
-            firstWindow
-        );
-        firstBlock = getWindowStartingBlock(
-            currentWindow + 1,
-            windowDuration,
-            firstBlock,
-            windowOffset
-        );
-        windowOffset = currentWindow;
-        firstWindow = currentWindow;
-        windowDuration = windowSize;
     }
 }
