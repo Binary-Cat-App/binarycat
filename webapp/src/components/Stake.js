@@ -20,7 +20,7 @@ export const Stake = () => {
     	tokenObj
 	} = useStaking();
 	
-	const _walletBalance = walletBalance ? weiToCurrency(walletBalance) : 0.00;
+	const _walletBalance = walletBalance ? weiToCurrency( walletBalance ) : 0.00;
 	const _userAllowance = userAllowance ? weiToCurrency( userAllowance ) : 0.00;
 
 	const handleAllowance = async (val) => {
@@ -82,9 +82,13 @@ export const Stake = () => {
 					outline
 					className="text-gray-800 font-normal py-1 px-2 border border-gray-400 rounded shadow"
 					handleClick={() => {
-						setValue(_userAllowance);
+						if (_userAllowance !== 0) {
+							setValue(_userAllowance);
+						} else {
+							setValue(_walletBalance);
+						}
 					}}
-					isDisabled={_userAllowance === 0}
+					isDisabled={_walletBalance === 0}
 					>
 					max
 				</Button>
