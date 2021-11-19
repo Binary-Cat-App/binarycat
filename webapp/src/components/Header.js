@@ -11,10 +11,10 @@ export const Header = () => {
   const stakingBtn = location.pathname === '/staking' ? 'btn--green' : 'btn--outline';
 
   return (
-    <div className="pt-8 flex-shrink-0">
+    <div className="pt-4 lg:pt-8 flex-shrink-0">
       <Container>
-        <div className="flex items-center justify-between">
-          <span className="mr-4">
+        <div className="flex flex-col md:flex-row items-center justify-between">
+          <span className="mb-4 md:mb-0 md:mr-4">
             <Link to="/">
               <Logo />
             </Link>

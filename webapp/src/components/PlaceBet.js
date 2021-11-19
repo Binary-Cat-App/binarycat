@@ -31,7 +31,7 @@ export const PlaceBet = ({
         <IconUp className="icon w-16 h-auto" />
       </Button>
       <div
-        className={`min-w-0 py-2 px-4 flex items-center bg-white border-l border-r border-gray-200 relative ${
+        className={`w-full min-w-0 py-2 px-4 flex items-center bg-white border-l border-r border-gray-200 relative ${
           (!account || !isOpenForBetting) && 'bg-gray-100 '
         }`}
       >

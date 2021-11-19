@@ -289,7 +289,7 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
-      <div className="flex mb-6 -mx-4 my-auto items-center">
+      <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
         <UserSummary />
         <UserActions />
       </div>
@@ -307,7 +307,7 @@ export const Dashboard = () => {
           ref={betScrollDiv}
           style={transformMove}
         >
-          <TransitionGroup className="flex flex-row-reverse">
+          <TransitionGroup className="flex flex-col lg:flex-row-reverse">
             {bets.map((bet, index) => {
               let data = [];
               if (bet.status === 'finalized') {
