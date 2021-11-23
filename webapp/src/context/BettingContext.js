@@ -587,7 +587,7 @@ export const BettingProvider = ({ children }) => {
       const _windowBlocks = windowBlocks( _windowNumber );
 
       const prices = await contractObj
-        .getPastEvents('priceUpdated', {
+        .getPastEvents('PriceUpdated', {
           filter: { windowNumber: [_windowNumber + 1, _windowNumber + 2] },
           fromBlock: _windowBlocks.startingBlock,
           toBlock: 'latest',
@@ -634,7 +634,7 @@ export const BettingProvider = ({ children }) => {
       var _poolTotalDown = 0;
 
       const result = await contractObj
-        .getPastEvents('newBet', {
+        .getPastEvents('NewBet', {
           fromBlock: startingBlock,
           toBlock: endingBlock,
         })
