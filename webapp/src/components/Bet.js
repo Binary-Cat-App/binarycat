@@ -60,7 +60,7 @@ export const Bet = ({
   }
 
   return (
-    <div className="w-1/3 px-4 flex-shrink-0">
+    <div className="w-full lg:w-1/3 px-4 pb-4 lg:pb-0 flex-shrink-0">
 
       <div className={`${ ( _isWon ) ? 'border-2 border-yellow-300' : ( _isLost ) ? 'border-2 border-gray-100' : '' } bg-white p-4 sm:p-6 h-full flex flex-col relative rounded-3xl`}>
 

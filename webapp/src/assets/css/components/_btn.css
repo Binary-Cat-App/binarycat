@@ -36,7 +36,7 @@
 
     &:disabled,
     &.is-disabled {
-      @apply text-gray-200  border-gray-200 bg-white !important;
+      @apply text-gray-200  border-gray-200 bg-transparent !important;
     }
   }
 

@@ -6,9 +6,9 @@ import { ReactComponent as IconFAQ } from '../assets/images/icon-faq.svg';
 
 export const Help = () => {
   return <div>
-      <div className="flex -mx-4">
-          <div className="w-1/3 p-8 mx-4 bg-white flex flex-col rounded-3xl">
-          <h3 
+      <div className="flex lg:-mx-4 flex-col lg:flex-row">
+          <div className="w-full lg:w-1/3 p-8 mb-4 lg:mb-0 lg:mx-4 bg-white flex flex-col rounded-3xl">
+            <h3 
               className="pb-4 text-3xl font-medium flex justify-center"
               >
                 <span 
@@ -28,7 +28,7 @@ export const Help = () => {
             </div>
           </div>
           
-          <div className="w-1/3 p-8 mx-4 bg-white flex flex-col rounded-3xl">
+          <div className="w-full lg:w-1/3 p-8 mb-4 lg:mb-0 lg:mx-4 bg-white flex flex-col rounded-3xl">
             <h3 
               className="pb-4 text-3xl font-medium flex justify-center"
               >
@@ -48,7 +48,7 @@ export const Help = () => {
             </div>
           </div>
           
-          <div className="w-1/3 p-8 mx-4 bg-white flex flex-col rounded-3xl">
+          <div className="w-full lg:w-1/3 p-8 mb-4 lg:mb-0 lg:mx-4 bg-white flex flex-col rounded-3xl">
             <h3 
               className="pb-4 text-3xl font-medium flex justify-center"
               >
