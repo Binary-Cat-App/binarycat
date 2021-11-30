@@ -52,26 +52,26 @@ describe("Staking",function () {
         let value = ethers.utils.parseEther("100")
         await token.connect(account1).approve(stk.address, value)
         await stk.connect(account1).stake(value)
-        let stk_account = await stk.stakingBalance(account1.address);
-        expect(stk_account.stakedBin.toString()).to.equal(value)
+        let stk_account = await stk.balanceOf(account1.address);
+        expect(stk_account.toString()).to.equal(value)
 
         value = ethers.utils.parseEther("14.5")
         await token.connect(account2).approve(stk.address, value)
         await stk.connect(account2).stake(value)
-        stk_account = await stk.stakingBalance(account2.address);
-        expect(stk_account.stakedBin.toString()).to.equal(value)
+        stk_account = await stk.balanceOf(account2.address);
+        expect(stk_account.toString()).to.equal(value)
     });
 
     it("Should update staked balance on unstake", async function () {
         let stakedValue = ethers.utils.parseEther("14.5")
         await token.connect(account2).approve(stk.address, stakedValue)
         await stk.connect(account2).stake(stakedValue)
-        stk_account0 = await stk.stakingBalance(account2.address);
+        stk_account0 = await stk.balanceOf(account2.address);
 
         let unstakedValue = ethers.utils.parseEther("6.46")
         await stk.connect(account2).unstake(unstakedValue)
-        stk_account1 = await stk.stakingBalance(account2.address);
-        let result = stk_account0.stakedBin.sub(stk_account1.stakedBin)
+        stk_account1 = await stk.balanceOf(account2.address);
+        let result = stk_account0.sub(stk_account1)
         expect(result.toString()).to.equal(unstakedValue)
 
         unstakedValue = ethers.utils.parseEther("8.6")
@@ -138,7 +138,7 @@ describe("Staking",function () {
 
         dividends = await stk.ownedDividends(account1.address)
         expect(dividends -  divValue2 - divValue3).to.be.below(1);
-        await stk.connect(account1).release({gasPrice: 0})
+        await stk.connect(account1).release(account1.address, {gasPrice: 0})
         dividends = await stk.ownedDividends(account1.address)
         expect(dividends.toString()).to.equal("0")
         bal = await provider.getBalance(account1.address)
@@ -164,7 +164,6 @@ describe("Staking",function () {
         for(i=0; i<= divArray.length; i++) {
             let divValue = divArray[i]
             await stk.connect(owner).receiveFunds({value: divValue})
-            //await stk.connect(account2).release({gasPrice: 0 })
         }
 
         ownedDiv1 = await stk.ownedDividends(account1.address);
@@ -244,6 +243,55 @@ describe("Staking",function () {
         expect(expected1.sub(ownedDiv1)).to.be.below(1500);
         expect(ownedDiv2.sub(expected2)).to.be.below(1500);
         expect(ownedDiv3.sub(expected3)).to.be.below(1500);
+    });
+
+    it('Should update valueWhenLastReleased on transfer', async function () {
+        let stakedValue = ethers.utils.parseEther("200")
+        await token.connect(account1).approve(stk.address, stakedValue, {gasPrice: 0})
+        await stk.connect(account1).stake(stakedValue,{gasPrice: 0})
+
+        await token.connect(account2).approve(stk.address, stakedValue, {gasPrice: 0})
+        await stk.connect(account2).stake(stakedValue,{gasPrice: 0})
+        
+        let initialBalance = await provider.getBalance(stk.address);
+        let div = ethers.utils.parseEther("10")
+        await stk.connect(owner).receiveFunds({value: div})
+
+        let value1 = await stk.valueWhenLastReleased(account1.address)
+        let value2 = await stk.valueWhenLastReleased(account2.address)
+        expect(value1.toString()).to.equal('0')
+        expect(value2.toString()).to.equal('0')
+
+        trueValue = await stk.accumulatedRewards()
+
+        await stk.connect(account1).transfer(account2.address, 100)
+        let finalBalance = await provider.getBalance(stk.address);
+        value1 = await stk.valueWhenLastReleased(account1.address)
+        value2 = await stk.valueWhenLastReleased(account2.address)
+        expect(value1.toString()).to.equal(trueValue.toString())
+        expect(value2.toString()).to.equal(trueValue.toString())
+    });
+
+    it('Should update valueWhenLastReleased on transferFrom', async function () {
+        let initialBalance = await provider.getBalance(account1.address);
+        let stakedValue = ethers.utils.parseEther("200")
+        await token.connect(account1).approve(stk.address, stakedValue, {gasPrice: 0})
+        await stk.connect(account1).stake(stakedValue,{gasPrice: 0})
+
+        let div = ethers.utils.parseEther("10")
+        await stk.connect(owner).receiveFunds({value: div})
+
+        let value1 = await stk.valueWhenLastReleased(account1.address)
+        expect(value1.toString()).to.equal('0')
+
+        trueValue = await stk.accumulatedRewards()
+
+        await stk.connect(account1).approve(owner.address, 100, {gasPrice: 0})
+        await stk.connect(owner).transferFrom(account1.address, owner.address, 100)
+        value1 = await stk.valueWhenLastReleased(account1.address)
+        expect(value1.toString()).to.equal(trueValue.toString())
+        let finalBalance = await provider.getBalance(account1.address);
+        expect(finalBalance.toString()).to.equal((initialBalance.add(div)).toString())
     });
 
 });
