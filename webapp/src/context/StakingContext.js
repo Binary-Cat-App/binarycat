@@ -79,8 +79,8 @@ export const StakingProvider = ({ children }) => {
     if ( active && account ) {
 
       // Total Staked
-      tokenObj.methods
-        .balanceOf(staking.address)
+      stakingObj.methods
+        .totalSuppy()
         .call({
           from: account
         })
@@ -110,12 +110,12 @@ export const StakingProvider = ({ children }) => {
 
       // Staked Balance
       stakingObj.methods
-        .stakingBalance(account)
+        .balanceOf(account)
         .call({
           from: account
         })
         .then(
-          (response) => setStakedBalance(response.stakedBin)
+          (response) => setStakedBalance(response)
         );
 
       // User Allowance
