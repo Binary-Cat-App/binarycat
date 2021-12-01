@@ -12,19 +12,20 @@
 
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./BinToken.sol";
 
-contract BinaryStaking {
+contract BinaryStaking is ERC20 {
+    string public constant NAME = "Staked KITTY";
+    string public constant SYMBOL = "sKITTY";
+    uint8 public constant DECIMALS = 18;
+
     IERC20 public binToken;
 
     uint256 internal constant PRECISION_CONSTANT = 1e27;
     address payable owner;
-    struct StakingAccount {
-        uint256 stakedBin;
-        uint256 valueWhenLastReleased; //Global accumulated value of new_rewards/total_staked when user last got rewards
-    }
 
-    mapping(address => StakingAccount) public stakingBalance;
+    mapping(address => uint256) public valueWhenLastReleased;
     uint256 public accumulatedRewards; //(per staked token)
 
     event Staked(address indexed user, uint256 amount);
@@ -32,18 +33,18 @@ contract BinaryStaking {
     event Release(address indexed user, uint256 amount);
     event Reward(uint256 amount);
 
-    constructor(address token) {
+    constructor(address token) ERC20(NAME, SYMBOL){
         owner = payable(msg.sender);
         binToken = BinToken(token);
     }
 
     function receiveFunds() public payable {
         uint256 value = msg.value;
-        if (binToken.balanceOf(address(this)) != 0) {
+        if (totalSupply() != 0) {
             accumulatedRewards =
                 accumulatedRewards +
                 (value * PRECISION_CONSTANT) /
-                binToken.balanceOf(address(this));
+                totalSupply();
         } else {
             owner.transfer(value);
         }
@@ -52,49 +53,51 @@ contract BinaryStaking {
 
     function stake(uint256 amount) external {
         require(amount > 0, "Amount should be greater than 0");
-        release();
+        release(msg.sender);
         require(binToken.transferFrom(msg.sender, address(this), amount));
-        stakingBalance[msg.sender].stakedBin =
-            stakingBalance[msg.sender].stakedBin +
-            amount;
-
+        _mint(msg.sender, amount);
         emit Staked(msg.sender, amount);
     }
 
     function unstake(uint256 amount) external {
         require(amount > 0, "Amount should be greater than 0");
         require(
-            amount <= stakingBalance[msg.sender].stakedBin,
+            amount <= balanceOf(msg.sender),
             "Cannot unstake more than balance"
         );
 
-        release();
-        stakingBalance[msg.sender].stakedBin =
-            stakingBalance[msg.sender].stakedBin -
-            amount;
+        release(msg.sender);
+        _burn(msg.sender, amount);
 
         binToken.transfer(msg.sender, amount);
         emit Unstaked(msg.sender, amount);
     }
 
-    function release() public {
+    function release(address user) public {
         if (accumulatedRewards == 0) {
             return;
         }
-        uint256 amount = ownedDividends(msg.sender);
-        stakingBalance[msg.sender].valueWhenLastReleased = accumulatedRewards;
+        uint256 amount = ownedDividends(user);
+        valueWhenLastReleased[user] = accumulatedRewards;
 
         if (amount > 0) {
-            payable(msg.sender).transfer(amount);
-            emit Release(msg.sender, amount);
+            payable(user).transfer(amount);
+            emit Release(user, amount);
         }
     }
 
     function ownedDividends(address user) public view returns (uint256) {
-        StakingAccount memory balance = stakingBalance[user];
         return
-            (balance.stakedBin *
-                (accumulatedRewards - balance.valueWhenLastReleased)) /
+            (balanceOf(user) *
+                (accumulatedRewards - valueWhenLastReleased[user])) /
             PRECISION_CONSTANT;
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal virtual override 
+    {
+        super._beforeTokenTransfer(from, to, amount);
+        release(from);
+        release(to);
     }
 }

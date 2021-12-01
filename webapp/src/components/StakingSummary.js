@@ -28,7 +28,7 @@ export const StakingSummary = () => {
 	
 		if ( active && account ) {
 			const withdraw = await stakingObj.methods
-				.release()
+				.release(account)
 				.send({
 					from: account
 				});
