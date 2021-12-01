@@ -80,7 +80,7 @@ export const StakingProvider = ({ children }) => {
 
       // Total Staked
       stakingObj.methods
-        .totalSuppy()
+        .totalSupply()
         .call({
           from: account
         })
