@@ -3,6 +3,8 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
 
+    const IDO_ADDRESS = config[network.name].ido_address
+    const RELEASE_TIMESTAMP = config[network.name].release_timestamp
     let PRICE_FEED_ADDRESS = config[network.name].price_feed_address
     const WINDOW_DURATION = config[network.name].window_duration;
     const FEE = config[network.name].fee;
@@ -17,10 +19,18 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         PRICE_FEED_ADDRESS = mock.address
     }
 
+
+    console.log(IDO_ADDRESS)
     let token = await deploy('BinToken', {
     from: deployer,
-    args: [],
+    args: [IDO_ADDRESS],
     log: true,
+    });
+
+    let lock = await deploy('KittyTimeLock', {
+        from: deployer,
+        args: [token.address, deployer, RELEASE_TIMESTAMP],
+        log: true,
     });
 
     let stake = await deploy('BinaryStaking', {
@@ -36,4 +46,4 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
     });
 }
 
-module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken'];
+module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock'];
