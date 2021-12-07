@@ -29,7 +29,7 @@ describe("BinaryBets Bet management", function () {
         BinaryStaking = await ethers.getContractFactory("BinaryStaking");
         BinToken = await ethers.getContractFactory("BinToken");
 
-        token = await BinToken.deploy();
+        token = await BinToken.deploy(owner.address);
         stk = await BinaryStaking.deploy(token.address);
         bet = await BinaryBet.deploy(30, 1, aggregatorAddress, stk.address, token.address, 332);
         await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);

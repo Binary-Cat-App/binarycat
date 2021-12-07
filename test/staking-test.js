@@ -15,7 +15,7 @@ describe("Staking",function () {
         BinaryStaking = await ethers.getContractFactory("BinaryStaking");
         BinToken = await ethers.getContractFactory("BinToken");
 
-        token = await BinToken.deploy();
+        token = await BinToken.deploy(owner.address);
         stk = await BinaryStaking.deploy(token.address);
         bet = await BinaryBet.deploy(30, 1, mockAggregator.address, stk.address, token.address, 332);
 
