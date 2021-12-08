@@ -7,6 +7,7 @@ require('./tasks')
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".mnemonic").toString().trim();
+const key = fs.readFileSync(".key").toString().trim();
 
 task("accounts", "Prints the list of accounts", async () => {
   const accounts = await ethers.getSigners();
@@ -33,7 +34,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                     enabled: true,
-                    runs: 1000,
+                    runs: 10000,
                     },    
                 },
             }
@@ -64,7 +65,7 @@ module.exports = {
           url: 'https://api.avax.network/ext/bc/C/rpc',
           gasPrice: 225000000000,
           chainId: 43114,
-          accounts: mnemonic ? { mnemonic } : undefined,
+          accounts: [`${key}`]
       }
   },
 
