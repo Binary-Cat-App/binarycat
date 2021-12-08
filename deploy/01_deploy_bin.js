@@ -4,6 +4,7 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
     const {deployer} = await getNamedAccounts();
 
     const IDO_ADDRESS = config[network.name].ido_address
+    const BENEFICIARY = config[network.name].beneficiary
     const RELEASE_TIMESTAMP = config[network.name].release_timestamp
     let PRICE_FEED_ADDRESS = config[network.name].price_feed_address
     const WINDOW_DURATION = config[network.name].window_duration;
@@ -19,8 +20,6 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         PRICE_FEED_ADDRESS = mock.address
     }
 
-
-    console.log(IDO_ADDRESS)
     let token = await deploy('BinToken', {
     from: deployer,
     args: [IDO_ADDRESS],
@@ -29,7 +28,7 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
 
     let lock = await deploy('KittyTimeLock', {
         from: deployer,
-        args: [token.address, deployer, RELEASE_TIMESTAMP],
+        args: [token.address, BENEFICIARY, RELEASE_TIMESTAMP],
         log: true,
     });
 
