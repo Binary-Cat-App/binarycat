@@ -32,17 +32,17 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         log: true,
     });
 
-    let stake = await deploy('BinaryStaking', {
-        from: deployer,
-        args: [token.address],
-        log: true,
-    });
+    //let stake = await deploy('BinaryStaking', {
+    //    from: deployer,
+    //    args: [token.address],
+    //    log: true,
+    //});
 
-    let bet = await deploy('BinaryBet', {
-        from: deployer,
-        args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address, REWARD],
-        log: true,
-    });
+    //let bet = await deploy('BinaryBet', {
+    //    from: deployer,
+    //    args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address, REWARD],
+    //    log: true,
+    //});
 }
 
 module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock'];
