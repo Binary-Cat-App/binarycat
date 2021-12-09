@@ -20,13 +20,13 @@ module.exports = {
 
   },
 
-  avax_mainet: {
+  avax_mainnet: {
       price_feed_address: "0x0A77230d17318075983913bC2145DB16C7366156", // AVAX/USD price feed
       window_duration: 150,
       fee: 2,
       reward: 190,
       ido_address: "0xA6a30EdAa5dFb0b4c11a82c56Fd68bA36Cf8992e",
-      release_timestamp: 1640998801, //PLACE HOLDER
+      release_timestamp: 1640998801, 
       beneficiary: "0xfbF8a1D6d712E8A4257C907e027d2B2A881e5cC5"
   },
 
