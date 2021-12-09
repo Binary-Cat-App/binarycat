@@ -3,11 +3,13 @@ require('hardhat-deploy');
 require("@nomiclabs/hardhat-ethers")
 require("solidity-coverage");
 require("hardhat-gas-reporter");
+require("@nomiclabs/hardhat-etherscan");
 require('./tasks')
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".mnemonic").toString().trim();
 const key = fs.readFileSync(".key").toString().trim();
+const snowtrace = fs.readFileSync(".snowtrace").toString().trim();
 
 task("accounts", "Prints the list of accounts", async () => {
   const accounts = await ethers.getSigners();
@@ -68,6 +70,9 @@ module.exports = {
           accounts: [`${key}`]
       }
   },
+    etherscan: {
+        apiKey: snowtrace
+    }
 
 };
 
