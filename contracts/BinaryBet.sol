@@ -37,8 +37,8 @@ contract BinaryBet {
     }
 
     struct Pool {
-        uint64 downValue;
-        uint64 upValue;
+        uint256 downValue;
+        uint256 upValue;
     }
 
     //Other contracts interactions
@@ -110,7 +110,7 @@ contract BinaryBet {
 
         uint256 betFee = computeFee(msg.value, fee);
         accumulatedFees = accumulatedFees + betFee;
-        uint64 value = uint64(msg.value - betFee);
+        uint256 value = msg.value - betFee;
 
         uint256 windowNumber = getWindowNumber(
             block.timestamp,
