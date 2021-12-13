@@ -15,7 +15,7 @@ module.exports = {
       fee: 2,
       reward: 332,
       ido_address: "0x67eAE479A44f24A1472b14171b006d84d2F00B60", //PLACE HOLDER
-      release_timestamp: 1638994964,
+      release_timestamp: 1638994964000,
       beneficiary: "0x152B849943a70ffdDf44b6ceFC871EF0aAdfb2cb"
 
   },
