@@ -52,11 +52,11 @@ contract BinaryBet {
     mapping(uint256 => Pool) public pools; //windowNumber => Pool
     uint256 public accumulatedFees;
     uint256 public immutable fee;
-    uint256 public immutable firstBlock;
+    uint256 public immutable deployTimestamp;
 
 
     //Window management
-    uint256 public immutable windowDuration; //in blocks
+    uint256 public immutable windowDuration; //in epoch timestamp
     mapping(uint256 => uint256) public windowPrice; /*first price collection
                                                       at the window.
                                                      */
@@ -82,7 +82,7 @@ contract BinaryBet {
     event PriceUpdated(uint256 indexed windowNumber, uint256 price);
 
     constructor(
-        uint256 _windowDuration,
+        uint256 _windowDuration, 
         uint256 _fee,
         address aggregator,
         address stakingContract,
@@ -91,7 +91,7 @@ contract BinaryBet {
     ) {
         require(_fee <= 100);
         priceFeed = AggregatorV3Interface(aggregator);
-        firstBlock = block.number;
+        deployTimestamp = block.timestamp;
         windowDuration = _windowDuration;
 
         fee = _fee;
@@ -113,9 +113,9 @@ contract BinaryBet {
         uint64 value = uint64(msg.value - betFee);
 
         uint256 windowNumber = getWindowNumber(
-            block.number,
+            block.timestamp,
             windowDuration,
-            firstBlock
+            deployTimestamp
         );
 
         User storage sender = user[msg.sender];
@@ -157,9 +157,9 @@ contract BinaryBet {
             */
             uint256 window = userData.bets[i - 1];
             uint256 currentWindow = getWindowNumber(
-                block.number,
+                block.timestamp,
                 windowDuration,
-                firstBlock
+                deployTimestamp
             );
             (
                 uint256 referencePrice,
@@ -320,24 +320,24 @@ contract BinaryBet {
     }
 
     function getWindowNumber(
-        uint256 currentBlock,
+        uint256 currentTimestamp,
         uint256 _windowDuration,
-        uint256 _firstBlock
+        uint256 _deployTimestamp
     ) public pure returns (uint256 windowNumber) {
-        //n = floor((block - first_block)/window_size  + 1)
+        //n = floor((currentTimestamp - deployTimestamp)/windowDuration  + 1)
         windowNumber =
-            ((currentBlock - _firstBlock) / _windowDuration)
+            ((currentTimestamp - _deployTimestamp) / _windowDuration)
             + 1; //integer division => floor
     }
 
-    function getWindowStartingBlock(
+    function getWindowStartingTimestamp(
         uint256 windowNumber,
         uint256 _windowDuration,
-        uint256 _firstBlock
-    ) public pure returns (uint256 startingBlock) {
-        //firstBlock + (n-1 - (offset + 1))*window_size
-        startingBlock =
-            _firstBlock +
+        uint256 _currentTimestamp
+    ) public pure returns (uint256 startingTimestamp) {
+        //deployTimestamp + (n-1 - (offset + 1))*windowDuration
+        startingTimestamp =
+            _currentTimestamp +
             (windowNumber - 1) *
             _windowDuration;
     }
@@ -352,9 +352,9 @@ contract BinaryBet {
 
     function updatePrice() public {
         uint256 window = getWindowNumber(
-            block.number,
+            block.timestamp,
             windowDuration,
-            firstBlock
+            deployTimestamp
         );
         if (windowPrice[window] == 0) {
             windowPrice[window] = priceOracle();
