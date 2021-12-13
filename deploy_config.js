@@ -4,8 +4,9 @@ module.exports = {
       window_duration: 120,
       fee: 2,
       reward: 332,
-      ido_address: "0xb9249FC2c91232926243a7b70397f5775286a1a6", //PLACE HOLDER
-      release_timestamp: 1638987668
+      ido_address: "0x67eAE479A44f24A1472b14171b006d84d2F00B60", //PLACE HOLDER
+      release_timestamp: 1638987668,
+      beneficiary: "0x152B849943a70ffdDf44b6ceFC871EF0aAdfb2cb"
   },
 
   avax_fuji: {
@@ -13,18 +14,20 @@ module.exports = {
       window_duration: 75,
       fee: 2,
       reward: 332,
-      ido_address: "0xb9249FC2c91232926243a7b70397f5775286a1a6", //PLACE HOLDER
-      release_timestamp: 1638987668
+      ido_address: "0x67eAE479A44f24A1472b14171b006d84d2F00B60", //PLACE HOLDER
+      release_timestamp: 1638994964,
+      beneficiary: "0x152B849943a70ffdDf44b6ceFC871EF0aAdfb2cb"
 
   },
 
-  avax_mainet: {
+  avax_mainnet: {
       price_feed_address: "0x0A77230d17318075983913bC2145DB16C7366156", // AVAX/USD price feed
       window_duration: 150,
       fee: 2,
-      reward: 332,
-      ido_address: "0xb9249FC2c91232926243a7b70397f5775286a1a6", //PLACE HOLDER
-      release_timestamp: 1638987668 //PLACE HOLDER
+      reward: 190,
+      ido_address: "0xA6a30EdAa5dFb0b4c11a82c56Fd68bA36Cf8992e",
+      release_timestamp: 1640998801, 
+      beneficiary: "0xfbF8a1D6d712E8A4257C907e027d2B2A881e5cC5"
   },
 
 }
