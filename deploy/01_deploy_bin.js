@@ -16,33 +16,38 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
             from: deployer,
             args: [],
             log: true,
+            skipIfAlreadyDeployed: true,
         });
         PRICE_FEED_ADDRESS = mock.address
     }
 
     let token = await deploy('BinToken', {
-    from: deployer,
-    args: [IDO_ADDRESS],
-    log: true,
+        from: deployer,
+        args: [IDO_ADDRESS],
+        log: true,
+        skipIfAlreadyDeployed: true,
     });
 
     let lock = await deploy('KittyTimeLock', {
         from: deployer,
         args: [token.address, BENEFICIARY, RELEASE_TIMESTAMP],
         log: true,
+        skipIfAlreadyDeployed: true,
     });
 
-    //let stake = await deploy('BinaryStaking', {
-    //    from: deployer,
-    //    args: [token.address],
-    //    log: true,
-    //});
+    let stake = await deploy('BinaryStaking', {
+        from: deployer,
+        args: [token.address],
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
 
-    //let bet = await deploy('BinaryBet', {
-    //    from: deployer,
-    //    args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address, REWARD],
-    //    log: true,
-    //});
+    let bet = await deploy('BinaryBet', {
+        from: deployer,
+        args: [WINDOW_DURATION, FEE, PRICE_FEED_ADDRESS, stake.address, token.address, REWARD],
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
 }
 
 module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock'];
