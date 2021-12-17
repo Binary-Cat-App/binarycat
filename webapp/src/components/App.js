@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import { useWeb3React } from "@web3-react/core";
+import { useWeb3React } from '@web3-react/core';
 
 import { Header } from './Header';
 import { Faq } from './Faq';
@@ -15,10 +15,9 @@ import { BettingProvider } from '../context/BettingContext';
 import { StakingProvider } from '../context/StakingContext';
 
 const RoutesComponent = () => {
-  
   const { active } = useWeb3React();
 
-  if ( !active )
+  if (!active)
     return (
       <div className="flex flex-col">
         <Router>
@@ -49,7 +48,7 @@ const RoutesComponent = () => {
   return (
     <div className="flex flex-col">
       <Router>
-        <Header />
+        <Header connected="true" />
         <div className="pt-6 sm:pt-12 flex-grow flex flex-col">
           <Container>
             <Switch>
@@ -81,9 +80,7 @@ const RoutesComponent = () => {
 const ConnectedRoutesComponent = RoutesComponent;
 
 export const App = (props) => {
-  return (
-    <ConnectedRoutesComponent />
-  );
+  return <ConnectedRoutesComponent />;
 };
 
 export default App;
