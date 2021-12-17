@@ -55,7 +55,7 @@ export const Header = ({ connected = false }) => {
               {connected && (
                 <li className="mr-4">
                   <Link
-                    to=""
+                    to="#"
                     onClick={handleAddToken}
                     className="text-gray-500 hover:text-gray-800 flex items-center"
                   >
