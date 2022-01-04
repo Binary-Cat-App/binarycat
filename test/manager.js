@@ -7,7 +7,7 @@ const {deployMockContract} = require('@ethereum-waffle/mock-contract');
 const { deployments, ethers } = require("hardhat");
 const AGGREGATOR = require('../artifacts/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol/AggregatorV3Interface.json')
 
-describe("BinaryBets Bet management", function () {
+describe("Manager", function () {
     let owner;
     let account1;
     let account2;

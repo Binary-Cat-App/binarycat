@@ -50,7 +50,6 @@ contract BinaryBet {
     //Betting variables
     uint256 public immutable REWARD_PER_WINDOW;
     mapping(uint256 => Pool) public pools; //windowNumber => Pool
-    uint256 public accumulatedFees;
     uint256 public immutable fee;
     uint256 public immutable deployTimestamp;
 
@@ -108,10 +107,6 @@ contract BinaryBet {
         updatePrice();
         updateBalance(msg.sender);
 
-        uint256 betFee = computeFee(msg.value, fee);
-        accumulatedFees = accumulatedFees + betFee;
-        uint256 value = msg.value - betFee;
-
         uint256 windowNumber = getWindowNumber(
             block.timestamp,
             windowDuration,
@@ -131,15 +126,15 @@ contract BinaryBet {
 
         //Update the user stake and pool for the window.
         if (BetSide(side) == BetSide.up) {
-            sender.stake[windowNumber].upValue += value;
-            pools[windowNumber].upValue += value;
+            sender.stake[windowNumber].upValue += msg.value;
+            pools[windowNumber].upValue += msg.value;
         }
         else {
-            sender.stake[windowNumber].downValue += value;
-            pools[windowNumber].downValue += value;
+            sender.stake[windowNumber].downValue += msg.value;
+            pools[windowNumber].downValue += msg.value;
         }
 
-        emit NewBet(msg.sender, windowNumber, value, side);
+        emit NewBet(msg.sender, windowNumber, msg.value, side);
     }
 
     function updateBalance(address _user) public {
@@ -151,6 +146,7 @@ contract BinaryBet {
 
         uint256 totalGain = 0;
         uint256 totalRewards = 0;
+        uint256 accumulatedFees = 0;
         for (uint256 i = userData.bets.length; i > 0; i--) {
             /*Maximum number of itens in list is 2, when the user bets
               on 2 subsequent windows and the first window is not yet settled.
@@ -202,28 +198,31 @@ contract BinaryBet {
                 result
             );
 
-            totalGain = totalGain + windowGain;
-            accumulatedFees = accumulatedFees + fees;
+            totalGain += windowGain;
+            accumulatedFees += fees;
 
             //KITTY token rewards
-            uint256 reward = calculateTokenReward(
+            totalRewards += calculateTokenReward(
                 stake.upValue,
                 stake.downValue,
                 pool.upValue,
                 pool.downValue
             );
-            totalRewards = totalRewards + reward;
+
             emit BetSettled(window, _user, windowGain);
         }
 
-        if (totalGain >= 0) {
+        if (totalGain > 0) {
             payable(_user).transfer(totalGain);
         }
 
-        if (totalRewards >= 0) {
+        if (totalRewards > 0) {
             transferRewards(_user, totalRewards);
         }
-        transferFees();
+
+        if (accumulatedFees > 0) {
+            staking.receiveFunds{value: accumulatedFees}();
+        }
     }
 
     function windowStatus(
@@ -253,28 +252,26 @@ contract BinaryBet {
         }
     }
 
-    function transferFees() internal {
-        if (accumulatedFees > 0) {
-            staking.receiveFunds{value: accumulatedFees}();
-            accumulatedFees = 0;
-        }
-    }
-
     function settleBet(
         uint256 upStake,
         uint256 downStake,
         uint256 poolUp,
         uint256 poolDown,
         uint8 res
-    ) public pure returns (uint256 gain, uint256 fees) {
+    ) public view returns (uint256 gain, uint256 fees) {
         BetResult result = BetResult(res);
         uint256 poolTotal = poolUp + poolDown;
+        uint256 value;
         if (result == BetResult.up && poolUp != 0) {
             //(upStake/poolUp)*poolTotal
-            gain = sharePool(poolTotal, upStake, poolUp);
+            value = sharePool(poolTotal, upStake, poolUp);
+            fees = computeFee(value, fee);
+            gain = value - fees;
         } else if (result == BetResult.down && poolDown != 0) {
             //(downStake/poolDown)*poolTotal
-            gain = sharePool(poolTotal, downStake, poolDown);
+            value = sharePool(poolTotal, downStake, poolDown);
+            fees = computeFee(value, fee);
+            gain = value - fees;
         } else if (result == BetResult.tie) {
             gain = upStake + downStake;
         } else {
