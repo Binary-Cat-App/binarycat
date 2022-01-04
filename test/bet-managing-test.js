@@ -129,21 +129,6 @@ describe("BinaryBets Bet management", function () {
       ).to.be.revertedWith("Only strictly positive values");
     });
 
-    it("Should accumulate fees", async function () {
-        await bet.connect(account1).placeBet(0, {value: 100})
-        let fee = await bet.accumulatedFees()
-        expect(fee).to.equal(1);
-
-        await bet.connect(account2).placeBet(0, {value: 200})
-        fee = await bet.accumulatedFees()
-        expect(fee).to.equal(3);
-        
-        await bet.connect(account3).placeBet(0, {value: 500})
-        fee = await bet.accumulatedFees()
-        expect(fee).to.equal(8);
-
-    });
-
     it("Should update pool", async function () {
         bet = await BinaryBet.deploy(30, 0, aggregatorAddress, stk.address, token.address, 332);
         await bet.connect(account1).placeBet(0, {value: 100})
@@ -181,24 +166,48 @@ describe("BinaryBets Bet management", function () {
     });
 
 
-    it("Should transfer fees to staking", async function () {
+    it("Should settle bet and transfer fees to staking", async function () {
         let value = ethers.utils.parseEther("100")
         await token.connect(owner).approve(stk.address, value)
         await stk.connect(owner).stake(value)
 
         bet = await BinaryBet.deploy(10, 2, aggregatorAddress, stk.address, token.address, 332);
+        let windowDuration = await bet.windowDuration()
+        let deployTimestamp = await bet.deployTimestamp()
+
+        let balance3Initial = await provider.getBalance(account3.address)
+        let balance2Initial = await provider.getBalance(account2.address)
+
         await bet.connect(account3).placeBet(0, {value: 200})
+        await bet.connect(account2).placeBet(1, {value: 200})
+
+        await provider.send("evm_increaseTime", [
+                Number(10),
+            ]);
+        await provider.send("evm_mine");
+
+        await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);
+        await bet.connect(owner).updatePrice()
+
+        await provider.send("evm_increaseTime", [
+                Number(10),
+            ]);
+        await provider.send("evm_mine");
+        block = await provider.getBlock(  )
+        window = await bet.getWindowNumber(block.timestamp, windowDuration, deployTimestamp)
+        await mockAggregator.mock.latestRoundData.returns(102, 102,102,102,102);
+        await bet.connect(owner).updatePrice()
         
-        let fees = await bet.accumulatedFees()
-        expect(fees.toString()).to.equal('4')
+        await bet.connect(owner).updateBalance(account3.address)
+        await bet.connect(owner).updateBalance(account2.address)
 
-        await mine(300)
-        await bet.updateBalance(account3.getAddress())
-        fees = await bet.accumulatedFees()
-        expect(fees.toString()).to.equal('0')
 
+        let balance3Final = await provider.getBalance(account3.address)
+        let balance2Final = await provider.getBalance(account2.address)
         let stakingBalance = await provider.getBalance(stk.address);
-        expect(stakingBalance.toString()).to.equal('4')
+        expect((balance2Final.sub(balance2Initial)).toString()).to.equal('192')
+        expect((balance3Final.sub(balance3Initial)).toString()).to.equal('-200')
+        expect(stakingBalance.toString()).to.equal('8')
     });
 
     it("Should reward KITTY", async function () {

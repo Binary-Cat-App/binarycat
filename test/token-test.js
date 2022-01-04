@@ -16,8 +16,9 @@ describe("Token",function () {
         BinToken = await ethers.getContractFactory("BinToken");
         token = await BinToken.deploy(ido.address);
 
+        lockDate = Date.now() + 100
         Lock = await ethers.getContractFactory("KittyTimeLock");
-        lock = await Lock.deploy(token.address, owner.address, 1641061268);
+        lock = await Lock.deploy(token.address, owner.address, lockDate);
     });
 
     it("Should deploy correct balance", async function () {
@@ -36,7 +37,7 @@ describe("Token",function () {
 
 
         await provider.send("evm_increaseTime", [
-                Number(1000),
+                Number(10),
             ]);
         await provider.send("evm_mine");
 
@@ -53,7 +54,7 @@ describe("Token",function () {
         let balance = await token.balanceOf(owner.address)
 
         await provider.send("evm_increaseTime", [
-                Number(2592000),
+                Number(lockDate + 100000),
             ]);
         await provider.send("evm_mine");
 
