@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { useWeb3React } from "@web3-react/core";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
+import { useWeb3React } from '@web3-react/core';
 
 import { differenceInDays } from 'date-fns';
 import _ from 'lodash';
@@ -16,25 +22,21 @@ export const useBetting = () => {
 };
 
 export const BettingProvider = ({ children }) => {
-
   const { active, account, library } = useWeb3React();
 
   const web3Eth = library.eth;
   const web3Utils = library.utils;
 
-  const contractObj = new web3Eth.Contract(
-    contract.abi,
-    contract.address
-  );
+  const contractObj = new web3Eth.Contract(contract.abi, contract.address);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
   const [unsettledGains, setUnsettledGains] = useState(0);
   const [unsettledKITTY, setUnsettledKITTY] = useState(0);
 
-  const [currentBlock, setCurrentBlock] = useState(null);
-  const [firstBlock, setFirstBlock] = useState(null)
-  const [windowDuration, setWindowDuration] = useState(null)
+  const [currentTimestamp, setCurrentTimestamp] = useState(null);
+  const [initTimestamp, setInitTimestamp] = useState(null);
+  const [windowDuration, setWindowDuration] = useState(null);
   const [windowNumber, setWindowNumber] = useState(null);
   const [progress, setProgress] = useState(100);
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
@@ -47,12 +49,8 @@ export const BettingProvider = ({ children }) => {
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
     windowNumber: 0,
-    startingBlock: 0,
-    endingBlock: 0,
-  });
-  const [openedWindowTimestamps, setOpenedWindowTimestamps] = useState({
-    startingBlockTimestamp: 0,
-    endingBlockTimestamp: 0,
+    startingTimestamp: 0,
+    endingTimestamp: 0,
   });
   const [openedPricesData, setOpenedPricesData] = useState({
     initialPrice: '',
@@ -72,12 +70,8 @@ export const BettingProvider = ({ children }) => {
   // Ongoing data
   const [ongoingWindowData, setOngoingWindowData] = useState({
     windowNumber: 0,
-    startingBlock: 0,
-    endingBlock: 0,
-  });
-  const [ongoingWindowTimestamps, setOngoingWindowTimestamps] = useState({
-    startingBlockTimestamp: 0,
-    endingBlockTimestamp: 0,
+    startingTimestamp: 0,
+    endingTimestamp: 0,
   });
   const [ongoingWindowChartData, setOngoingWindowChartData] = useState([]);
   const [ongoingPricesData, setOngoingPricesData] = useState({
@@ -98,12 +92,8 @@ export const BettingProvider = ({ children }) => {
   // Finalized data
   const [finalizedWindowData, setFinalizedWindowData] = useState({
     windowNumber: 0,
-    startingBlock: 0,
-    endingBlock: 0,
-  });
-  const [finalizedWindowTimestamps, setFinalizedWindowTimestamps] = useState({
-    startingBlockTimestamp: 0,
-    endingBlockTimestamp: 0,
+    startingTimestamp: 0,
+    endingTimestamp: 0,
   });
   const [finalizedWindowChartData, setFinalizedWindowChartData] = useState([]);
   const [finalizedPricesData, setFinalizedPricesData] = useState({
@@ -149,178 +139,120 @@ export const BettingProvider = ({ children }) => {
     return ref.current;
   };
 
-  const prevBlock = usePrevious( currentBlock );
-  const prevWindowNumber = usePrevious( windowNumber );
-  const prevOpenedWindowTimestamps = usePrevious( openedWindowTimestamps );
-  const prevOngoingWindowTimestamps = usePrevious( ongoingWindowTimestamps );
+  const prevWindowNumber = usePrevious(windowNumber);
+  const prevOpenedWindowData = usePrevious(openedWindowData);
+  const prevOngoingWindowData = usePrevious(ongoingWindowData);
 
   // Contract Initials
   useEffect(() => {
-    if ( active && account ) {
-
+    if (active && account) {
       contractObj.methods
-        .firstBlock()
+        .deployTimestamp()
         .call()
-        .then(
-          (response) => setFirstBlock(Number.parseInt(response))
-        );
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
 
       contractObj.methods
         .windowDuration()
         .call()
-        .then(
-          (response) => setWindowDuration(Number.parseInt(response))
-        );
+        .then((response) => setWindowDuration(Number.parseInt(response)));
     }
   }, []);
 
-  // Gets Current Blockchain Block
+  // Gets Current Timestamp
   useEffect(() => {
-    if ( active && account ) {
-
-      web3Eth
-        .getBlock('latest')
-        .then(
-          (data) => {
-            setCurrentBlock({ number: data.number, hash: data.hash });
-          }
-        );
-      
-      var subscription = web3Eth
-        .subscribe('newBlockHeaders')
-        .on('connected', function (subscriptionId) {
-          //console.log(subscriptionId);
-        })
-        .on('data', function (blockHeader) {
-          setCurrentBlock({
-            number: blockHeader.number,
-            hash: blockHeader.hash,
-            timestamp: blockHeader.timestamp,
-          });
-        })
-        .on('error', console.error);
-
-      // unsubscribes the subscription
-      return () => {
-        subscription.unsubscribe(function (error, success) {
-          if (success) {
-            console.log('Successfully unsubscribed!');
-          }
-        });
+    if (active && account) {
+      var timer = setInterval(
+        () => setCurrentTimestamp(Math.floor(Date.now() / 1000)),
+        1000
+      );
+      return function cleanup() {
+        clearInterval(timer);
       };
     }
   }, []);
 
   // Calculate Totals
   useEffect(() => {
-    if ( active && account ) {
+    if (active && account) {
       totalsPrecalculations();
     }
-  }, [currentBlock]);
+  }, [currentTimestamp]);
 
   // Windows data
   useEffect(() => {
-    
-    if ( !active ) return;
+    if (!active) return;
 
     const openedWindow = windowCalculations('Opened');
     const ongoingWindow = windowCalculations('Ongoing');
     const finalizedWindow = windowCalculations('Finalized');
-    
-    if ( 
-          openedWindow && ongoingWindow && finalizedWindow &&
-          currentBlock && prevBlock &&
-          Number(prevBlock.number) !== Number(currentBlock.number)
-    ) {
-      
+
+    if (openedWindow && ongoingWindow && finalizedWindow && currentTimestamp) {
       // Reset data
-      if ( Number(openedWindow.startingBlock) === Number(currentBlock.number) ) {
+      if (Number(openedWindow.startingTimestamp) === Number(currentTimestamp)) {
         setOpenedPoolData(initPoolData);
         setIsOpenForBetting(true);
         setIsBetPlaced(false);
       }
 
-      if (prevWindowNumber !== openedWindow.windowNumber ) {
-        
+      if (prevWindowNumber !== openedWindow.windowNumber) {
         setWindowNumber(openedWindow.windowNumber);
-        
+
         setOpenedWindowData({
           windowNumber: openedWindow.windowNumber,
-          startingBlock: openedWindow.startingBlock,
-          endingBlock: openedWindow.endingBlock,
+          startingTimestamp: openedWindow.startingTimestamp,
+          endingTimestamp: openedWindow.endingTimestamp,
         });
-        
+
         setOngoingWindowData({
           windowNumber: ongoingWindow.windowNumber,
-          startingBlock: ongoingWindow.startingBlock,
-          endingBlock: ongoingWindow.endingBlock,
+          startingTimestamp: ongoingWindow.startingTimestamp,
+          endingTimestamp: ongoingWindow.endingTimestamp,
         });
-        
+
         setFinalizedWindowData({
           windowNumber: finalizedWindow.windowNumber,
-          startingBlock: finalizedWindow.startingBlock,
-          endingBlock: finalizedWindow.endingBlock,
+          startingTimestamp: finalizedWindow.startingTimestamp,
+          endingTimestamp: finalizedWindow.endingTimestamp,
         });
-      
       }
 
-      updatePoolValuesForWindow(
-        'Opened',
-        openedWindow.startingBlock,
-        currentBlock.number
-      );
+      updatePoolValuesForWindow('Opened', openedWindow.windowNumber);
 
-      updateTimestampsForWindow('Opened', currentBlock.timestamp);
-
-      if ( Number(openedWindow.endingBlock) > Number(currentBlock.number) ) {
-
+      if (Number(openedWindow.endingTimestamp) > Number(currentTimestamp)) {
         updatePricesForWindow('Ongoing', ongoingWindow.windowNumber);
         updatePricesForWindow('Finalized', finalizedWindow.windowNumber);
 
-        updatePoolValuesForWindow(
-          'Ongoing',
-          ongoingWindow.startingBlock,
-          ongoingWindow.endingBlock
-        );
-        updatePoolValuesForWindow(
-          'Finalized',
-          finalizedWindow.startingBlock,
-          finalizedWindow.endingBlock
-        );
-
-        updateTimestampsForWindow('Ongoing', null);
-        updateTimestampsForWindow('Finalized', null);
-
-      }
-      else {
-
+        updatePoolValuesForWindow('Ongoing', ongoingWindow.windowNumber);
+        updatePoolValuesForWindow('Finalized', finalizedWindow.windowNumber);
+      } else {
         setOngoingWindowChartData([]);
         setFinalizedWindowChartData([]);
 
         setOngoingPricesData(resetOngoingPricesData);
         setFinalizedPricesData(resetFinalizedPricesData);
-        
+
         setOngoingPoolData(initPoolData);
         setFinalizedPoolData(initPoolData);
 
         setOngoingAccountsData(initAccountsData);
         setFinalizedAccountsData(initAccountsData);
-
       }
-    
     }
-
-  }, [currentBlock]);
+  }, [currentTimestamp]);
 
   // Charts Data
   useEffect(() => {
-    const startBlockDate = new Date(openedWindowTimestamps.startingBlockTimestamp * 1000);
-    const endBlockDate = new Date(openedWindowTimestamps.endingBlockTimestamp * 1000);
-    const dayDifference = differenceInDays(endBlockDate, startBlockDate);
-    const shouldFetchPrices = openedWindowTimestamps.startingBlockTimestamp !== 0
-      && openedWindowTimestamps.startingBlockTimestamp !== prevOpenedWindowTimestamps.startingBlockTimestamp
-      && openedWindowTimestamps.startingBlockTimestamp !== openedWindowTimestamps.endingBlockTimestamp
-      && dayDifference <= 1;
+    const startDate = new Date(openedWindowData.startingTimestamp * 1000);
+    const endDate = new Date(openedWindowData.endingTimestamp * 1000);
+
+    const dayDifference = differenceInDays(endDate, startDate);
+
+    const shouldFetchPrices =
+      openedWindowData.startingTimestamp !== 0 &&
+      openedWindowData.startingTimestamp !==
+        prevOpenedWindowData.startingTimestamp &&
+      openedWindowData.startingTimestamp !== openedWindowData.endingTimestamp &&
+      dayDifference <= 1;
 
     if (shouldFetchPrices) {
       window
@@ -331,41 +263,40 @@ export const BettingProvider = ({ children }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: openedWindowTimestamps.startingBlockTimestamp,
-            to: openedWindowTimestamps.endingBlockTimestamp,
+            from: openedWindowData.startingTimestamp,
+            to: openedWindowData.endingTimestamp,
           }),
         })
         .then((res) => res.json())
         .then((result) => {
           if (result.result.length > 0) {
-
             var _priceRange = [];
 
-            if ( 
-              parseFloat(ongoingPricesData.initialPrice) !== 0 && 
-              openedWindowTimestamps ) {
-
+            if (
+              parseFloat(ongoingPricesData.initialPrice) !== 0 &&
+              openedWindowData
+            ) {
               _priceRange = [
                 {
-                  "_id": "initial",
-                  "time": openedWindowTimestamps.startingBlockTimestamp,
-                  "rate": ongoingPricesData.initialPrice
-                }
+                  _id: 'initial',
+                  time: openedWindowData.startingTimestamp,
+                  rate: ongoingPricesData.initialPrice,
+                },
               ];
             }
 
             setOngoingWindowChartData([...result.result, ..._priceRange]);
-
           }
         });
     }
-  }, [windowNumber, openedWindowTimestamps, ongoingPricesData]);
+  }, [windowNumber, openedWindowData, ongoingPricesData]);
 
   useEffect(() => {
     if (
-      ongoingWindowTimestamps.startingBlockTimestamp !== 0 &&
-      ongoingWindowTimestamps.endingBlockTimestamp !== prevOngoingWindowTimestamps.endingBlockTimestamp &&
-      ongoingWindowTimestamps.startingBlockTimestamp !== ongoingWindowTimestamps.endingBlockTimestamp
+      ongoingWindowData.startingTimestamp !== 0 &&
+      ongoingWindowData.endingTimestamp !==
+        prevOngoingWindowData.endingTimestamp &&
+      ongoingWindowData.startingTimestamp !== ongoingWindowData.endingTimestamp
     ) {
       window
         .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
@@ -375,50 +306,55 @@ export const BettingProvider = ({ children }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: ongoingWindowTimestamps.startingBlockTimestamp,
-            to: ongoingWindowTimestamps.endingBlockTimestamp,
+            from: ongoingWindowData.startingTimestamp,
+            to: ongoingWindowData.endingTimestamp,
           }),
         })
         .then((res) => res.json())
         .then((result) => {
-          if(result.result.length > 0) {
-            
+          if (result.result.length > 0) {
             var _priceRange = [];
-            
-            if ( 
-                parseFloat(finalizedPricesData.initialPrice) !== 0 && 
-                parseFloat(finalizedPricesData.finalPrice) !== 0 && 
-                ongoingWindowTimestamps ) {
 
+            if (
+              parseFloat(finalizedPricesData.initialPrice) !== 0 &&
+              parseFloat(finalizedPricesData.finalPrice) !== 0 &&
+              ongoingWindowData
+            ) {
               _priceRange = [
                 {
-                  "_id": "initial",
-                  "time": ongoingWindowTimestamps.startingBlockTimestamp,
-                  "rate": finalizedPricesData.initialPrice
+                  _id: 'initial',
+                  time: ongoingWindowData.startingTimestamp,
+                  rate: finalizedPricesData.initialPrice,
                 },
                 {
-                  "_id": "final",
-                  "time": ongoingWindowTimestamps.endingBlockTimestamp,
-                  "rate": finalizedPricesData.finalPrice
-                }
+                  _id: 'final',
+                  time: ongoingWindowData.endingTimestamp,
+                  rate: finalizedPricesData.finalPrice,
+                },
               ];
             }
 
             setFinalizedWindowChartData([...result.result, ..._priceRange]);
-
           }
         });
     }
-  }, [windowNumber, ongoingWindowTimestamps, finalizedPricesData]);
+  }, [windowNumber, ongoingWindowData, finalizedPricesData]);
 
   // Combined Chart Data
   React.useEffect(() => {
-
     const today = new Date();
-    const nextdate = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1);
-    const prevdate = new Date(today.getFullYear(), today.getMonth(), today.getDate()-1);
-    const selectFrom = prevdate.getTime()/1000;
-    const selectTo = nextdate.getTime()/1000;
+    const nextdate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 1
+    );
+    const prevdate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 1
+    );
+    const selectFrom = prevdate.getTime() / 1000;
+    const selectTo = nextdate.getTime() / 1000;
 
     window
       .fetch(`${global.config.currencyRatesNodeAPI}/api/prices`, {
@@ -434,24 +370,20 @@ export const BettingProvider = ({ children }) => {
       })
       .then((res) => res.json())
       .then((result) => {
-        if(result.result.length > 0) {
+        if (result.result.length > 0) {
           setHistoricalChartData(result.result);
         }
       });
-
   }, []);
 
   // Socket for Realtime Currency Rate data
   React.useEffect(() => {
     const socket = io(global.config.currencyRatesNodeAPI);
-    socket.on(
-      'socket-message',
-      (payload) => {
-        if ( payload.data ) {
-          setSocketData([payload.data]);
-        }
+    socket.on('socket-message', (payload) => {
+      if (payload.data) {
+        setSocketData([payload.data]);
       }
-    );
+    });
   }, []);
 
   React.useEffect(() => {
@@ -468,164 +400,72 @@ export const BettingProvider = ({ children }) => {
 
   // Progress Bar
   useEffect(() => {
-    if (!currentBlock) return;
+    if (!currentTimestamp) return;
     if (!windowDuration) return;
-    if (!firstBlock) return;
+    if (!initTimestamp) return;
     if (!windowNumber) return;
 
-    const start = firstBlock + (windowNumber - 1) * windowDuration;
-    const _progress =
-      100 - ((currentBlock.number - start) / windowDuration) * 100;
+    const start = initTimestamp + (windowNumber - 1) * windowDuration;
+    const _progress = 100 - ((currentTimestamp - start) / windowDuration) * 100;
     setProgress(_progress);
-  }, [currentBlock, windowNumber]);
+  }, [currentTimestamp, windowNumber]);
 
   // Open for betting
   useEffect(() => {
     setIsOpenForBetting(
       openedPoolData.betDirection !== '' || isBetPlaced === true ? false : true
     );
-  }, [currentBlock, windowNumber, openedPoolData]);
-
-  // Retrieve block data
-  const updateTimestampsForWindow = async (where, current) => {
-    if ( active ) {
-      
-      var _startingBlockTimestamp = 0;
-      var _endingBlockTimestamp = 0;
-
-      switch (where) {
-        case 'Opened':
-
-          if(Number.isInteger(openedWindowData.startingBlock) === false)
-            return;
-
-          _startingBlockTimestamp = await web3Eth
-            .getBlock(openedWindowData.startingBlock)
-            .then((response) => response.timestamp);
-
-          if (current) _endingBlockTimestamp = current;
-          else
-            _endingBlockTimestamp = await web3Eth
-              .getBlock(openedWindowData.endingBlock)
-              .then((response) => response.timestamp);
-
-          setOpenedWindowTimestamps({
-            startingBlockTimestamp: _startingBlockTimestamp,
-            endingBlockTimestamp: _endingBlockTimestamp,
-          });
-          
-          break;
-
-        case 'Ongoing':
-
-          if (
-            Number.isInteger(ongoingWindowData.startingBlock) === false ||
-            Number.isInteger(ongoingWindowData.endingBlock) === false
-          )
-            return;
-
-          _startingBlockTimestamp = await web3Eth
-            .getBlock(ongoingWindowData.startingBlock)
-            .then((response) => response.timestamp);
-
-          _endingBlockTimestamp = await web3Eth
-            .getBlock(ongoingWindowData.endingBlock)
-            .then((response) => response.timestamp);
-
-          if(
-            Number(ongoingWindowTimestamps.startingBlockTimestamp) !== Number(_startingBlockTimestamp) ||
-            Number(ongoingWindowTimestamps.endingBlockTimestamp) !== Number(_endingBlockTimestamp)
-          ) {
-            setOngoingWindowTimestamps({
-              startingBlockTimestamp: _startingBlockTimestamp,
-              endingBlockTimestamp: _endingBlockTimestamp,
-            });
-          }
-
-          break;
-
-        case 'Finalized':
-
-          if (
-            Number.isInteger(finalizedWindowData.startingBlock) === false ||
-            Number.isInteger(finalizedWindowData.endingBlock) === false
-          )
-            return;
-
-          _startingBlockTimestamp = await web3Eth
-            .getBlock(finalizedWindowData.startingBlock)
-            .then((response) => response.timestamp);
-
-          _endingBlockTimestamp = await web3Eth
-            .getBlock(finalizedWindowData.endingBlock)
-            .then((response) => response.timestamp);
-
-          if(
-            Number(finalizedWindowTimestamps.startingBlockTimestamp) !== Number(_startingBlockTimestamp) ||
-            Number(finalizedWindowTimestamps.endingBlockTimestamp) !== Number(_endingBlockTimestamp)
-          ) {
-            setFinalizedWindowTimestamps({
-              startingBlockTimestamp: _startingBlockTimestamp,
-              endingBlockTimestamp: _endingBlockTimestamp,
-            });
-          }
-
-          break;
-        default:
-      }
-
-    }
-  };
+  }, [currentTimestamp, windowNumber, openedPoolData]);
 
   // initialPrice , finalPrice
   const updatePricesForWindow = async (where, _windowNumber) => {
-    if ( active ) {
-
-      if(Number.isInteger(_windowNumber) === false)
-        return;
-
-      const _windowBlocks = windowBlocks( _windowNumber );
+    if (active) {
+      if (Number.isInteger(_windowNumber) === false) return;
 
       const prices = await contractObj
         .getPastEvents('PriceUpdated', {
           filter: { windowNumber: [_windowNumber + 1, _windowNumber + 2] },
-          fromBlock: _windowBlocks.startingBlock,
+          fromBlock: 0,
           toBlock: 'latest',
         })
         .then((result) => result);
 
-      let initialPrice = ( prices.length > 0 ) ? prices[0].returnValues.price / 100000000 : '0.00';
-      let finalPrice = ( where === 'Finalized' && prices.length > 1 ) ? prices[1].returnValues.price / 100000000 : '0.00';
+      let initialPrice =
+        prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
+      let finalPrice =
+        where === 'Finalized' && prices.length > 1
+          ? prices[1].returnValues.price / 100000000
+          : '0.00';
 
-      switch ( where ) {
-        
+      switch (where) {
         case 'Ongoing':
-          if( 
-              parseFloat(initialPrice) !== parseFloat(ongoingPricesData.initialPrice) 
+          if (
+            parseFloat(initialPrice) !==
+            parseFloat(ongoingPricesData.initialPrice)
           ) {
             setOngoingPricesData({ initialPrice, finalPrice });
           }
           break;
-        
+
         case 'Finalized':
-          if( 
-              parseFloat(initialPrice) !== parseFloat(finalizedPricesData.initialPrice) || 
-              parseFloat(finalPrice) !== parseFloat(finalizedPricesData.finalPrice)
+          if (
+            parseFloat(initialPrice) !==
+              parseFloat(finalizedPricesData.initialPrice) ||
+            parseFloat(finalPrice) !==
+              parseFloat(finalizedPricesData.finalPrice)
           ) {
             setFinalizedPricesData({ initialPrice, finalPrice });
           }
           break;
-        
+
         default:
       }
     }
   };
 
-  const updatePoolValuesForWindow = async (where, startingBlock, endingBlock) => {
-    if ( active ) {
-
-      if(isNaN(startingBlock) || isNaN(endingBlock))
-        return;
+  const updatePoolValuesForWindow = async (where, _windowNumber) => {
+    if (active) {
+      if (isNaN(_windowNumber)) return;
 
       var _betAmount = 0;
       var _betDirection = '';
@@ -635,13 +475,13 @@ export const BettingProvider = ({ children }) => {
 
       const result = await contractObj
         .getPastEvents('NewBet', {
-          fromBlock: startingBlock,
-          toBlock: endingBlock,
+          filter: { windowNumber: _windowNumber },
+          fromBlock: 0,
+          toBlock: 'latest',
         })
         .then((result) => result);
 
       if (result.length > 0) {
-        
         // poolSize
         _poolSize = result.reduce((acc, current) => {
           return acc + weiToCurrency(current.returnValues.value.toString());
@@ -666,11 +506,12 @@ export const BettingProvider = ({ children }) => {
 
         // user bet amount and direction
         const currentUser = result.filter(
-          (key) =>
-            key.returnValues.user.toLowerCase() === account.toLowerCase()
+          (key) => key.returnValues.user.toLowerCase() === account.toLowerCase()
         );
         if (currentUser.length > 0) {
-          _betAmount = weiToCurrency(currentUser[0].returnValues.value.toString()).toFixed(2);
+          _betAmount = weiToCurrency(
+            currentUser[0].returnValues.value.toString()
+          ).toFixed(2);
           _betDirection =
             Number.parseInt(currentUser[0].returnValues.side) === 1
               ? 'up'
@@ -686,21 +527,21 @@ export const BettingProvider = ({ children }) => {
         _poolTotalDown,
         _poolSize,
       });
-
     }
   };
 
   const updatePoolAndAccountsData = (key, details) => {
     switch (key) {
-      
       case 'Opened':
-        
         if (
           Number(openedAccountsData.accounts) !== details.accounts.length ||
-          parseFloat(openedPoolData.betAmount) !== parseFloat(details._betAmount) ||
+          parseFloat(openedPoolData.betAmount) !==
+            parseFloat(details._betAmount) ||
           openedPoolData.betDirection !== details._betDirection ||
-          parseFloat(openedPoolData.poolTotalUp) !== parseFloat(details._poolTotalUp) ||
-          parseFloat(openedPoolData.poolTotalDown) !== parseFloat(details._poolTotalDown) ||
+          parseFloat(openedPoolData.poolTotalUp) !==
+            parseFloat(details._poolTotalUp) ||
+          parseFloat(openedPoolData.poolTotalDown) !==
+            parseFloat(details._poolTotalDown) ||
           parseFloat(openedPoolData.poolSize) !== parseFloat(details._poolSize)
         ) {
           setOpenedPoolData(
@@ -715,23 +556,25 @@ export const BettingProvider = ({ children }) => {
               : initPoolData
           );
         }
-        
-        if ( Number(openedAccountsData.accounts) !== details.accounts.length ) {
+
+        if (Number(openedAccountsData.accounts) !== details.accounts.length) {
           setOpenedAccountsData({
             accounts: details.accounts.length,
           });
         }
 
         break;
-      
-      case 'Ongoing':
 
+      case 'Ongoing':
         if (
           Number(ongoingAccountsData.accounts) !== details.accounts.length ||
-          parseFloat(ongoingPoolData.betAmount) !== parseFloat(details._betAmount) ||
+          parseFloat(ongoingPoolData.betAmount) !==
+            parseFloat(details._betAmount) ||
           ongoingPoolData.betDirection !== details._betDirection ||
-          parseFloat(ongoingPoolData.poolTotalUp) !== parseFloat(details._poolTotalUp) ||
-          parseFloat(ongoingPoolData.poolTotalDown) !== parseFloat(details._poolTotalDown) ||
+          parseFloat(ongoingPoolData.poolTotalUp) !==
+            parseFloat(details._poolTotalUp) ||
+          parseFloat(ongoingPoolData.poolTotalDown) !==
+            parseFloat(details._poolTotalDown) ||
           parseFloat(ongoingPoolData.poolSize) !== parseFloat(details._poolSize)
         ) {
           setOngoingPoolData(
@@ -747,23 +590,26 @@ export const BettingProvider = ({ children }) => {
           );
         }
 
-        if ( Number(ongoingAccountsData.accounts) !== details.accounts.length ) {
+        if (Number(ongoingAccountsData.accounts) !== details.accounts.length) {
           setOngoingAccountsData({
             accounts: details.accounts.length,
           });
         }
 
         break;
-      
-      case 'Finalized':
 
+      case 'Finalized':
         if (
           Number(finalizedAccountsData.accounts) !== details.accounts.length ||
-          parseFloat(finalizedPoolData.betAmount) !== parseFloat(details._betAmount) ||
+          parseFloat(finalizedPoolData.betAmount) !==
+            parseFloat(details._betAmount) ||
           finalizedPoolData.betDirection !== details._betDirection ||
-          parseFloat(finalizedPoolData.poolTotalUp) !== parseFloat(details._poolTotalUp) ||
-          parseFloat(finalizedPoolData.poolTotalDown) !== parseFloat(details._poolTotalDown) ||
-          parseFloat(finalizedPoolData.poolSize) !== parseFloat(details._poolSize)
+          parseFloat(finalizedPoolData.poolTotalUp) !==
+            parseFloat(details._poolTotalUp) ||
+          parseFloat(finalizedPoolData.poolTotalDown) !==
+            parseFloat(details._poolTotalDown) ||
+          parseFloat(finalizedPoolData.poolSize) !==
+            parseFloat(details._poolSize)
         ) {
           setFinalizedPoolData(
             details.accounts.length > 0
@@ -778,7 +624,9 @@ export const BettingProvider = ({ children }) => {
           );
         }
 
-        if ( Number(finalizedAccountsData.accounts) !== details.accounts.length ) {
+        if (
+          Number(finalizedAccountsData.accounts) !== details.accounts.length
+        ) {
           setFinalizedAccountsData({
             accounts: details.accounts.length,
           });
@@ -791,46 +639,37 @@ export const BettingProvider = ({ children }) => {
 
   // Totals Pre-calculations
   const totalsPrecalculations = async () => {
-    if ( active ) {
-
+    if (active) {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
       var unsettledUserKITTY = 0;
-      
+
       const unsettledBetsCount = await contractObj.methods
         .betListLen(account)
         .call({
-          from: account
+          from: account,
         })
         .then((response) => response);
 
       if (unsettledBetsCount > 0) {
-
         // unsettledBetsCount is the length of the unsettledBets array
 
         for (let i = 0; i < unsettledBetsCount; i++) {
-
           const userBetList = await contractObj.methods
-            .getUserBetList(
-              account,
-              i
-            )
+            .getUserBetList(account, i)
             .call({
-              from: account
+              from: account,
             })
             .then((response) => response);
 
           if (userBetList > 0) {
-
             // userBetList is BettingWindow #
 
             const windowBetPrices = await contractObj.methods
-              .getWindowBetPrices(
-                userBetList
-              )
+              .getWindowBetPrices(userBetList)
               .call({
-                from: account
+                from: account,
               })
               .then((response) => response);
 
@@ -840,54 +679,49 @@ export const BettingProvider = ({ children }) => {
               prices[0] = parseInt(prices[0]);
               prices[1] = parseInt(prices[1]);
 
-              if( prices[0] !== 0 && prices[1] !== 0) {
-
+              if (prices[0] !== 0 && prices[1] !== 0) {
                 unsettledUserBets = unsettledUserBets + 1;
 
                 // 0 = Down, 1 = Up, 2 = Tie
-                const priceDirection = ( prices[0] > prices[1] ) ? 0 : ( prices[0] < prices[1] ) ? 1 : 2 ;
+                const priceDirection =
+                  prices[0] > prices[1] ? 0 : prices[0] < prices[1] ? 1 : 2;
 
                 const userStake = await contractObj.methods
-                  .getUserStake(
-                    userBetList,
-                    account
-                  )
+                  .getUserStake(userBetList, account)
                   .call({
-                    from: account
+                    from: account,
                   })
                   .then((response) => response);
 
                 if (userStake) {
                   const userBet = Object.values(userStake);
-                  
+
                   const windowPoolValues = await contractObj.methods
-                    .getPoolValues(
-                      userBetList
-                    )
+                    .getPoolValues(userBetList)
                     .call({
-                      from: account
+                      from: account,
                     })
                     .then((response) => response);
 
                   if (windowPoolValues) {
                     const poolValues = Object.values(windowPoolValues);
-                    
+
                     const settledBet = await contractObj.methods
                       .settleBet(
-                        userBet[1], 
-                        userBet[0], 
-                        poolValues[1], 
-                        poolValues[0], 
+                        userBet[1],
+                        userBet[0],
+                        poolValues[1],
+                        poolValues[0],
                         priceDirection
                       )
                       .call({
-                        from: account
+                        from: account,
                       })
                       .then((response) => response);
 
                     if (settledBet) {
                       const gain = BigInt(settledBet.gain);
-                      
+
                       if (gain > 0) {
                         unsettledUserWins = unsettledUserWins + 1;
                         unsettledUserGains = unsettledUserGains + gain;
@@ -898,22 +732,17 @@ export const BettingProvider = ({ children }) => {
                       let poolValues0 = weiToCurrency(poolValues[0]);
                       let poolValues1 = weiToCurrency(poolValues[1]);
 
-                      unsettledUserKITTY = unsettledUserKITTY + ( 332 * (userBet0 + userBet1) / (poolValues0 + poolValues1) );
-
+                      unsettledUserKITTY =
+                        unsettledUserKITTY +
+                        (332 * (userBet0 + userBet1)) /
+                          (poolValues0 + poolValues1);
                     }
-
                   }
-
                 }
-
               }
-
             }
-
           }
-        
         }
-
       }
 
       setUnsettledBets(unsettledUserBets);
@@ -924,15 +753,15 @@ export const BettingProvider = ({ children }) => {
   };
 
   const windowCalculations = (which) => {
-    if (!currentBlock) return;
-    if (!firstBlock) return;
+    if (!currentTimestamp) return;
+    if (!initTimestamp) return;
     if (!windowDuration) return;
 
     var offset = 0;
 
     switch (which) {
       case 'Opened':
-        offset = 0;        
+        offset = 0;
         break;
       case 'Ongoing':
         offset = 1;
@@ -943,44 +772,44 @@ export const BettingProvider = ({ children }) => {
       default:
     }
 
-    const _windowNumber = Math.floor( (currentBlock.number - firstBlock) / windowDuration + 1 - offset );
-    const _windowStartingBlock = firstBlock + (_windowNumber - 1) * windowDuration;
-    const _windowEndingBlock = Math.floor( firstBlock + _windowNumber * windowDuration - 1 );
+    const _windowNumber = Math.floor(
+      (currentTimestamp - initTimestamp) / windowDuration + 1 - offset
+    );
+
+    const _windowStartingTimestamp =
+      initTimestamp + (_windowNumber - 1) * windowDuration;
+
+    const _windowEndingTimestamp = Math.floor(
+      initTimestamp + _windowNumber * windowDuration - 1
+    );
 
     return {
       windowNumber: _windowNumber,
-      startingBlock: _windowStartingBlock,
-      endingBlock: _windowEndingBlock
-    };
-  };
-
-  const windowBlocks = (window) => {
-    if (!firstBlock) return;
-    if (!windowDuration) return;
-
-    const _windowStartingBlock = firstBlock + (window - 1) * windowDuration;
-    const _windowEndingBlock = Math.floor( firstBlock + window * windowDuration - 1 );
-
-    return {
-      startingBlock: _windowStartingBlock,
-      endingBlock: _windowEndingBlock
+      startingTimestamp: _windowStartingTimestamp,
+      endingTimestamp: _windowEndingTimestamp,
     };
   };
 
   const weiToCurrency = (value, asFloat = true) => {
     if (!value) return;
-    const valueInCurrency = web3Utils.fromWei(value, global.config.currencyRequestValue);
-    return (asFloat) ? parseFloat(valueInCurrency) : valueInCurrency;
+    const valueInCurrency = web3Utils.fromWei(
+      value,
+      global.config.currencyRequestValue
+    );
+    return asFloat ? parseFloat(valueInCurrency) : valueInCurrency;
   };
 
   const currencyToWei = (value, asBigInt = false) => {
     if (!value) return;
-    const valueInWei = web3Utils.toWei(value, global.config.currencyRequestValue);
-    return (asBigInt) ? BigInt(valueInWei) : valueInWei;
+    const valueInWei = web3Utils.toWei(
+      value,
+      global.config.currencyRequestValue
+    );
+    return asBigInt ? BigInt(valueInWei) : valueInWei;
   };
 
   const value = {
-    currentBlock,
+    currentTimestamp,
     active,
     account,
     progress,
@@ -1011,7 +840,7 @@ export const BettingProvider = ({ children }) => {
     currencyToWei,
     web3Eth,
     web3Utils,
-    contractObj
+    contractObj,
   };
 
   return (

@@ -19,7 +19,7 @@ export const Dashboard = () => {
   const [isLoading] = useState(false);
   const [betSession, setBetSession] = useState(0);
   const {
-    currentBlock,
+    currentTimestamp,
     account,
     unsettledGains,
     progress,
@@ -47,55 +47,51 @@ export const Dashboard = () => {
     currencyToWei,
     web3Eth,
     web3Utils,
-    contractObj
+    contractObj,
   } = useBetting();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
-  const [bets, setBets] = useState(
-    [
-      {
-        ...openedWindowData,
-        ...openedPricesData,
-        ...openedPoolData,
-        ...openedAccountsData,
-        status: 'open',
-        id: uuid(),
-      },
-      {
-        ...ongoingWindowData,
-        ...ongoingPricesData,
-        ...ongoingPoolData,
-        ...ongoingAccountsData,
-        status: 'ongoing',
-        id: uuid(),
-      },
-      {
-        ...finalizedWindowData,
-        ...finalizedPricesData,
-        ...finalizedPoolData,
-        ...finalizedAccountsData,
-        status: 'finalized',
-        id: uuid(),
-      },
-      {
-        ...finalizedWindowData,
-        ...finalizedPricesData,
-        ...finalizedPoolData,
-        ...finalizedAccountsData,
-        status: 'finalized',
-        id: uuid(),
-      },
-    ]
-  );
+  const [bets, setBets] = useState([
+    {
+      ...openedWindowData,
+      ...openedPricesData,
+      ...openedPoolData,
+      ...openedAccountsData,
+      status: 'open',
+      id: uuid(),
+    },
+    {
+      ...ongoingWindowData,
+      ...ongoingPricesData,
+      ...ongoingPoolData,
+      ...ongoingAccountsData,
+      status: 'ongoing',
+      id: uuid(),
+    },
+    {
+      ...finalizedWindowData,
+      ...finalizedPricesData,
+      ...finalizedPoolData,
+      ...finalizedAccountsData,
+      status: 'finalized',
+      id: uuid(),
+    },
+    {
+      ...finalizedWindowData,
+      ...finalizedPricesData,
+      ...finalizedPoolData,
+      ...finalizedAccountsData,
+      status: 'finalized',
+      id: uuid(),
+    },
+  ]);
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
 
   // Betting Cards Initialisation
   React.useEffect(() => {
-
-    if (currentBlock) {
+    if (currentTimestamp) {
       if (isFirstLoad) {
-        
         // Initialize Cards
         setBets((prev) => [
           {
@@ -134,7 +130,6 @@ export const Dashboard = () => {
 
         setIsFirstLoad(false);
       } else {
-
         const updateBets = bets.slice(0);
         const opened = updateBets.find((el) => el.status === 'open');
         const ongoing = updateBets.find((el) => el.status === 'ongoing');
@@ -142,13 +137,13 @@ export const Dashboard = () => {
         // Transforms Current Open For Betting Card to Ongoing Card
         if (opened) {
           opened.status = 'ongoing';
-          opened.endingBlock = ongoingWindowData.endingBlock;
+          opened.endingTimestamp = ongoingWindowData.endingTimestamp;
         }
 
         // Transforms Current Ongoing Card to Finalized Card
         if (ongoing) {
           ongoing.status = 'finalized';
-          ongoing.endingBlock = finalizedWindowData.endingBlock;
+          ongoing.endingTimestamp = finalizedWindowData.endingTimestamp;
         }
 
         // Adds New Open For Betting Card
@@ -177,26 +172,21 @@ export const Dashboard = () => {
     const updateBets = bets.slice(0);
     const selected = updateBets.find((el) => el.status === 'open');
     if (!selected) return;
-    selected.endingBlock = openedWindowData.endingBlock;
+    selected.endingTimestamp = openedWindowData.endingTimestamp;
     selected.betDirectionContract = openedPoolData.betDirection;
     selected.betAmountContract = openedPoolData.betAmount;
     selected.poolTotalUp = openedPoolData.poolTotalUp;
     selected.poolTotalDown = openedPoolData.poolTotalDown;
     selected.poolSize = openedPoolData.poolSize;
     selected.accounts = openedAccountsData.accounts;
-  }, [
-    currentBlock, 
-    openedWindowData, 
-    openedPoolData, 
-    openedAccountsData
-  ]);
+  }, [currentTimestamp, openedWindowData, openedPoolData, openedAccountsData]);
 
   // Ongoing window (Card): Update data
   React.useEffect(() => {
     const updateBets = bets.slice(0);
     const selected = updateBets.find((el) => el.status === 'ongoing');
     if (!selected) return;
-    selected.endingBlock = ongoingWindowData.endingBlock;
+    selected.endingTimestamp = ongoingWindowData.endingTimestamp;
     selected.initialPrice = ongoingPricesData.initialPrice;
     selected.betDirectionContract = ongoingPoolData.betDirection;
     selected.betAmountContract = ongoingPoolData.betAmount;
@@ -205,11 +195,11 @@ export const Dashboard = () => {
     selected.poolSize = ongoingPoolData.poolSize;
     selected.accounts = ongoingAccountsData.accounts;
   }, [
-    windowNumber, 
-    ongoingWindowData, 
-    ongoingPoolData, 
+    windowNumber,
+    ongoingWindowData,
+    ongoingPoolData,
     ongoingAccountsData,
-    ongoingPricesData
+    ongoingPricesData,
   ]);
 
   // Finalized window (Card): Update data
@@ -217,7 +207,7 @@ export const Dashboard = () => {
     const updateBets = bets.slice(0);
     const selected = updateBets.find((el) => el.status === 'finalized');
     if (!selected) return;
-    selected.endingBlock = finalizedWindowData.endingBlock;
+    selected.endingTimestamp = finalizedWindowData.endingTimestamp;
     selected.initialPrice = finalizedPricesData.initialPrice;
     selected.finalPrice = finalizedPricesData.finalPrice;
     selected.betDirectionContract = finalizedPoolData.betDirection;
@@ -231,7 +221,7 @@ export const Dashboard = () => {
     finalizedWindowData,
     finalizedPoolData,
     finalizedAccountsData,
-    finalizedPricesData
+    finalizedPricesData,
   ]);
 
   // Train animation on every new betting window
@@ -261,8 +251,7 @@ export const Dashboard = () => {
   }, [betSession]);
 
   const onBetHandler = ({ value, direction }) => {
-    if ( account ) {
-      
+    if (account) {
       if (Number(value) <= MIN_BET_AMOUNT) {
         alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
         return;
@@ -295,7 +284,10 @@ export const Dashboard = () => {
       </div>
 
       <DismissableAlert name="alert-unclaimed-gains">
-        <span className="text-sm text-gray-300">Unclaimed gains and KITTY tokens are transferred to your MetaMask wallet by using the claim button or automatically on your next bet.</span>
+        <span className="text-sm text-gray-300">
+          Unclaimed gains and KITTY tokens are transferred to your MetaMask
+          wallet by using the claim button or automatically on your next bet.
+        </span>
       </DismissableAlert>
 
       <BetProgressBar completed={progress} />
@@ -337,7 +329,12 @@ export const Dashboard = () => {
       </div>
 
       <DismissableAlert name="alert-prices">
-        <span className="text-sm text-gray-300">There may be a discrepancy between initial/final prices and prices shown on the graph. The graph is just for illustration purpose, the official prices, used to settle the bets, are the initial/final prices collected from the Chainlink onchain API</span>
+        <span className="text-sm text-gray-300">
+          There may be a discrepancy between initial/final prices and prices
+          shown on the graph. The graph is just for illustration purpose, the
+          official prices, used to settle the bets, are the initial/final prices
+          collected from the Chainlink onchain API
+        </span>
       </DismissableAlert>
 
       <div className="bg-white rounded-3xl mt-2 px-4">
