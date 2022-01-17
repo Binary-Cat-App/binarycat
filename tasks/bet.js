@@ -62,11 +62,9 @@ subtask("current_window", "Gets current betting window", async function (
         );
 
         let duration = await bet.windowDuration()
-        let firstBlock = await bet.firstBlock()
-        let firstWindow = await bet.firstWindow()
-        let offset = await bet.windowOffset()
-        let block = ethers.provider.getBlockNumber()
-        let windowNumber = await bet.getWindowNumber(block, duration, firstBlock, offset, firstWindow);
+        let deployTime = await bet.deployTimestamp()
+        let block = await ethers.provider.getBlock()
+        let windowNumber = await bet.getWindowNumber(block.timestamp, duration, deployTime);
         return windowNumber
 });
 
