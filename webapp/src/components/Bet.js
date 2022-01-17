@@ -110,6 +110,11 @@ export const Bet = ({
               </span>
             )}
           </h2>
+          <p className="text-sm text-gray-300 text-center">
+            {endingTimestamp
+              ? new Date(endingTimestamp * 1000).toLocaleTimeString()
+              : ''}
+          </p>
         </div>
 
         <div className="-mx-2 flex-grow ">
