@@ -15,7 +15,7 @@ export const Header = ({ connected = false }) => {
   const [success, setSuccess] = useState(false);
 
   const token = {
-    address: '0x7c0a374De8893283CE2010D322DbB9c10b23D8f8',
+    address: '0xEC9810d9F10BAA8Bce7984881CE130B59B4c9Da4',
     symbol: 'KITTY',
     decimals: 18,
   };
