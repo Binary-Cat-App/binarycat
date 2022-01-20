@@ -734,7 +734,7 @@ export const BettingProvider = ({ children }) => {
 
                       unsettledUserKITTY =
                         unsettledUserKITTY +
-                        (332 * (userBet0 + userBet1)) /
+                        (200 * (userBet0 + userBet1)) /
                           (poolValues0 + poolValues1);
                     }
                   }
