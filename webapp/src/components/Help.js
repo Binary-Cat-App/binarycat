@@ -19,7 +19,7 @@ export const Help = () => {
             </h3>
             <div className="flex justify-center">
               <a 
-                href="https://medium.com/@BinaryCat/binary-cat-app-walkthrough-2939db9c506e"
+                href="https://medium.com/@BinaryCat/binary-cat-app-place-your-decentralized-bets-easily-and-quickly-5d1d3150c5a7"
                 className="btn btn--green"
                 target="_blank"
               >
