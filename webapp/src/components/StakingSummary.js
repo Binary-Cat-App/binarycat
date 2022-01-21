@@ -42,7 +42,7 @@ export const StakingSummary = () => {
 			<div className="w-1/2 lg:w-1/4 mb-4 lg:mb-0 p-4 lg:p-6 mx-2 lg:mx-4 bg-white flex flex-col rounded-3xl shadow-lg">
 				<dl>
 					<dt className="pb-1 leading-none whitespace-no-wrap text-center">
-						Total Rewards
+						Unclaimed Rewards
 					</dt>
 					<dd className="text-xl lg:text-2xl font-black text-green-500 leading-none text-center">
 						{_totalRewards.toFixed(6)} {global.config.currencyName}
