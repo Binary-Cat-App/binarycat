@@ -16,9 +16,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BinToken.sol";
 import "./BinaryBet.sol";
 import "./BetLibrary.sol";
+import "hardhat/console.sol";
 
 contract KittyPool {
-    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    address public immutable BURN_ADDRESS;
     BinaryBet binarybet;
 
     mapping(address => BetLibrary.User) user;
@@ -32,22 +33,24 @@ contract KittyPool {
         uint256 _fee,
         uint _maxBurn,
         address tokenContract,
-        address binarybetContract
+        address binarybetContract,
+        address burnAddress
     ) {
         require(_fee <= 100);
         fee = _fee;
         maxBurn = _maxBurn * 1e18;
         token = BinToken(tokenContract);
         binarybet = BinaryBet(binarybetContract);
+        BURN_ADDRESS = burnAddress;
     }
 
     function placeBet(uint8 side, uint value) external payable {
-        require(msg.value > 0, "Only strictly positive values");
+        require(value > 0, "Only strictly positive values");
         binarybet.updatePrice();
         updateBalance(msg.sender);
 
         token.transferFrom(msg.sender, address(this), value);
-        uint256 windowNumber = binarybet.getWindowNumber(
+        uint256 windowNumber = BetLibrary.getWindowNumber(
             block.timestamp,
             binarybet.windowDuration(),
             binarybet.deployTimestamp()
@@ -92,7 +95,7 @@ contract KittyPool {
               on 2 subsequent windows and the first window is not yet settled.
             */
             uint256 window = userData.bets[i - 1];
-            uint256 currentWindow = binarybet.getWindowNumber(
+            uint256 currentWindow = BetLibrary.getWindowNumber(
                 block.timestamp,
                 binarybet.windowDuration(),
                 binarybet.deployTimestamp()
