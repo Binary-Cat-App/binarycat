@@ -11,7 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
 import { useBetting } from '../context/BettingContext';
 import _ from 'lodash';
-import soundEffect from '../assets/sounds/bell-ring.mp3';
+import soundEffect from '../assets/sounds/bell-ring.ogg';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
