@@ -25,7 +25,7 @@ export const Stake = () => {
 
   const allowanceThreshold = 1000000;
 
-  const handleAllowance = async (val) => {
+  const handleAllowance = async () => {
     if (active && account) {
       const amount = currencyToWei(Number.MAX_SAFE_INTEGER);
 
@@ -77,7 +77,7 @@ export const Stake = () => {
             size="normal"
             className="w-full py-3 text-xl mb-8"
             handleClick={() => {
-              handleAllowance(value);
+              handleAllowance();
             }}
           >
             Top up your staking allowance
