@@ -11,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
 import { useBetting } from '../context/BettingContext';
 import _ from 'lodash';
+import soundEffect from '../assets/sounds/bell-ring.mp3';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
@@ -224,6 +225,26 @@ export const Dashboard = () => {
     finalizedPricesData,
   ]);
 
+  const audioRef = useRef(null);
+
+  const play = () => {
+    const promise = audioRef.current.play();
+    if (promise) {
+      promise
+        .then((_) => {
+          // Autoplay started!
+        })
+        .catch((error) => {
+          // Autoplay was prevented.
+          // Show a "Play" button so that user can start playback.
+        });
+    }
+  };
+
+  useEffect(() => {
+    play();
+  }, [windowNumber]);
+
   // Train animation on every new betting window
   useEffect(() => {
     // Betting Cards Container Width
@@ -282,6 +303,8 @@ export const Dashboard = () => {
         <UserSummary />
         <UserActions />
       </div>
+
+      <audio src={soundEffect} ref={audioRef} autoPlay></audio>
 
       <DismissableAlert name="alert-unclaimed-gains">
         <span className="text-sm text-gray-300">
