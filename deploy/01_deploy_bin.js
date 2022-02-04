@@ -11,6 +11,10 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
     const FEE = config[network.name].fee;
     const REWARD = config[network.name].reward;
 
+    const MAX_BURN = config[network.name].max_burn;
+    const BURN_ADDRESS = config[network.name].burn_address;
+
+
     if (network.name === 'hardhat' || network.name === 'localhost') {
         let mock = await deploy('OracleMock', {
             from: deployer,
@@ -48,6 +52,22 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         log: true,
         skipIfAlreadyDeployed: true,
     });
+
+    let betLibrary = await deploy('BetLibrary', {
+        from: deployer,
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
+
+    let kittyPool = await deploy('KittyPool', {
+        from: deployer,
+        args: [FEE, MAX_BURN, token.address, bet.address, BURN_ADDRESS],
+        libraries: {
+            BetLibrary: betLibrary.address
+        },
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
 }
 
-module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock'];
+module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock', 'KittyPool'];
