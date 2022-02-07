@@ -58,10 +58,13 @@ export const BettingProvider = ({ children }) => {
   });
   const [openedPoolData, setOpenedPoolData] = useState({
     betAmount: '0.00',
+    betAmountUp: '0.00',
+    betAmountDown: '0.00',
     betDirection: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
+    userBets: 0,
   });
   const [openedAccountsData, setOpenedAccountsData] = useState({
     accounts: 0,
@@ -80,10 +83,13 @@ export const BettingProvider = ({ children }) => {
   });
   const [ongoingPoolData, setOngoingPoolData] = useState({
     betAmount: '0.00',
+    betAmountUp: '0.00',
+    betAmountDown: '0.00',
     betDirection: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
+    userBets: 0,
   });
   const [ongoingAccountsData, setOngoingAccountsData] = useState({
     accounts: 0,
@@ -102,10 +108,13 @@ export const BettingProvider = ({ children }) => {
   });
   const [finalizedPoolData, setFinalizedPoolData] = useState({
     betAmount: '0.00',
+    betAmountUp: '0.00',
+    betAmountDown: '0.00',
     betDirection: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
+    userBets: 0,
   });
   const [finalizedAccountsData, setFinalizedAccountsData] = useState({
     accounts: 0,
@@ -114,10 +123,13 @@ export const BettingProvider = ({ children }) => {
   // Resets
   const initPoolData = {
     betAmount: '0.00',
+    betAmountUp: '0.00',
+    betAmountDown: '0.00',
     betDirection: '',
     poolTotalUp: '0.00',
     poolTotalDown: '0.00',
     poolSize: '0.00',
+    userBets: 0,
   };
   const initAccountsData = {
     accounts: 0,
@@ -412,9 +424,7 @@ export const BettingProvider = ({ children }) => {
 
   // Open for betting
   useEffect(() => {
-    setIsOpenForBetting(
-      openedPoolData.betDirection !== '' || isBetPlaced === true ? false : true
-    );
+    setIsOpenForBetting(true);
   }, [currentTimestamp, windowNumber, openedPoolData]);
 
   // initialPrice , finalPrice
@@ -468,10 +478,13 @@ export const BettingProvider = ({ children }) => {
       if (isNaN(_windowNumber)) return;
 
       var _betAmount = 0;
+      var _betAmountUp = 0;
+      var _betAmountDown = 0;
       var _betDirection = '';
       var _poolSize = 0;
       var _poolTotalUp = 0;
       var _poolTotalDown = 0;
+      var _userBets = 0;
 
       const result = await contractObj
         .getPastEvents('NewBet', {
@@ -504,28 +517,49 @@ export const BettingProvider = ({ children }) => {
           }, 0);
         _poolTotalDown = _poolTotalDown.toFixed(2);
 
-        // user bet amount and direction
-        const currentUser = result.filter(
+        // Filter user bets
+        const userBets = result.filter(
           (key) => key.returnValues.user.toLowerCase() === account.toLowerCase()
         );
-        if (currentUser.length > 0) {
-          _betAmount = weiToCurrency(
-            currentUser[0].returnValues.value.toString()
-          ).toFixed(2);
-          _betDirection =
-            Number.parseInt(currentUser[0].returnValues.side) === 1
-              ? 'up'
-              : 'down';
+        _userBets = userBets.length;
+        if (userBets.length > 0) {
+          // The user could made lots of bets in this window
+          userBets.forEach((transaction) => {
+            // Bets direction
+            const directionValue = transaction.returnValues.side;
+            const direction = Number.parseInt(directionValue);
+            const transactionBetDirection = direction === 1 ? 'up' : 'down';
+            if (_betDirection === '') {
+              _betDirection = transactionBetDirection;
+            } else {
+              if (_betDirection !== transactionBetDirection) {
+                _betDirection = 'both';
+              }
+            }
+            // Bets Amount
+            const transactionBetAmount =
+              transaction.returnValues.value.toString();
+            const weiTransactionBetAmount =
+              weiToCurrency(transactionBetAmount).toFixed(2);
+            if (direction === 1) {
+              _betAmountUp += parseFloat(weiTransactionBetAmount);
+            } else {
+              _betAmountDown += parseFloat(weiTransactionBetAmount);
+            }
+          });
+          _betAmount += _betAmountUp + _betAmountDown;
         }
       }
-
       updatePoolAndAccountsData(where, {
         accounts: result,
         _betAmount,
+        _betAmountUp,
+        _betAmountDown,
         _betDirection,
         _poolTotalUp,
         _poolTotalDown,
         _poolSize,
+        _userBets,
       });
     }
   };
@@ -534,9 +568,16 @@ export const BettingProvider = ({ children }) => {
     switch (key) {
       case 'Opened':
         if (
+          // Check if something changed
           Number(openedAccountsData.accounts) !== details.accounts.length ||
           parseFloat(openedPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
+          parseFloat(openedPoolData.betAmountUp) !==
+            parseFloat(details._betAmountUp) ||
+          parseFloat(openedPoolData.betAmountDown) !==
+            parseFloat(details._betAmountDown) ||
+          parseFloat(openedPoolData.userBets) !==
+            parseFloat(details.userBets) ||
           openedPoolData.betDirection !== details._betDirection ||
           parseFloat(openedPoolData.poolTotalUp) !==
             parseFloat(details._poolTotalUp) ||
@@ -548,10 +589,13 @@ export const BettingProvider = ({ children }) => {
             details.accounts.length > 0
               ? {
                   betAmount: details._betAmount,
+                  betAmountUp: details._betAmountUp,
+                  betAmountDown: details._betAmountDown,
                   betDirection: details._betDirection,
                   poolTotalUp: details._poolTotalUp,
                   poolTotalDown: details._poolTotalDown,
                   poolSize: details._poolSize,
+                  userBets: details._userBets,
                 }
               : initPoolData
           );
@@ -567,9 +611,16 @@ export const BettingProvider = ({ children }) => {
 
       case 'Ongoing':
         if (
+          // Check if something changed
           Number(ongoingAccountsData.accounts) !== details.accounts.length ||
           parseFloat(ongoingPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
+          parseFloat(ongoingPoolData.betAmountUp) !==
+            parseFloat(details._betAmountUp) ||
+          parseFloat(ongoingPoolData.betAmountDown) !==
+            parseFloat(details._betAmountDown) ||
+          parseFloat(ongoingPoolData.userBets) !==
+            parseFloat(details.userBets) ||
           ongoingPoolData.betDirection !== details._betDirection ||
           parseFloat(ongoingPoolData.poolTotalUp) !==
             parseFloat(details._poolTotalUp) ||
@@ -581,10 +632,13 @@ export const BettingProvider = ({ children }) => {
             details.accounts.length > 0
               ? {
                   betAmount: details._betAmount,
+                  betAmountUp: details._betAmountUp,
+                  betAmountDown: details._betAmountDown,
                   betDirection: details._betDirection,
                   poolTotalUp: details._poolTotalUp,
                   poolTotalDown: details._poolTotalDown,
                   poolSize: details._poolSize,
+                  userBets: details._userBets,
                 }
               : initPoolData
           );
@@ -600,9 +654,16 @@ export const BettingProvider = ({ children }) => {
 
       case 'Finalized':
         if (
+          // Check if something changed
           Number(finalizedAccountsData.accounts) !== details.accounts.length ||
           parseFloat(finalizedPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
+          parseFloat(finalizedPoolData.betAmountUp) !==
+            parseFloat(details._betAmountUp) ||
+          parseFloat(finalizedPoolData.betAmountDown) !==
+            parseFloat(details._betAmountDown) ||
+          parseFloat(finalizedPoolData.userBets) !==
+            parseFloat(details.userBets) ||
           finalizedPoolData.betDirection !== details._betDirection ||
           parseFloat(finalizedPoolData.poolTotalUp) !==
             parseFloat(details._poolTotalUp) ||
@@ -615,10 +676,13 @@ export const BettingProvider = ({ children }) => {
             details.accounts.length > 0
               ? {
                   betAmount: details._betAmount,
+                  betAmountUp: details._betAmountUp,
+                  betAmountDown: details._betAmountDown,
                   betDirection: details._betDirection,
                   poolTotalUp: details._poolTotalUp,
                   poolTotalDown: details._poolTotalDown,
                   poolSize: details._poolSize,
+                  userBets: details._userBets,
                 }
               : initPoolData
           );
