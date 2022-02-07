@@ -89,7 +89,7 @@ export const Dashboard = () => {
   const [transformMove, setTransformMove] = useState(null);
   const [transformAnimation, setTransformAnimation] = useState(null);
 
-  // Betting Cards Initialisation
+  // Betting Cards Initialization
   React.useEffect(() => {
     if (currentTimestamp) {
       if (isFirstLoad) {
@@ -180,6 +180,9 @@ export const Dashboard = () => {
     selected.poolTotalDown = openedPoolData.poolTotalDown;
     selected.poolSize = openedPoolData.poolSize;
     selected.accounts = openedAccountsData.accounts;
+    selected.betAmountUp = openedPoolData.betAmountUp;
+    selected.betAmountDown = openedPoolData.betAmountDown;
+    selected.userBets = openedPoolData.userBets;
   }, [currentTimestamp, openedWindowData, openedPoolData, openedAccountsData]);
 
   // Ongoing window (Card): Update data
@@ -195,6 +198,9 @@ export const Dashboard = () => {
     selected.poolTotalDown = ongoingPoolData.poolTotalDown;
     selected.poolSize = ongoingPoolData.poolSize;
     selected.accounts = ongoingAccountsData.accounts;
+    selected.betAmountUp = ongoingPoolData.betAmountUp;
+    selected.betAmountDown = ongoingPoolData.betAmountDown;
+    selected.userBets = ongoingPoolData.userBets;
   }, [
     windowNumber,
     ongoingWindowData,
@@ -217,6 +223,9 @@ export const Dashboard = () => {
     selected.poolTotalDown = finalizedPoolData.poolTotalDown;
     selected.poolSize = finalizedPoolData.poolSize;
     selected.accounts = finalizedAccountsData.accounts;
+    selected.betAmountUp = finalizedPoolData.betAmountUp;
+    selected.betAmountDown = finalizedPoolData.betAmountDown;
+    selected.userBets = finalizedPoolData.userBets;
   }, [
     windowNumber,
     finalizedWindowData,
@@ -271,7 +280,7 @@ export const Dashboard = () => {
     setBets(bets.slice(0, MAX_CARDS));
   }, [betSession]);
 
-  const onBetHandler = ({ value, direction }) => {
+  const onBetHandler = ({ value, direction, callback }) => {
     if (account) {
       if (Number(value) <= MIN_BET_AMOUNT) {
         alert(`Min bet amount is ${MIN_BET_AMOUNT.toFixed(2)}`);
@@ -287,8 +296,9 @@ export const Dashboard = () => {
           value: _bet.toString(),
         })
         .on('transactionHash', function (hash) {
-          setIsOpenForBetting(false);
+          setIsOpenForBetting(true);
           setIsBetPlaced(true);
+          callback();
         });
     }
   };

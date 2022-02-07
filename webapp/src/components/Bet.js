@@ -1,10 +1,9 @@
-import { ReactComponent as IconUp } from '../assets/images/icon-up.svg';
-import { ReactComponent as IconDown } from '../assets/images/icon-down.svg';
 import { ReactComponent as IconSpinner } from '../assets/images/icon-spinner.svg';
 import { BetPlaced } from './BetPlaced';
 import { PlaceBet } from './PlaceBet';
 import { BetChart } from './Chart';
 import React, { useState } from 'react';
+import { BetsCounter } from './BetsCounter';
 
 export const Bet = ({
   endingTimestamp,
@@ -12,6 +11,8 @@ export const Bet = ({
   finalPrice,
   betDirectionContract,
   betAmountContract,
+  betAmountUp,
+  betAmountDown,
   poolTotalUp,
   poolTotalDown,
   poolSize,
@@ -22,6 +23,7 @@ export const Bet = ({
   onBet,
   isOpenForBetting,
   chart,
+  userBets,
 }) => {
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
@@ -36,7 +38,13 @@ export const Bet = ({
       betDirectionContract === 'down' &&
       finalPrice > 0 &&
       initialPrice > 0 &&
-      finalPrice < initialPrice);
+      finalPrice < initialPrice) ||
+    (status === 'finalized' &&
+      betDirectionContract === 'both' &&
+      finalPrice > 0 &&
+      initialPrice > 0 &&
+      finalPrice !== initialPrice);
+
   const _isLost =
     (status === 'finalized' &&
       betDirectionContract === 'up' &&
@@ -47,7 +55,12 @@ export const Bet = ({
       betDirectionContract === 'down' &&
       finalPrice > 0 &&
       initialPrice > 0 &&
-      finalPrice > initialPrice);
+      finalPrice > initialPrice) ||
+    (status === 'finalized' &&
+      betDirectionContract === 'both' &&
+      finalPrice > 0 &&
+      initialPrice > 0 &&
+      finalPrice === initialPrice);
 
   const _isUp =
     status === 'finalized' &&
@@ -65,7 +78,7 @@ export const Bet = ({
 
   React.useEffect(() => {
     setBetDirection(betDirectionContract);
-    setBetAmount(betAmountContract);
+    // setBetAmount(betAmountContract);
   }, [betDirectionContract, betAmountContract]);
 
   function handleBetAmount(value) {
@@ -79,10 +92,13 @@ export const Bet = ({
         onBet({
           value: betAmount,
           direction: direction === 'up' ? 1 : 0,
+          callback: () => {
+            // Cleans the textfield for new bettings
+            setBetAmount(0);
+          },
         });
     }
   }
-
   return (
     <div className="w-full lg:w-1/3 px-4 pb-4 lg:pb-0 flex-shrink-0">
       <div
@@ -194,36 +210,22 @@ export const Bet = ({
         </div>
 
         <div className="flex -mx-2 items-center">
-          <div className="px-2 flex-grow">
-            <div className="flex items-center">
-              <span className="flex-shrink-0 mr-2">
-                <IconUp className="icon text-green-500" />
-              </span>
-              <span className="font-digits text-xl xl:text-2xl text-green-500">
-                {poolTotalUp}
-              </span>
-              <span className="text-xs text-gray-300 ml-2">
-                {global.config.currencyName}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <span className="flex-shrink-0 mr-2">
-                <IconDown className="icon text-pink-500" />
-              </span>
-              <span className="font-digits text-xl xl:text-2xl text-pink-500">
-                {poolTotalDown}
-              </span>
-              <span className="text-xs text-gray-300 ml-2">
-                {global.config.currencyName}
-              </span>
-            </div>
-          </div>
+          <BetsCounter
+            poolTotalUp={poolTotalUp}
+            poolTotalDown={poolTotalDown}
+          />
           <div className="px-2 flex-shrink-0">
             <BetPlaced
               betAmountContract={betAmountContract}
+              betAmountUp={betAmountUp}
+              betAmountDown={betAmountDown}
               betDirectionContract={betDirectionContract}
               isWon={_isWon}
               isLost={_isLost}
+              id={id}
+              userBets={userBets}
+              isUp={_isUp}
+              isDown={_isDown}
             />
           </div>
         </div>
@@ -241,7 +243,7 @@ export const Bet = ({
         </div>
 
         <div className="flex items-center">
-          <span className="text-xs text-gray-300 w-1/4">Accounts</span>
+          <span className="text-xs text-gray-300 w-1/4">Total bets</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{accounts}</span>
           </div>

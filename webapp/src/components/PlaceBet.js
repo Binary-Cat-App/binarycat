@@ -12,10 +12,7 @@ export const PlaceBet = ({
   handleBetDirection,
   isOpenForBetting,
 }) => {
-
-  const {
-    account
-  } = useBetting();
+  const { account } = useBetting();
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-8">
