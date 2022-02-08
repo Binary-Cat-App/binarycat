@@ -548,6 +548,7 @@ export const BettingProvider = ({ children }) => {
             }
           });
           _betAmount += _betAmountUp + _betAmountDown;
+          _betAmount = _betAmount.toFixed(2);
         }
       }
       updatePoolAndAccountsData(where, {
