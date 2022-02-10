@@ -56,7 +56,6 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
     let betLibrary = await deploy('BetLibrary', {
         from: deployer,
         log: true,
-        skipIfAlreadyDeployed: true,
     });
 
     let kittyPool = await deploy('KittyPool', {
@@ -66,7 +65,6 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
             BetLibrary: betLibrary.address
         },
         log: true,
-        skipIfAlreadyDeployed: true,
     });
 }
 
