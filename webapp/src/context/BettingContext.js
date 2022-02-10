@@ -13,7 +13,11 @@ import _ from 'lodash';
 import { io } from 'socket.io-client';
 
 import BinaryBet from '../contracts/BinaryBet.json';
+import KittyPool from '../contracts/KittyPool.json';
+import ContractManager from '../managers/ContractManager';
+
 const contract = BinaryBet;
+const kittyContract = KittyPool;
 
 const BettingContext = createContext();
 
@@ -21,13 +25,16 @@ export const useBetting = () => {
   return useContext(BettingContext);
 };
 
+export const CURRENCY_AVAX = 'AVAX';
+export const CURRENCY_KITTY = 'KITTY';
+
 export const BettingProvider = ({ children }) => {
   const { active, account, library } = useWeb3React();
 
   const web3Eth = library.eth;
   const web3Utils = library.utils;
 
-  const contractObj = new web3Eth.Contract(contract.abi, contract.address);
+  const [selectedCurrency, selectCurrency] = useState(CURRENCY_AVAX);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
@@ -42,6 +49,21 @@ export const BettingProvider = ({ children }) => {
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [historicalChartData, setHistoricalChartData] = useState([]);
+
+  // Set the contract according to the currency
+  const setContract = () => {
+    var contractObj;
+    if (selectedCurrency === CURRENCY_AVAX) {
+      contractObj = new web3Eth.Contract(contract.abi, contract.address);
+    } else if (selectedCurrency === CURRENCY_KITTY) {
+      contractObj = new web3Eth.Contract(
+        kittyContract.abi,
+        kittyContract.address
+      );
+    }
+    return contractObj;
+  };
+  const contractObj = setContract();
 
   // Realtime Currency Rates Socket data
   const [socketData, setSocketData] = useState([]);
@@ -155,9 +177,15 @@ export const BettingProvider = ({ children }) => {
   const prevOpenedWindowData = usePrevious(openedWindowData);
   const prevOngoingWindowData = usePrevious(ongoingWindowData);
 
+  // Change contract currency
+  useEffect(() => {
+    setContract();
+  }, [selectedCurrency]);
+
   // Contract Initials
   useEffect(() => {
-    if (active && account) {
+    console.log(contractObj);
+    if (active && account && contractObj) {
       contractObj.methods
         .deployTimestamp()
         .call()
@@ -432,13 +460,12 @@ export const BettingProvider = ({ children }) => {
     if (active) {
       if (Number.isInteger(_windowNumber) === false) return;
 
-      const prices = await contractObj
-        .getPastEvents('PriceUpdated', {
-          filter: { windowNumber: [_windowNumber + 1, _windowNumber + 2] },
-          fromBlock: 0,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
+      const prices = await ContractManager.shared().getPastEvents(
+        contractObj,
+        selectedCurrency,
+        _windowNumber,
+        'PriceUpdated'
+      );
 
       let initialPrice =
         prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
@@ -478,21 +505,19 @@ export const BettingProvider = ({ children }) => {
       if (isNaN(_windowNumber)) return;
 
       var _betAmount = 0;
-      var _betAmountUp = 0;
-      var _betAmountDown = 0;
+      var _betAmountUp = 0.0;
+      var _betAmountDown = 0.0;
       var _betDirection = '';
       var _poolSize = 0;
       var _poolTotalUp = 0;
       var _poolTotalDown = 0;
       var _userBets = 0;
 
-      const result = await contractObj
-        .getPastEvents('NewBet', {
-          filter: { windowNumber: _windowNumber },
-          fromBlock: 0,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
+      const result = await ContractManager.shared().getBets(
+        contractObj,
+        selectedCurrency,
+        _windowNumber
+      );
 
       if (result.length > 0) {
         // poolSize
@@ -548,6 +573,9 @@ export const BettingProvider = ({ children }) => {
             }
           });
           _betAmount += _betAmountUp + _betAmountDown;
+          _betAmount = _betAmount.toFixed(2);
+          _betAmountUp = _betAmountUp.toFixed(2);
+          _betAmountDown = _betAmountDown.toFixed(2);
         }
       }
       updatePoolAndAccountsData(where, {
@@ -703,7 +731,7 @@ export const BettingProvider = ({ children }) => {
 
   // Totals Pre-calculations
   const totalsPrecalculations = async () => {
-    if (active) {
+    if (active && contractObj) {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
@@ -905,6 +933,8 @@ export const BettingProvider = ({ children }) => {
     web3Eth,
     web3Utils,
     contractObj,
+    selectedCurrency,
+    selectCurrency,
   };
 
   return (

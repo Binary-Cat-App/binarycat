@@ -12,6 +12,7 @@ import { BetProgressBar } from './BetProgressBar';
 import { useBetting } from '../context/BettingContext';
 import _ from 'lodash';
 import soundEffect from '../assets/sounds/bell-ring.ogg';
+import { ControlBar } from './ControlBar';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
@@ -49,6 +50,8 @@ export const Dashboard = () => {
     web3Eth,
     web3Utils,
     contractObj,
+    selectedCurrency,
+    selectCurrency,
   } = useBetting();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
@@ -309,6 +312,11 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
+      <ControlBar
+        selectedCurrency={selectedCurrency}
+        selectCurrency={selectCurrency}
+      ></ControlBar>
+
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
         <UserSummary />
         <UserActions />
@@ -322,6 +330,8 @@ export const Dashboard = () => {
           wallet by using the claim button or automatically on your next bet.
         </span>
       </DismissableAlert>
+
+      {/* <ControlBar></ControlBar> */}
 
       <BetProgressBar completed={progress} />
 
