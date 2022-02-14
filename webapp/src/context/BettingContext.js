@@ -12,12 +12,12 @@ import _ from 'lodash';
 
 import { io } from 'socket.io-client';
 
+// Contracts
 import BinaryBet from '../contracts/BinaryBet.json';
 import KittyPool from '../contracts/KittyPool.json';
-import ContractManager from '../managers/ContractManager';
 
-const contract = BinaryBet;
-const kittyContract = KittyPool;
+// const avaxContract = BinaryBet;
+// const kittyContract = KittyPool;
 
 const BettingContext = createContext();
 
@@ -34,6 +34,11 @@ export const BettingProvider = ({ children }) => {
   const web3Eth = library.eth;
   const web3Utils = library.utils;
 
+  // Available Contracts
+  const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
+  const kittyContract = new web3Eth.Contract(KittyPool.abi, KittyPool.address);
+
+  const [contract, setContract] = useState(null);
   const [selectedCurrency, selectCurrency] = useState(CURRENCY_AVAX);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
@@ -50,23 +55,36 @@ export const BettingProvider = ({ children }) => {
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [historicalChartData, setHistoricalChartData] = useState([]);
 
-  // Set the contract according to the currency
-  const setContract = () => {
-    var contractObj;
-    if (selectedCurrency === CURRENCY_AVAX) {
-      contractObj = new web3Eth.Contract(contract.abi, contract.address);
-    } else if (selectedCurrency === CURRENCY_KITTY) {
-      contractObj = new web3Eth.Contract(
-        kittyContract.abi,
-        kittyContract.address
-      );
-    }
-    return contractObj;
-  };
-  const contractObj = setContract();
-
   // Realtime Currency Rates Socket data
   const [socketData, setSocketData] = useState([]);
+
+  const changeContract = async () => {
+    console.log('SETANDO O CONTRATO');
+    if (selectedCurrency === CURRENCY_AVAX) {
+      setContract(avaxContract);
+    } else if (selectedCurrency === CURRENCY_KITTY) {
+      setContract(kittyContract);
+    }
+  };
+
+  useEffect(() => {
+    if (active && account) {
+      avaxContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
+
+      avaxContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
+    }
+  }, []);
+
+  // Contract Initials
+  useEffect(() => {
+    changeContract();
+  }, [selectedCurrency]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -177,27 +195,6 @@ export const BettingProvider = ({ children }) => {
   const prevOpenedWindowData = usePrevious(openedWindowData);
   const prevOngoingWindowData = usePrevious(ongoingWindowData);
 
-  // Change contract currency
-  useEffect(() => {
-    setContract();
-  }, [selectedCurrency]);
-
-  // Contract Initials
-  useEffect(() => {
-    console.log(contractObj);
-    if (active && account && contractObj) {
-      contractObj.methods
-        .deployTimestamp()
-        .call()
-        .then((response) => setInitTimestamp(Number.parseInt(response)));
-
-      contractObj.methods
-        .windowDuration()
-        .call()
-        .then((response) => setWindowDuration(Number.parseInt(response)));
-    }
-  }, []);
-
   // Gets Current Timestamp
   useEffect(() => {
     if (active && account) {
@@ -220,7 +217,7 @@ export const BettingProvider = ({ children }) => {
 
   // Windows data
   useEffect(() => {
-    if (!active) return;
+    if (!active || !contract) return;
 
     const openedWindow = windowCalculations('Opened');
     const ongoingWindow = windowCalculations('Ongoing');
@@ -459,13 +456,12 @@ export const BettingProvider = ({ children }) => {
   const updatePricesForWindow = async (where, _windowNumber) => {
     if (active) {
       if (Number.isInteger(_windowNumber) === false) return;
-
-      const prices = await ContractManager.shared().getPastEvents(
-        contractObj,
-        selectedCurrency,
-        _windowNumber,
-        'PriceUpdated'
-      );
+      var prices;
+      if (selectedCurrency === CURRENCY_AVAX) {
+        prices = await getPastEvents(_windowNumber, 'PriceUpdated');
+      } else if (selectedCurrency === CURRENCY_KITTY) {
+        prices = await getPastEvents(_windowNumber, 'BetSettled');
+      }
 
       let initialPrice =
         prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
@@ -513,11 +509,7 @@ export const BettingProvider = ({ children }) => {
       var _poolTotalDown = 0;
       var _userBets = 0;
 
-      const result = await ContractManager.shared().getBets(
-        contractObj,
-        selectedCurrency,
-        _windowNumber
-      );
+      const result = await getBets(selectedCurrency, _windowNumber, account);
 
       if (result.length > 0) {
         // poolSize
@@ -562,10 +554,10 @@ export const BettingProvider = ({ children }) => {
               }
             }
             // Bets Amount
-            const transactionBetAmount =
-              transaction.returnValues.value.toString();
-            const weiTransactionBetAmount =
-              weiToCurrency(transactionBetAmount).toFixed(2);
+            const transactionBetAmount = transaction.returnValues.value.toString();
+            const weiTransactionBetAmount = weiToCurrency(
+              transactionBetAmount
+            ).toFixed(2);
             if (direction === 1) {
               _betAmountUp += parseFloat(weiTransactionBetAmount);
             } else {
@@ -731,39 +723,47 @@ export const BettingProvider = ({ children }) => {
 
   // Totals Pre-calculations
   const totalsPrecalculations = async () => {
-    if (active && contractObj) {
+    if (active && contract) {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
       var unsettledUserKITTY = 0;
 
-      const unsettledBetsCount = await contractObj.methods
+      const unsettledBetsCount = await contract.methods
         .betListLen(account)
         .call({
           from: account,
         })
         .then((response) => response);
-
+      console.log('Número de apostas: ' + unsettledBetsCount);
       if (unsettledBetsCount > 0) {
         // unsettledBetsCount is the length of the unsettledBets array
 
         for (let i = 0; i < unsettledBetsCount; i++) {
-          const userBetList = await contractObj.methods
+          const userBetList = await contract.methods
             .getUserBetList(account, i)
             .call({
               from: account,
             })
             .then((response) => response);
+          console.log('Número da window da aposta ' + i + ': ');
+          console.log(userBetList);
 
           if (userBetList > 0) {
             // userBetList is BettingWindow #
-
-            const windowBetPrices = await contractObj.methods
+            const windowBetPrices = await contract.methods
               .getWindowBetPrices(userBetList)
               .call({
                 from: account,
               })
               .then((response) => response);
+            console.log(
+              'Número da window ' +
+                userBetList +
+                ': ' +
+                windowBetPrices.toString()
+            );
+            console.log(windowBetPrices);
 
             if (windowBetPrices) {
               const prices = Object.values(windowBetPrices);
@@ -771,24 +771,26 @@ export const BettingProvider = ({ children }) => {
               prices[0] = parseInt(prices[0]);
               prices[1] = parseInt(prices[1]);
 
-              if (prices[0] !== 0 && prices[1] !== 0) {
+              if (prices[0] !== 0 || prices[1] !== 0) {
                 unsettledUserBets = unsettledUserBets + 1;
 
                 // 0 = Down, 1 = Up, 2 = Tie
                 const priceDirection =
                   prices[0] > prices[1] ? 0 : prices[0] < prices[1] ? 1 : 2;
 
-                const userStake = await contractObj.methods
+                const userStake = await contract.methods
                   .getUserStake(userBetList, account)
                   .call({
                     from: account,
                   })
                   .then((response) => response);
 
+                console.log(userStake);
+
                 if (userStake) {
                   const userBet = Object.values(userStake);
 
-                  const windowPoolValues = await contractObj.methods
+                  const windowPoolValues = await contract.methods
                     .getPoolValues(userBetList)
                     .call({
                       from: account,
@@ -798,7 +800,7 @@ export const BettingProvider = ({ children }) => {
                   if (windowPoolValues) {
                     const poolValues = Object.values(windowPoolValues);
 
-                    const settledBet = await contractObj.methods
+                    const settledBet = await contract.methods
                       .settleBet(
                         userBet[1],
                         userBet[0],
@@ -900,6 +902,44 @@ export const BettingProvider = ({ children }) => {
     return asBigInt ? BigInt(valueInWei) : valueInWei;
   };
 
+  // MARK: Currency contract interation
+
+  const getPastEvents = async (windowNumber, event) => {
+    var prices;
+    prices = await contract
+      .getPastEvents(event, {
+        filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
+        fromBlock: 0,
+        toBlock: 'latest',
+      })
+      .then((result) => result);
+    return prices;
+  };
+
+  // Return Bets for that window
+  const getBets = async (currency, windowNumber, account) => {
+    if (currency === CURRENCY_AVAX) {
+      const result = await contract
+        .getPastEvents('NewBet', {
+          filter: { windowNumber: windowNumber },
+          fromBlock: 0,
+          toBlock: 'latest',
+        })
+        .then((result) => result);
+      return result;
+    } else if (currency === CURRENCY_KITTY) {
+      // const betContract = await contractObj.
+      const result = await contract
+        .getPastEvents('NewBet', {
+          filter: { windowNumber: windowNumber },
+          fromBlock: 0,
+          toBlock: 'latest',
+        })
+        .then((result) => result);
+      return result;
+    }
+  };
+
   const value = {
     currentTimestamp,
     active,
@@ -932,7 +972,7 @@ export const BettingProvider = ({ children }) => {
     currencyToWei,
     web3Eth,
     web3Utils,
-    contractObj,
+    contract,
     selectedCurrency,
     selectCurrency,
   };

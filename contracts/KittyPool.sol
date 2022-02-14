@@ -20,7 +20,7 @@ import "hardhat/console.sol";
 
 contract KittyPool {
     address public immutable BURN_ADDRESS;
-    BinaryBet binarybet;
+    BinaryBet public binarybet;
 
     mapping(address => BetLibrary.User) user;
     mapping(uint256 => BetLibrary.Pool) public pools; //windowNumber => Pool

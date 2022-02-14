@@ -9,7 +9,11 @@ import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
-import { useBetting } from '../context/BettingContext';
+import {
+  CURRENCY_AVAX,
+  CURRENCY_KITTY,
+  useBetting,
+} from '../context/BettingContext';
 import _ from 'lodash';
 import soundEffect from '../assets/sounds/bell-ring.ogg';
 import { ControlBar } from './ControlBar';
@@ -49,7 +53,7 @@ export const Dashboard = () => {
     currencyToWei,
     web3Eth,
     web3Utils,
-    contractObj,
+    contract,
     selectedCurrency,
     selectCurrency,
   } = useBetting();
@@ -291,18 +295,32 @@ export const Dashboard = () => {
       }
 
       const _bet = currencyToWei(value, true);
-
-      contractObj.methods
-        .placeBet(direction)
-        .send({
-          from: account,
-          value: _bet.toString(),
-        })
-        .on('transactionHash', function (hash) {
-          setIsOpenForBetting(true);
-          setIsBetPlaced(true);
-          callback();
-        });
+      // Check currency
+      if (selectedCurrency === CURRENCY_AVAX) {
+        contract.methods
+          .placeBet(direction)
+          .send({
+            from: account,
+            value: _bet.toString(),
+          })
+          .on('transactionHash', function (hash) {
+            setIsOpenForBetting(true);
+            setIsBetPlaced(true);
+            callback();
+          });
+      } else if (selectedCurrency === CURRENCY_KITTY) {
+        contract.methods
+          .placeBet(direction, _bet.toString())
+          .send({
+            from: account,
+            // value: _bet.toString(),
+          })
+          .on('transactionHash', function (hash) {
+            setIsOpenForBetting(true);
+            setIsBetPlaced(true);
+            callback();
+          });
+      }
     }
   };
 
