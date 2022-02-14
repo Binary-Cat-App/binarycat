@@ -14,8 +14,14 @@ import { Footer } from './Footer';
 import { BettingProvider } from '../context/BettingContext';
 import { StakingProvider } from '../context/StakingContext';
 
+// Google Analytics
+import ReactGA from 'react-ga';
+
 const RoutesComponent = () => {
   const { active } = useWeb3React();
+  // Analytics configuration
+  ReactGA.initialize('UA-220083391-1');
+  ReactGA.pageview(window.location.pathname + window.location.search);
 
   if (!active)
     return (
