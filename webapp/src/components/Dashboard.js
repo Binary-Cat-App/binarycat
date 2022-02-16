@@ -17,6 +17,7 @@ import {
 import _ from 'lodash';
 import soundEffect from '../assets/sounds/bell-ring.ogg';
 import { ControlBar } from './ControlBar';
+import { getWeb3ReactContext } from '@web3-react/core';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
@@ -56,6 +57,8 @@ export const Dashboard = () => {
     contract,
     selectedCurrency,
     selectCurrency,
+    userAllowance,
+    contractPermissionRequested,
   } = useBetting();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
@@ -336,7 +339,7 @@ export const Dashboard = () => {
       ></ControlBar>
 
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
-        <UserSummary />
+        <UserSummary selectedCurrency={selectedCurrency} />
         <UserActions />
       </div>
 
@@ -381,6 +384,9 @@ export const Dashboard = () => {
                     betSession={index}
                     onBet={onBetHandler}
                     isOpenForBetting={isOpenForBetting}
+                    selectedCurrency={selectedCurrency}
+                    userAllowance={userAllowance}
+                    permissionRequested={contractPermissionRequested}
                   />
                 </CSSTransition>
               );

@@ -4,6 +4,8 @@ import { PlaceBet } from './PlaceBet';
 import { BetChart } from './Chart';
 import React, { useState } from 'react';
 import { BetsCounter } from './BetsCounter';
+import { CURRENCY_AVAX } from '../context/BettingContext';
+import { PermissionRequest } from './PermissionRequest';
 
 export const Bet = ({
   endingTimestamp,
@@ -24,6 +26,9 @@ export const Bet = ({
   isOpenForBetting,
   chart,
   userBets,
+  selectedCurrency,
+  userAllowance,
+  permissionRequested,
 }) => {
   const [betAmount, setBetAmount] = useState(0);
   const [betDirection, setBetDirection] = useState('');
@@ -99,6 +104,7 @@ export const Bet = ({
         });
     }
   }
+
   return (
     <div className="w-full lg:w-1/3 px-4 pb-4 lg:pb-0 flex-shrink-0">
       <div
@@ -134,12 +140,20 @@ export const Bet = ({
         </div>
 
         <div className="-mx-2 flex-grow ">
-          {status === 'open' ? (
+          {status === 'open' &&
+          selectedCurrency !== CURRENCY_AVAX &&
+          userAllowance === '0' ? (
+            <PermissionRequest
+              selectedCurrency={selectedCurrency}
+              permissionRequested={permissionRequested}
+            />
+          ) : status === 'open' ? (
             <PlaceBet
               betAmount={betAmount}
               handleBetAmount={handleBetAmount}
               handleBetDirection={handleBetDirection}
               isOpenForBetting={isOpenForBetting}
+              selectedCurrency={selectedCurrency}
             />
           ) : (
             <BetChart classAlt="h-48" chart={chart} status={status} />
@@ -213,6 +227,7 @@ export const Bet = ({
           <BetsCounter
             poolTotalUp={poolTotalUp}
             poolTotalDown={poolTotalDown}
+            selectedCurrency={selectedCurrency}
           />
           <div className="px-2 flex-shrink-0">
             <BetPlaced
@@ -226,6 +241,7 @@ export const Bet = ({
               userBets={userBets}
               isUp={_isUp}
               isDown={_isDown}
+              selectedCurrency={selectedCurrency}
             />
           </div>
         </div>
@@ -237,7 +253,7 @@ export const Bet = ({
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{poolSize}</span>
             <span className="text-xxs text-gray-300 ml-2">
-              {global.config.currencyName}
+              {selectedCurrency}
             </span>
           </div>
         </div>

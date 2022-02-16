@@ -18,6 +18,7 @@ export const BetPlaced = ({
   userBets,
   isUp,
   isDown,
+  selectedCurrency,
 }) => {
   return (
     <>
@@ -33,6 +34,7 @@ export const BetPlaced = ({
           poolTotalDown={betAmountDown}
           upWin={isUp && isWon}
           downWin={isDown > 0 && isWon}
+          selectedCurrency={selectedCurrency}
         />
       </ReactTooltip>
       <p className="text-xxs text-gray-300 mb-1">

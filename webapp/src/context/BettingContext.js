@@ -15,9 +15,7 @@ import { io } from 'socket.io-client';
 // Contracts
 import BinaryBet from '../contracts/BinaryBet.json';
 import KittyPool from '../contracts/KittyPool.json';
-
-// const avaxContract = BinaryBet;
-// const kittyContract = KittyPool;
+import BinToken from '../contracts/BinToken.json';
 
 const BettingContext = createContext();
 
@@ -37,6 +35,7 @@ export const BettingProvider = ({ children }) => {
   // Available Contracts
   const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
   const kittyContract = new web3Eth.Contract(KittyPool.abi, KittyPool.address);
+  const tokenContract = new web3Eth.Contract(BinToken.abi, BinToken.address);
 
   const [contract, setContract] = useState(null);
   const [selectedCurrency, selectCurrency] = useState(CURRENCY_AVAX);
@@ -54,6 +53,8 @@ export const BettingProvider = ({ children }) => {
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [historicalChartData, setHistoricalChartData] = useState([]);
+  // Bet permissions (for toher currencies different from AVAX)
+  const [userAllowance, setUserAllowance] = useState(1);
 
   // Realtime Currency Rates Socket data
   const [socketData, setSocketData] = useState([]);
@@ -67,6 +68,7 @@ export const BettingProvider = ({ children }) => {
     }
   };
 
+  // INIT
   useEffect(() => {
     if (active && account) {
       avaxContract.methods
@@ -85,6 +87,12 @@ export const BettingProvider = ({ children }) => {
   useEffect(() => {
     changeContract();
   }, [selectedCurrency]);
+
+  useEffect(() => {
+    if (selectedCurrency !== CURRENCY_AVAX) {
+      checkContractAllownce();
+    }
+  }, [contract]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -458,9 +466,13 @@ export const BettingProvider = ({ children }) => {
       if (Number.isInteger(_windowNumber) === false) return;
       var prices;
       if (selectedCurrency === CURRENCY_AVAX) {
-        prices = await getPastEvents(_windowNumber, 'PriceUpdated');
+        prices = await getPastEvents(contract, _windowNumber, 'PriceUpdated');
       } else if (selectedCurrency === CURRENCY_KITTY) {
-        prices = await getPastEvents(_windowNumber, 'BetSettled');
+        prices = await getPastEvents(
+          avaxContract,
+          _windowNumber,
+          'PriceUpdated'
+        );
       }
 
       let initialPrice =
@@ -723,12 +735,13 @@ export const BettingProvider = ({ children }) => {
 
   // Totals Pre-calculations
   const totalsPrecalculations = async () => {
-    if (active && contract) {
+    if (active && contract && selectedCurrency === CURRENCY_AVAX) {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
       var unsettledUserKITTY = 0;
 
+      // Recupera quantas apostas esse usuario fez no contrato
       const unsettledBetsCount = await contract.methods
         .betListLen(account)
         .call({
@@ -738,8 +751,8 @@ export const BettingProvider = ({ children }) => {
       console.log('Número de apostas: ' + unsettledBetsCount);
       if (unsettledBetsCount > 0) {
         // unsettledBetsCount is the length of the unsettledBets array
-
         for (let i = 0; i < unsettledBetsCount; i++) {
+          // Para cada aposta, recupera o id da janela
           const userBetList = await contract.methods
             .getUserBetList(account, i)
             .call({
@@ -751,18 +764,13 @@ export const BettingProvider = ({ children }) => {
 
           if (userBetList > 0) {
             // userBetList is BettingWindow #
-            const windowBetPrices = await contract.methods
+            const windowBetPrices = await avaxContract.methods
               .getWindowBetPrices(userBetList)
               .call({
                 from: account,
               })
               .then((response) => response);
-            console.log(
-              'Número da window ' +
-                userBetList +
-                ': ' +
-                windowBetPrices.toString()
-            );
+            console.log('Número da window ' + userBetList + ': ');
             console.log(windowBetPrices);
 
             if (windowBetPrices) {
@@ -799,6 +807,10 @@ export const BettingProvider = ({ children }) => {
 
                   if (windowPoolValues) {
                     const poolValues = Object.values(windowPoolValues);
+                    console.log('PARANUEEEEEEEEEEEEEEEEEEEEEEEE');
+                    console.log(userBet);
+                    console.log(poolValues);
+                    console.log(priceDirection);
 
                     const settledBet = await contract.methods
                       .settleBet(
@@ -902,11 +914,38 @@ export const BettingProvider = ({ children }) => {
     return asBigInt ? BigInt(valueInWei) : valueInWei;
   };
 
+  const checkContractAllownce = () => {
+    if (!contract) return;
+    console.log(contract);
+    // User Allowance
+    tokenContract.methods
+      .allowance(account, contract._address)
+      .call({
+        from: account,
+      })
+      .then((response) => {
+        setUserAllowance(response);
+      });
+  };
+
+  const contractPermissionRequested = async () => {
+    const amount = currencyToWei(Number.MAX_SAFE_INTEGER + '');
+
+    const allowance = await tokenContract.methods
+      .approve(contract._address, amount)
+      .send({
+        from: account,
+      })
+      .then(() => {
+        checkContractAllownce();
+      });
+  };
+
   // MARK: Currency contract interation
 
-  const getPastEvents = async (windowNumber, event) => {
+  const getPastEvents = async (selectedContract, windowNumber, event) => {
     var prices;
-    prices = await contract
+    prices = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
         fromBlock: 0,
@@ -973,8 +1012,11 @@ export const BettingProvider = ({ children }) => {
     web3Eth,
     web3Utils,
     contract,
+    tokenContract,
     selectedCurrency,
     selectCurrency,
+    userAllowance,
+    contractPermissionRequested,
   };
 
   return (
