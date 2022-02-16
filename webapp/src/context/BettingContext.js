@@ -70,6 +70,7 @@ export const BettingProvider = ({ children }) => {
 
   // INIT
   useEffect(() => {
+    console.log('Initializing...');
     if (active && account) {
       avaxContract.methods
         .deployTimestamp()
@@ -81,11 +82,18 @@ export const BettingProvider = ({ children }) => {
         .call()
         .then((response) => setWindowDuration(Number.parseInt(response)));
     }
+    // Check for the last defined currency
+    let lastSelected = localStorage.getItem('selectedCurrency');
+    if (lastSelected) {
+      selectCurrency(lastSelected);
+    }
   }, []);
 
   // Contract Initials
   useEffect(() => {
     changeContract();
+    // Save the currency
+    localStorage.setItem('selectedCurrency', selectedCurrency);
   }, [selectedCurrency]);
 
   useEffect(() => {
