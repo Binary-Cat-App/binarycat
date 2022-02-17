@@ -43,7 +43,9 @@ export const BetPlaced = ({
       <div
         data-tip=""
         data-for={id}
-        className={`border py-1 px-4 flex flex-col items-center relative bg-gray-50 border-gray-100 rounded ${
+        className={`border py-1 ${
+          betAmountContract && betAmountContract.length > 5 ? 'px-2' : 'px-4'
+        } flex flex-col items-center relative bg-gray-50 border-gray-100 rounded ${
           betDirectionContract === 'up' && 'bg-green-100 border-green-500'
         } ${betDirectionContract === 'down' && 'bg-pink-100 border-pink-500'}`}
       >

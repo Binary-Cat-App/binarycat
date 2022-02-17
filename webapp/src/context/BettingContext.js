@@ -100,7 +100,7 @@ export const BettingProvider = ({ children }) => {
     if (selectedCurrency !== CURRENCY_AVAX) {
       checkContractAllownce();
     }
-  }, [contract]);
+  }, [contract, account]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -743,7 +743,7 @@ export const BettingProvider = ({ children }) => {
 
   // Totals Pre-calculations
   const totalsPrecalculations = async () => {
-    if (active && contract && selectedCurrency === CURRENCY_AVAX) {
+    if (active && contract) {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
@@ -778,7 +778,7 @@ export const BettingProvider = ({ children }) => {
                 from: account,
               })
               .then((response) => response);
-            console.log('Número da window ' + userBetList + ': ');
+            console.log('Preço da window ' + userBetList + ': ');
             console.log(windowBetPrices);
 
             if (windowBetPrices) {
@@ -801,7 +801,7 @@ export const BettingProvider = ({ children }) => {
                   })
                   .then((response) => response);
 
-                console.log(userStake);
+                console.log('Stake da window: ' + userStake);
 
                 if (userStake) {
                   const userBet = Object.values(userStake);
@@ -832,7 +832,8 @@ export const BettingProvider = ({ children }) => {
                         from: account,
                       })
                       .then((response) => response);
-
+                    console.log('Settled BET: ');
+                    console.log(settledBet);
                     if (settledBet) {
                       const gain = BigInt(settledBet.gain);
 
@@ -846,10 +847,20 @@ export const BettingProvider = ({ children }) => {
                       let poolValues0 = weiToCurrency(poolValues[0]);
                       let poolValues1 = weiToCurrency(poolValues[1]);
 
-                      unsettledUserKITTY =
-                        unsettledUserKITTY +
-                        (200 * (userBet0 + userBet1)) /
-                          (poolValues0 + poolValues1);
+                      console.log('DEIXA EU TE MOSTRAR UMA COISA: ');
+                      console.log('Unsettled gains: ' + unsettledUserGains);
+                      console.log('Unsettled KITTY : ' + unsettledUserKITTY);
+                      console.log('aposta do user pra baixo : ' + userBet0);
+                      console.log('aposta do user pra cima : ' + userBet1);
+                      console.log(poolValues0);
+                      console.log(poolValues1);
+
+                      if (selectedCurrency === CURRENCY_AVAX) {
+                        unsettledUserKITTY =
+                          unsettledUserKITTY +
+                          (200 * (userBet0 + userBet1)) /
+                            (poolValues0 + poolValues1);
+                      }
                     }
                   }
                 }

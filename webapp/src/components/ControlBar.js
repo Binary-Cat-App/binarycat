@@ -20,7 +20,7 @@ export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
           variant="blue"
           handleClick={selectAvax}
         >
-          bet{selectedCurrency === 'AVAX' ? 'ing' : ''} with AVAX 🏔
+          bet{selectedCurrency === 'AVAX' ? 'ing' : ''} with AVAX 🔺
         </Button>
         <Button
           className={`btn  mr-3 ${
