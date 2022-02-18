@@ -38,7 +38,7 @@ export const BettingProvider = ({ children }) => {
   const tokenContract = new web3Eth.Contract(BinToken.abi, BinToken.address);
 
   const [contract, setContract] = useState(null);
-  const [selectedCurrency, selectCurrency] = useState(CURRENCY_AVAX);
+  const [selectedCurrency, selectCurrency] = useState(null);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
@@ -60,7 +60,7 @@ export const BettingProvider = ({ children }) => {
   const [socketData, setSocketData] = useState([]);
 
   const changeContract = async () => {
-    console.log('SETANDO O CONTRATO');
+    if (!selectedCurrency) return;
     if (selectedCurrency === CURRENCY_AVAX) {
       setContract(avaxContract);
     } else if (selectedCurrency === CURRENCY_KITTY) {
@@ -97,10 +97,11 @@ export const BettingProvider = ({ children }) => {
   }, [selectedCurrency]);
 
   useEffect(() => {
+    if (!account || !contract) return;
     if (selectedCurrency !== CURRENCY_AVAX) {
       checkContractAllownce();
     }
-  }, [contract, account]);
+  }, [account, contract]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -756,7 +757,6 @@ export const BettingProvider = ({ children }) => {
           from: account,
         })
         .then((response) => response);
-      console.log('Número de apostas: ' + unsettledBetsCount);
       if (unsettledBetsCount > 0) {
         // unsettledBetsCount is the length of the unsettledBets array
         for (let i = 0; i < unsettledBetsCount; i++) {
@@ -767,8 +767,6 @@ export const BettingProvider = ({ children }) => {
               from: account,
             })
             .then((response) => response);
-          console.log('Número da window da aposta ' + i + ': ');
-          console.log(userBetList);
 
           if (userBetList > 0) {
             // userBetList is BettingWindow #
@@ -778,9 +776,6 @@ export const BettingProvider = ({ children }) => {
                 from: account,
               })
               .then((response) => response);
-            console.log('Preço da window ' + userBetList + ': ');
-            console.log(windowBetPrices);
-
             if (windowBetPrices) {
               const prices = Object.values(windowBetPrices);
 
@@ -801,8 +796,6 @@ export const BettingProvider = ({ children }) => {
                   })
                   .then((response) => response);
 
-                console.log('Stake da window: ' + userStake);
-
                 if (userStake) {
                   const userBet = Object.values(userStake);
 
@@ -815,11 +808,6 @@ export const BettingProvider = ({ children }) => {
 
                   if (windowPoolValues) {
                     const poolValues = Object.values(windowPoolValues);
-                    console.log('PARANUEEEEEEEEEEEEEEEEEEEEEEEE');
-                    console.log(userBet);
-                    console.log(poolValues);
-                    console.log(priceDirection);
-
                     const settledBet = await contract.methods
                       .settleBet(
                         userBet[1],
@@ -832,8 +820,6 @@ export const BettingProvider = ({ children }) => {
                         from: account,
                       })
                       .then((response) => response);
-                    console.log('Settled BET: ');
-                    console.log(settledBet);
                     if (settledBet) {
                       const gain = BigInt(settledBet.gain);
 
@@ -846,14 +832,6 @@ export const BettingProvider = ({ children }) => {
                       let userBet1 = weiToCurrency(userBet[1]);
                       let poolValues0 = weiToCurrency(poolValues[0]);
                       let poolValues1 = weiToCurrency(poolValues[1]);
-
-                      console.log('DEIXA EU TE MOSTRAR UMA COISA: ');
-                      console.log('Unsettled gains: ' + unsettledUserGains);
-                      console.log('Unsettled KITTY : ' + unsettledUserKITTY);
-                      console.log('aposta do user pra baixo : ' + userBet0);
-                      console.log('aposta do user pra cima : ' + userBet1);
-                      console.log(poolValues0);
-                      console.log(poolValues1);
 
                       if (selectedCurrency === CURRENCY_AVAX) {
                         unsettledUserKITTY =
@@ -935,7 +913,6 @@ export const BettingProvider = ({ children }) => {
 
   const checkContractAllownce = () => {
     if (!contract) return;
-    console.log(contract);
     // User Allowance
     tokenContract.methods
       .allowance(account, contract._address)
