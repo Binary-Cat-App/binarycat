@@ -904,8 +904,9 @@ export const BettingProvider = ({ children }) => {
 
   const currencyToWei = (value, asBigInt = false) => {
     if (!value) return;
+    let cleanVlue = value.replace(' ', '');
     const valueInWei = web3Utils.toWei(
-      value,
+      cleanVlue,
       global.config.currencyRequestValue
     );
     return asBigInt ? BigInt(valueInWei) : valueInWei;
