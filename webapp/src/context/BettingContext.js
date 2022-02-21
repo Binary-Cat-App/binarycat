@@ -782,7 +782,7 @@ export const BettingProvider = ({ children }) => {
               prices[0] = parseInt(prices[0]);
               prices[1] = parseInt(prices[1]);
 
-              if (prices[0] !== 0 || prices[1] !== 0) {
+              if (prices[0] !== 0 && prices[1] !== 0) {
                 unsettledUserBets = unsettledUserBets + 1;
 
                 // 0 = Down, 1 = Up, 2 = Tie
