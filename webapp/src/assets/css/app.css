@@ -31,6 +31,6 @@
 @import './components/_transition';
 @import './components/_progress-bar';
 @import './components/_tooltip';
-@import "./components/_page-content";
+@import './components/_page-content';
 
 @tailwind utilities;

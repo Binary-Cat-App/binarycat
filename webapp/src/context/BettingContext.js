@@ -86,6 +86,8 @@ export const BettingProvider = ({ children }) => {
     let lastSelected = localStorage.getItem('selectedCurrency');
     if (lastSelected) {
       selectCurrency(lastSelected);
+    } else {
+      selectCurrency(CURRENCY_AVAX);
     }
   }, []);
 
@@ -778,7 +780,6 @@ export const BettingProvider = ({ children }) => {
               .then((response) => response);
             if (windowBetPrices) {
               const prices = Object.values(windowBetPrices);
-
               prices[0] = parseInt(prices[0]);
               prices[1] = parseInt(prices[1]);
 
