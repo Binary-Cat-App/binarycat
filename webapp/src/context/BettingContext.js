@@ -12,8 +12,10 @@ import _ from 'lodash';
 
 import { io } from 'socket.io-client';
 
+// Contracts
 import BinaryBet from '../contracts/BinaryBet.json';
-const contract = BinaryBet;
+import KittyPool from '../contracts/KittyPool.json';
+import BinToken from '../contracts/BinToken.json';
 
 const BettingContext = createContext();
 
@@ -21,13 +23,22 @@ export const useBetting = () => {
   return useContext(BettingContext);
 };
 
+export const CURRENCY_AVAX = 'AVAX';
+export const CURRENCY_KITTY = 'KITTY';
+
 export const BettingProvider = ({ children }) => {
   const { active, account, library } = useWeb3React();
 
   const web3Eth = library.eth;
   const web3Utils = library.utils;
 
-  const contractObj = new web3Eth.Contract(contract.abi, contract.address);
+  // Available Contracts
+  const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
+  const kittyContract = new web3Eth.Contract(KittyPool.abi, KittyPool.address);
+  const tokenContract = new web3Eth.Contract(BinToken.abi, BinToken.address);
+
+  const [contract, setContract] = useState(null);
+  const [selectedCurrency, selectCurrency] = useState(null);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
@@ -42,9 +53,57 @@ export const BettingProvider = ({ children }) => {
   const [isOpenForBetting, setIsOpenForBetting] = useState(true);
   const [isBetPlaced, setIsBetPlaced] = useState(false);
   const [historicalChartData, setHistoricalChartData] = useState([]);
+  // Bet permissions (for toher currencies different from AVAX)
+  const [userAllowance, setUserAllowance] = useState(1);
 
   // Realtime Currency Rates Socket data
   const [socketData, setSocketData] = useState([]);
+
+  const changeContract = async () => {
+    if (!selectedCurrency) return;
+    if (selectedCurrency === CURRENCY_AVAX) {
+      setContract(avaxContract);
+    } else if (selectedCurrency === CURRENCY_KITTY) {
+      setContract(kittyContract);
+    }
+  };
+
+  // INIT
+  useEffect(() => {
+    console.log('Initializing...');
+    if (active && account) {
+      avaxContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
+
+      avaxContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
+    }
+    // Check for the last defined currency
+    let lastSelected = localStorage.getItem('selectedCurrency');
+    if (lastSelected) {
+      selectCurrency(lastSelected);
+    } else {
+      selectCurrency(CURRENCY_AVAX);
+    }
+  }, []);
+
+  // Contract Initials
+  useEffect(() => {
+    changeContract();
+    // Save the currency
+    localStorage.setItem('selectedCurrency', selectedCurrency);
+  }, [selectedCurrency]);
+
+  useEffect(() => {
+    if (!account || !contract) return;
+    if (selectedCurrency !== CURRENCY_AVAX) {
+      checkContractAllownce();
+    }
+  }, [account, contract]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -155,21 +214,6 @@ export const BettingProvider = ({ children }) => {
   const prevOpenedWindowData = usePrevious(openedWindowData);
   const prevOngoingWindowData = usePrevious(ongoingWindowData);
 
-  // Contract Initials
-  useEffect(() => {
-    if (active && account) {
-      contractObj.methods
-        .deployTimestamp()
-        .call()
-        .then((response) => setInitTimestamp(Number.parseInt(response)));
-
-      contractObj.methods
-        .windowDuration()
-        .call()
-        .then((response) => setWindowDuration(Number.parseInt(response)));
-    }
-  }, []);
-
   // Gets Current Timestamp
   useEffect(() => {
     if (active && account) {
@@ -192,7 +236,7 @@ export const BettingProvider = ({ children }) => {
 
   // Windows data
   useEffect(() => {
-    if (!active) return;
+    if (!active || !contract) return;
 
     const openedWindow = windowCalculations('Opened');
     const ongoingWindow = windowCalculations('Ongoing');
@@ -431,14 +475,16 @@ export const BettingProvider = ({ children }) => {
   const updatePricesForWindow = async (where, _windowNumber) => {
     if (active) {
       if (Number.isInteger(_windowNumber) === false) return;
-
-      const prices = await contractObj
-        .getPastEvents('PriceUpdated', {
-          filter: { windowNumber: [_windowNumber + 1, _windowNumber + 2] },
-          fromBlock: 0,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
+      var prices;
+      if (selectedCurrency === CURRENCY_AVAX) {
+        prices = await getPastEvents(contract, _windowNumber, 'PriceUpdated');
+      } else if (selectedCurrency === CURRENCY_KITTY) {
+        prices = await getPastEvents(
+          avaxContract,
+          _windowNumber,
+          'PriceUpdated'
+        );
+      }
 
       let initialPrice =
         prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
@@ -478,21 +524,15 @@ export const BettingProvider = ({ children }) => {
       if (isNaN(_windowNumber)) return;
 
       var _betAmount = 0;
-      var _betAmountUp = 0;
-      var _betAmountDown = 0;
+      var _betAmountUp = 0.0;
+      var _betAmountDown = 0.0;
       var _betDirection = '';
       var _poolSize = 0;
       var _poolTotalUp = 0;
       var _poolTotalDown = 0;
       var _userBets = 0;
 
-      const result = await contractObj
-        .getPastEvents('NewBet', {
-          filter: { windowNumber: _windowNumber },
-          fromBlock: 0,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
+      const result = await getBets(selectedCurrency, _windowNumber, account);
 
       if (result.length > 0) {
         // poolSize
@@ -537,10 +577,10 @@ export const BettingProvider = ({ children }) => {
               }
             }
             // Bets Amount
-            const transactionBetAmount =
-              transaction.returnValues.value.toString();
-            const weiTransactionBetAmount =
-              weiToCurrency(transactionBetAmount).toFixed(2);
+            const transactionBetAmount = transaction.returnValues.value.toString();
+            const weiTransactionBetAmount = weiToCurrency(
+              transactionBetAmount
+            ).toFixed(2);
             if (direction === 1) {
               _betAmountUp += parseFloat(weiTransactionBetAmount);
             } else {
@@ -549,6 +589,8 @@ export const BettingProvider = ({ children }) => {
           });
           _betAmount += _betAmountUp + _betAmountDown;
           _betAmount = _betAmount.toFixed(2);
+          _betAmountUp = _betAmountUp.toFixed(2);
+          _betAmountDown = _betAmountDown.toFixed(2);
         }
       }
       updatePoolAndAccountsData(where, {
@@ -704,24 +746,24 @@ export const BettingProvider = ({ children }) => {
 
   // Totals Pre-calculations
   const totalsPrecalculations = async () => {
-    if (active) {
+    if (active && contract) {
       var unsettledUserBets = 0;
       var unsettledUserWins = 0;
       var unsettledUserGains = 0n;
       var unsettledUserKITTY = 0;
 
-      const unsettledBetsCount = await contractObj.methods
+      // Recupera quantas apostas esse usuario fez no contrato
+      const unsettledBetsCount = await contract.methods
         .betListLen(account)
         .call({
           from: account,
         })
         .then((response) => response);
-
       if (unsettledBetsCount > 0) {
         // unsettledBetsCount is the length of the unsettledBets array
-
         for (let i = 0; i < unsettledBetsCount; i++) {
-          const userBetList = await contractObj.methods
+          // Para cada aposta, recupera o id da janela
+          const userBetList = await contract.methods
             .getUserBetList(account, i)
             .call({
               from: account,
@@ -730,17 +772,14 @@ export const BettingProvider = ({ children }) => {
 
           if (userBetList > 0) {
             // userBetList is BettingWindow #
-
-            const windowBetPrices = await contractObj.methods
+            const windowBetPrices = await avaxContract.methods
               .getWindowBetPrices(userBetList)
               .call({
                 from: account,
               })
               .then((response) => response);
-
             if (windowBetPrices) {
               const prices = Object.values(windowBetPrices);
-
               prices[0] = parseInt(prices[0]);
               prices[1] = parseInt(prices[1]);
 
@@ -751,7 +790,7 @@ export const BettingProvider = ({ children }) => {
                 const priceDirection =
                   prices[0] > prices[1] ? 0 : prices[0] < prices[1] ? 1 : 2;
 
-                const userStake = await contractObj.methods
+                const userStake = await contract.methods
                   .getUserStake(userBetList, account)
                   .call({
                     from: account,
@@ -761,7 +800,7 @@ export const BettingProvider = ({ children }) => {
                 if (userStake) {
                   const userBet = Object.values(userStake);
 
-                  const windowPoolValues = await contractObj.methods
+                  const windowPoolValues = await contract.methods
                     .getPoolValues(userBetList)
                     .call({
                       from: account,
@@ -770,8 +809,7 @@ export const BettingProvider = ({ children }) => {
 
                   if (windowPoolValues) {
                     const poolValues = Object.values(windowPoolValues);
-
-                    const settledBet = await contractObj.methods
+                    const settledBet = await contract.methods
                       .settleBet(
                         userBet[1],
                         userBet[0],
@@ -783,7 +821,6 @@ export const BettingProvider = ({ children }) => {
                         from: account,
                       })
                       .then((response) => response);
-
                     if (settledBet) {
                       const gain = BigInt(settledBet.gain);
 
@@ -797,10 +834,12 @@ export const BettingProvider = ({ children }) => {
                       let poolValues0 = weiToCurrency(poolValues[0]);
                       let poolValues1 = weiToCurrency(poolValues[1]);
 
-                      unsettledUserKITTY =
-                        unsettledUserKITTY +
-                        (200 * (userBet0 + userBet1)) /
-                          (poolValues0 + poolValues1);
+                      if (selectedCurrency === CURRENCY_AVAX) {
+                        unsettledUserKITTY =
+                          unsettledUserKITTY +
+                          (200 * (userBet0 + userBet1)) /
+                            (poolValues0 + poolValues1);
+                      }
                     }
                   }
                 }
@@ -866,11 +905,76 @@ export const BettingProvider = ({ children }) => {
 
   const currencyToWei = (value, asBigInt = false) => {
     if (!value) return;
+    let cleanVlue = value.replace(' ', '');
     const valueInWei = web3Utils.toWei(
-      value,
+      cleanVlue,
       global.config.currencyRequestValue
     );
     return asBigInt ? BigInt(valueInWei) : valueInWei;
+  };
+
+  const checkContractAllownce = () => {
+    if (!contract) return;
+    // User Allowance
+    tokenContract.methods
+      .allowance(account, contract._address)
+      .call({
+        from: account,
+      })
+      .then((response) => {
+        setUserAllowance(response);
+      });
+  };
+
+  const contractPermissionRequested = async () => {
+    const amount = currencyToWei(Number.MAX_SAFE_INTEGER + '');
+
+    const allowance = await tokenContract.methods
+      .approve(contract._address, amount)
+      .send({
+        from: account,
+      })
+      .then(() => {
+        checkContractAllownce();
+      });
+  };
+
+  // MARK: Currency contract interation
+
+  const getPastEvents = async (selectedContract, windowNumber, event) => {
+    var prices;
+    prices = await selectedContract
+      .getPastEvents(event, {
+        filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
+        fromBlock: 0,
+        toBlock: 'latest',
+      })
+      .then((result) => result);
+    return prices;
+  };
+
+  // Return Bets for that window
+  const getBets = async (currency, windowNumber, account) => {
+    if (currency === CURRENCY_AVAX) {
+      const result = await contract
+        .getPastEvents('NewBet', {
+          filter: { windowNumber: windowNumber },
+          fromBlock: 0,
+          toBlock: 'latest',
+        })
+        .then((result) => result);
+      return result;
+    } else if (currency === CURRENCY_KITTY) {
+      // const betContract = await contractObj.
+      const result = await contract
+        .getPastEvents('NewBet', {
+          filter: { windowNumber: windowNumber },
+          fromBlock: 0,
+          toBlock: 'latest',
+        })
+        .then((result) => result);
+      return result;
+    }
   };
 
   const value = {
@@ -905,7 +1009,12 @@ export const BettingProvider = ({ children }) => {
     currencyToWei,
     web3Eth,
     web3Utils,
-    contractObj,
+    contract,
+    tokenContract,
+    selectedCurrency,
+    selectCurrency,
+    userAllowance,
+    contractPermissionRequested,
   };
 
   return (

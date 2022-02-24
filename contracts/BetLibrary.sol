@@ -40,19 +40,6 @@ library BetLibrary {
         uint256[] bets;
     }
 
-    //EVENTS
-    event NewBet(
-        address indexed user,
-        uint256 indexed windowNumber,
-        uint256 value,
-        uint8 side
-    );
-    event BetSettled(
-        uint256 indexed windowNumber,
-        address indexed user,
-        uint256 gain
-    );
-    event PriceUpdated(uint256 indexed windowNumber, uint256 price);
 
 
     function windowStatus(

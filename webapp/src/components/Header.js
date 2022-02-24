@@ -6,6 +6,7 @@ import { Container } from './Container';
 import { ReactComponent as Logo } from '../assets/images/logo.svg';
 import { ReactComponent as IconHelp } from '../assets/images/icon-help.svg';
 import { ReactComponent as IconAdd } from '../assets/images/icon-add.svg';
+import { ControlBar } from './ControlBar';
 
 export const Header = ({ connected = false }) => {
   const location = useLocation();

@@ -35,7 +35,6 @@ export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
         >
           bet{selectedCurrency === 'AVAX' ? 'ing' : ''} with AVAX 🔺
         </Button>
-
         <Button
           className={`btn  mr-3 ${
             selectedCurrency === 'KITTY' ? '' : 'btn--outline'

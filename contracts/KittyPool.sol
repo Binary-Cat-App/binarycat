@@ -20,7 +20,7 @@ import "hardhat/console.sol";
 
 contract KittyPool {
     address public immutable BURN_ADDRESS;
-    BinaryBet binarybet;
+    BinaryBet public binarybet;
 
     mapping(address => BetLibrary.User) user;
     mapping(uint256 => BetLibrary.Pool) public pools; //windowNumber => Pool
@@ -28,6 +28,19 @@ contract KittyPool {
     uint immutable fee;
     uint256 public immutable maxBurn;
     BinToken token;
+
+    //EVENTS
+    event NewBet(
+        address indexed user,
+        uint256 indexed windowNumber,
+        uint256 value,
+        uint8 side
+    );
+    event BetSettled(
+        uint256 indexed windowNumber,
+        address indexed user,
+        uint256 gain
+    );
 
     constructor(
         uint256 _fee,
@@ -78,7 +91,7 @@ contract KittyPool {
             pools[windowNumber].downValue += value;
         }
 
-        emit BetLibrary.NewBet(msg.sender, windowNumber, value, side);
+        emit NewBet(msg.sender, windowNumber, value, side);
     }
 
     function updateBalance(address _user) public{
@@ -144,7 +157,7 @@ contract KittyPool {
             totalGain += windowGain;
             accumulatedFees += fees;
 
-            emit BetLibrary.BetSettled(window, _user, windowGain);
+            emit BetSettled(window, _user, windowGain);
         }
 
 

@@ -11,6 +11,7 @@ export const PlaceBet = ({
   handleBetAmount,
   handleBetDirection,
   isOpenForBetting,
+  selectedCurrency,
 }) => {
   const { account } = useBetting();
 
@@ -50,7 +51,7 @@ export const PlaceBet = ({
           htmlFor="betAmount"
           className="mr-4 right-0 absolute text-lg flex-shrink-0"
         >
-          {global.config.currencyName}
+          {selectedCurrency}
         </label>
       </div>
       <Button
