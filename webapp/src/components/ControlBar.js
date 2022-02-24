@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from './Button';
 import { CURRENCY_AVAX, CURRENCY_KITTY } from '../context/BettingContext';
 import SelectButton from './SelectButton';
+import { ReactComponent as IconAvax } from '../assets/images/avax-logo.svg';
+import { ReactComponent as IconKitty } from '../assets/images/small-binary-transp.svg';
 
 export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
   const options = [
@@ -33,7 +35,8 @@ export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
           variant="blue"
           handleClick={selectAvax}
         >
-          bet{selectedCurrency === 'AVAX' ? 'ing' : ''} with AVAX 🔺
+          Bet{selectedCurrency === 'AVAX' ? 'ting' : ''} with AVAX
+          <IconAvax width={44} />
         </Button>
         <Button
           className={`btn  mr-3 ${
@@ -42,7 +45,8 @@ export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
           variant="blue"
           handleClick={selectKitty}
         >
-          bet{selectedCurrency === 'KITTY' ? 'ing' : ''} with KITTY 🐱
+          Bet{selectedCurrency === 'KITTY' ? 'ting' : ''} with KITTY
+          <IconKitty width={32} className="ml-2" />
         </Button>
       </div>
       <div className="h-full flex flex-row relative rounded-2xl">

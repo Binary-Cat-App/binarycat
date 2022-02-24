@@ -407,7 +407,7 @@ export const Dashboard = () => {
       <div className="bg-white rounded-3xl mt-2 px-4">
         <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>
-    </div>
+    </>
   );
 };
 
