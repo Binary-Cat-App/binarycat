@@ -9,9 +9,15 @@ import { BetChart } from './BigChart';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { v4 as uuid } from 'uuid';
 import { BetProgressBar } from './BetProgressBar';
-import { useBetting } from '../context/BettingContext';
+import {
+  CURRENCY_AVAX,
+  CURRENCY_KITTY,
+  useBetting,
+} from '../context/BettingContext';
 import _ from 'lodash';
 import soundEffect from '../assets/sounds/bell-ring.ogg';
+import { ControlBar } from './ControlBar';
+import { getWeb3ReactContext } from '@web3-react/core';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
@@ -48,7 +54,11 @@ export const Dashboard = () => {
     currencyToWei,
     web3Eth,
     web3Utils,
-    contractObj,
+    contract,
+    selectedCurrency,
+    selectCurrency,
+    userAllowance,
+    contractPermissionRequested,
   } = useBetting();
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const betScrollDiv = useRef(null);
@@ -288,18 +298,32 @@ export const Dashboard = () => {
       }
 
       const _bet = currencyToWei(value, true);
-
-      contractObj.methods
-        .placeBet(direction)
-        .send({
-          from: account,
-          value: _bet.toString(),
-        })
-        .on('transactionHash', function (hash) {
-          setIsOpenForBetting(true);
-          setIsBetPlaced(true);
-          callback();
-        });
+      // Check currency
+      if (selectedCurrency === CURRENCY_AVAX) {
+        contract.methods
+          .placeBet(direction)
+          .send({
+            from: account,
+            value: _bet.toString(),
+          })
+          .on('transactionHash', function (hash) {
+            setIsOpenForBetting(true);
+            setIsBetPlaced(true);
+            callback();
+          });
+      } else if (selectedCurrency === CURRENCY_KITTY) {
+        contract.methods
+          .placeBet(direction, _bet.toString())
+          .send({
+            from: account,
+            // value: _bet.toString(),
+          })
+          .on('transactionHash', function (hash) {
+            setIsOpenForBetting(true);
+            setIsBetPlaced(true);
+            callback();
+          });
+      }
     }
   };
 
@@ -309,8 +333,13 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
+      <ControlBar
+        selectedCurrency={selectedCurrency}
+        selectCurrency={selectCurrency}
+      ></ControlBar>
+
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
-        <UserSummary />
+        <UserSummary selectedCurrency={selectedCurrency} />
         <UserActions />
       </div>
 
@@ -322,6 +351,8 @@ export const Dashboard = () => {
           wallet by using the claim button or automatically on your next bet.
         </span>
       </DismissableAlert>
+
+      {/* <ControlBar></ControlBar> */}
 
       <BetProgressBar completed={progress} />
 
@@ -353,6 +384,9 @@ export const Dashboard = () => {
                     betSession={index}
                     onBet={onBetHandler}
                     isOpenForBetting={isOpenForBetting}
+                    selectedCurrency={selectedCurrency}
+                    userAllowance={userAllowance}
+                    permissionRequested={contractPermissionRequested}
                   />
                 </CSSTransition>
               );

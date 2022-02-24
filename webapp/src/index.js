@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Web3ReactProvider } from '@web3-react/core'
-import Web3 from 'web3'
+import { Web3ReactProvider } from '@web3-react/core';
+import Web3 from 'web3';
 
 import WebFontLoader from 'webfontloader';
 import './assets/css/app.css';
@@ -11,7 +11,7 @@ import App from './components/App';
 import MetamaskProvider from './components/MetamaskProvider';
 
 function getLibrary(provider) {
-  return new Web3(provider)
+  return new Web3(provider);
 }
 
 WebFontLoader.load({
@@ -24,7 +24,7 @@ ReactDOM.render(
   <React.StrictMode>
     <Web3ReactProvider getLibrary={getLibrary}>
       <MetamaskProvider>
-        <App/>
+        <App />
       </MetamaskProvider>
     </Web3ReactProvider>
   </React.StrictMode>,

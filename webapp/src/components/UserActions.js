@@ -11,36 +11,35 @@ export const UserActions = () => {
     active,
     weiToCurrency,
     currencyToWei,
-    contractObj
+    contract,
   } = useBetting();
 
   const [effect, setEffect] = useState(false);
 
   const handleUpdateBalance = async () => {
-
     setEffect(true);
 
-    if ( active && account ) {
-      const update = await contractObj.methods
-        .updateBalance(account)
-        .send({
-          from: account
-        });
+    if (active && account) {
+      const update = await contract.methods.updateBalance(account).send({
+        from: account,
+      });
 
-      if( update )setEffect(false);
+      if (update) setEffect(false);
     }
   };
 
   return (
     <div className="flex w-full md:w-1/5 px-4 pt-4 md:pt-0">
-      <Button 
+      <Button
         className="w-full"
-        variant="green" 
+        variant="green"
         handleClick={handleUpdateBalance}
         onAnimationEnd={() => setEffect(false)}
-        >
+      >
         Claim
-        { effect && <IconSpinner className="spinner animate-spin ml-2 h-5 w-5 text-gray" /> }
+        {effect && (
+          <IconSpinner className="spinner animate-spin ml-2 h-5 w-5 text-gray" />
+        )}
       </Button>
     </div>
   );

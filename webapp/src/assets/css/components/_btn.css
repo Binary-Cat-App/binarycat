@@ -38,6 +38,10 @@
     &.is-disabled {
       @apply text-gray-200  border-gray-200 bg-transparent !important;
     }
+
+    &.green {
+      @apply bg-blue-500;
+    }
   }
 
   /* blue */

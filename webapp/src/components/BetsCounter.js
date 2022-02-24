@@ -5,7 +5,13 @@ import { BadgeLost, BadgeWin, BetBadge } from './BetBadge';
 
 import { ReactComponent as IconWinner } from '../assets/images/icon-winner.svg';
 
-export const BetsCounter = ({ poolTotalUp, poolTotalDown, upWin, downWin }) => {
+export const BetsCounter = ({
+  poolTotalUp,
+  poolTotalDown,
+  upWin,
+  downWin,
+  selectedCurrency,
+}) => {
   return (
     <div className="px-2 flex-grow">
       <div className="flex items-center">
@@ -21,9 +27,7 @@ export const BetsCounter = ({ poolTotalUp, poolTotalDown, upWin, downWin }) => {
         <span className="font-digits text-xl xl:text-2xl text-green-500">
           {poolTotalUp}
         </span>
-        <span className="text-xs text-gray-300 ml-2">
-          {global.config.currencyName}
-        </span>
+        <span className="text-xs text-gray-300 ml-2">{selectedCurrency}</span>
       </div>
       <div className="flex items-center">
         {downWin && (
@@ -38,9 +42,7 @@ export const BetsCounter = ({ poolTotalUp, poolTotalDown, upWin, downWin }) => {
         <span className="font-digits text-xl xl:text-2xl text-pink-500">
           {poolTotalDown}
         </span>
-        <span className="text-xs text-gray-300 ml-2">
-          {global.config.currencyName}
-        </span>
+        <span className="text-xs text-gray-300 ml-2">{selectedCurrency}</span>
       </div>
     </div>
   );
