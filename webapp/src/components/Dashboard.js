@@ -12,6 +12,7 @@ import { BetProgressBar } from './BetProgressBar';
 import { useBetting } from '../context/BettingContext';
 import _ from 'lodash';
 import soundEffect from '../assets/sounds/bell-ring.ogg';
+import { ControlBar } from './ControlBar';
 
 const MIN_BET_AMOUNT = 0;
 const MAX_CARDS = 4;
@@ -308,7 +309,12 @@ export const Dashboard = () => {
       <Loading />
     </div>
   ) : (
-    <>
+    <div>
+      <ControlBar
+        selectedCurrency={selectedCurrency}
+        selectCurrency={selectCurrency}
+      ></ControlBar>
+
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
         <UserSummary />
         <UserActions />
@@ -373,7 +379,7 @@ export const Dashboard = () => {
       <div className="bg-white rounded-3xl mt-2 px-4">
         <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>
-    </>
+    </div>
   );
 };
 
