@@ -13,20 +13,18 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./BinToken.sol";
 import "./BinaryBet.sol";
 import "./BetLibrary.sol";
+import "./BinToken.sol";
 
-contract KittyPool {
-    address public immutable BURN_ADDRESS;
-    BinaryBet public binarybet;
+contract DailyPool {
+    BinaryBet immutable binarybet;
+    BinToken immutable token;
 
     mapping(address => BetLibrary.User) user;
     mapping(uint256 => BetLibrary.Pool) public pools; //windowNumber => Pool
 
-    uint immutable fee;
-    uint256 public immutable maxBurn;
-    BinToken token;
+    uint windowDuration;
 
     //EVENTS
     event NewBet(
@@ -42,18 +40,13 @@ contract KittyPool {
     );
 
     constructor(
-        uint256 _fee,
-        uint _maxBurn,
+        uint _windowDuration,
         address tokenContract,
-        address binarybetContract,
-        address burnAddress
+        address binarybetContract
     ) {
-        require(_fee <= 100);
-        fee = _fee;
-        maxBurn = _maxBurn * 1e18;
-        token = BinToken(tokenContract);
         binarybet = BinaryBet(binarybetContract);
-        BURN_ADDRESS = burnAddress;
+        token = BinToken(tokenContract);
+        windowDuration = _windowDuration;
     }
 
     function placeBet(uint8 side, uint value) external payable {
@@ -64,7 +57,7 @@ contract KittyPool {
         token.transferFrom(msg.sender, address(this), value);
         uint256 windowNumber = BetLibrary.getWindowNumber(
             block.timestamp,
-            binarybet.windowDuration(),
+            windowDuration,
             binarybet.deployTimestamp()
         );
 
@@ -101,7 +94,6 @@ contract KittyPool {
         }
 
         uint256 totalGain = 0;
-        uint256 accumulatedFees = 0;
         for (uint256 i = userData.bets.length; i > 0; i--) {
             /*Maximum number of itens in list is 2, when the user bets
               on 2 subsequent windows and the first window is not yet settled.
@@ -109,13 +101,13 @@ contract KittyPool {
             uint256 window = userData.bets[i - 1];
             uint256 currentWindow = BetLibrary.getWindowNumber(
                 block.timestamp,
-                binarybet.windowDuration(),
+                windowDuration,
                 binarybet.deployTimestamp()
             );
             (
                 uint256 referencePrice,
                 uint256 settlementPrice
-            ) = binarybet.getWindowBetPrices(window);
+            ) = getWindowBetPrices(window);
 
             BetLibrary.WindowStatus status = BetLibrary.windowStatus(
                 window,
@@ -145,7 +137,7 @@ contract KittyPool {
 
             BetLibrary.Pool memory stake = userData.stake[window];
             BetLibrary.Pool memory pool = pools[window];
-            (uint256 windowGain, uint256 fees) = settleBet(
+            uint256 windowGain = settleBet(
                 stake.upValue,
                 stake.downValue,
                 pool.upValue,
@@ -154,7 +146,6 @@ contract KittyPool {
             );
 
             totalGain += windowGain;
-            accumulatedFees += fees;
 
             emit BetSettled(window, _user, windowGain);
         }
@@ -162,15 +153,6 @@ contract KittyPool {
 
         if (totalGain > 0) {
             token.transfer(_user, totalGain);
-        }
-
-        if (accumulatedFees > 0) {
-            if (token.balanceOf(address(binarybet)) > 0) {
-                token.transfer(BURN_ADDRESS, accumulatedFees);
-            }
-            else {
-                token.transfer(address(binarybet), accumulatedFees);
-            }
         }
     }
 
@@ -180,29 +162,38 @@ contract KittyPool {
         uint256 poolUp,
         uint256 poolDown,
         uint8 res
-    ) public view returns (uint256 gain, uint256 fees) {
+    ) public view returns (uint256 gain) {
         BetLibrary.BetResult result = BetLibrary.BetResult(res);
         uint256 poolTotal = poolUp + poolDown;
         uint256 value;
         if (result == BetLibrary.BetResult.up && poolUp != 0) {
             //(upStake/poolUp)*poolTotal
-            value = BetLibrary.sharePool(poolTotal, upStake, poolUp);
-            fees = BetLibrary.computeFeeCapped(value, fee, maxBurn);
-            gain = value - fees;
+            gain = BetLibrary.sharePool(poolTotal, upStake, poolUp);
         } else if (result == BetLibrary.BetResult.down && poolDown != 0) {
             //(downStake/poolDown)*poolTotal
-            value = BetLibrary.sharePool(poolTotal, downStake, poolDown);
-            fees = BetLibrary.computeFeeCapped(value, fee, maxBurn);
-            gain = value - fees;
+            gain = BetLibrary.sharePool(poolTotal, downStake, poolDown);
         } else if (result == BetLibrary.BetResult.tie) {
             gain = upStake + downStake;
         } else {
             //If the winning pool is empty, all stake goes to the fees.
             gain = 0;
-            fees = upStake + downStake;
         }
     }
 
+    function getWindowBetPrices (uint windowNumber) public returns (uint, uint) {
+        uint initialTimestamp = BetLibrary.getWindowStartingTimestamp(windowNumber,
+                                                                      windowDuration,
+                                                                      binarybet.deployTimestamp()
+                                                                     );
+        uint finalTimestamp = initialTimestamp + windowDuration;
+
+        //Window number from original binarybet contract.
+        uint initialWindow = BetLibrary.getWindowNumber(initialTimestamp, binarybet.windowDuration(), binarybet.deployTimestamp());
+        uint finalWindow = BetLibrary.getWindowNumber(finalTimestamp, binarybet.windowDuration(), binarybet.deployTimestamp());
+
+        return (binarybet.windowPrice(initialWindow), binarybet.windowPrice(finalWindow));
+        
+    }
     function getPoolValues(uint256 windowNumber)
         public
         view
