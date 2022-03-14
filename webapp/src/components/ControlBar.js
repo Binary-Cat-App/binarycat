@@ -5,29 +5,31 @@ import SelectButton from './SelectButton';
 import { ReactComponent as IconAvax } from '../assets/images/avax-logo.svg';
 import { ReactComponent as IconKitty } from '../assets/images/small-binary-transp.svg';
 
-export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
-  const options = [
-    { value: CURRENCY_AVAX, label: 'Avax' },
-    { value: CURRENCY_KITTY, label: 'Kitty' },
-  ];
-
+export const ControlBar = ({
+  selectedCurrency,
+  selectCurrency,
+  selectedWindowTime,
+  selectWindowTime,
+}) => {
   const selectAvax = () => {
+    localStorage.removeItem('selectedWindowTime');
     selectCurrency('AVAX');
   };
 
   const selectKitty = () => {
+    localStorage.removeItem('selectedWindowTime');
     selectCurrency('KITTY');
   };
 
-  return (
-    <div className="w-full bg-white rounded-2xl px-4 py-4 lg:w mb-10  flex-shrink-0">
-      <div className="h-full flex flex-row relative rounded-2xl">
-        <SelectButton
-          options={options}
-          selectedCurrency={selectedCurrency}
-          className="btn-select"
-        ></SelectButton>
+  const onWindowTimeSelected = (value) => {
+    console.log(value);
+    localStorage.setItem('selectedWindowTime', value.value);
+    selectWindowTime(value.value);
+  };
 
+  return (
+    <div className="w-full rounded-2xl px-0 py-4 lg:w mb-10  flex-shrink-0">
+      <div className="h-full flex flex-row relative rounded-2xl">
         <Button
           className={`btn  mr-3 ${
             selectedCurrency === 'AVAX' ? '' : 'btn--outline'
@@ -49,8 +51,20 @@ export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
           <IconKitty width={32} className="ml-2" />
         </Button>
       </div>
-      <div className="h-full flex flex-row relative rounded-2xl">
-        <Button
+      <div className="h-full flex flex-row relative rounded-2xl mt-4">
+        <SelectButton
+          options={
+            !selectedCurrency
+              ? []
+              : global.currencyWindows.timeOptions[selectedCurrency]
+          }
+          selectedValue={selectedWindowTime}
+          className="btn-select"
+          placeholder={'Selecione'}
+          onChange={onWindowTimeSelected}
+        ></SelectButton>
+
+        {/* <Button
           className={`btn  mr-3 mt-4 btn--outline `}
           variant="blue"
           handleClick={selectKitty}
@@ -63,7 +77,7 @@ export const ControlBar = ({ selectedCurrency, selectCurrency }) => {
           handleClick={selectKitty}
         >
           🕐 24 Hours Window
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

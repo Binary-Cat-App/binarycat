@@ -16,6 +16,8 @@ import { io } from 'socket.io-client';
 import BinaryBet from '../contracts/BinaryBet.json';
 import KittyPool from '../contracts/KittyPool.json';
 import BinToken from '../contracts/BinToken.json';
+// NEW:
+// import BinToken from '../contracts/BinToken.json';
 
 const BettingContext = createContext();
 
@@ -39,6 +41,8 @@ export const BettingProvider = ({ children }) => {
 
   const [contract, setContract] = useState(null);
   const [selectedCurrency, selectCurrency] = useState(null);
+  const [selectedWindowTime, selectWindowTime] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
@@ -60,7 +64,11 @@ export const BettingProvider = ({ children }) => {
   const [socketData, setSocketData] = useState([]);
 
   const changeContract = async () => {
-    if (!selectedCurrency) return;
+    console.log('CHANGE CONTRACTY');
+    console.log(selectedCurrency);
+    console.log(selectedWindowTime);
+
+    if (!selectedCurrency || !selectedWindowTime) return;
     if (selectedCurrency === CURRENCY_AVAX) {
       setContract(avaxContract);
     } else if (selectedCurrency === CURRENCY_KITTY) {
@@ -72,6 +80,7 @@ export const BettingProvider = ({ children }) => {
   useEffect(() => {
     console.log('Initializing...');
     if (active && account) {
+      // TODO: select the correct timestamp according to the time window
       avaxContract.methods
         .deployTimestamp()
         .call()
@@ -84,6 +93,7 @@ export const BettingProvider = ({ children }) => {
     }
     // Check for the last defined currency
     let lastSelected = localStorage.getItem('selectedCurrency');
+
     if (lastSelected) {
       selectCurrency(lastSelected);
     } else {
@@ -91,12 +101,41 @@ export const BettingProvider = ({ children }) => {
     }
   }, []);
 
-  // Contract Initials
+  // When currency changes
   useEffect(() => {
-    changeContract();
+    if (!selectedCurrency) return;
     // Save the currency
-    localStorage.setItem('selectedCurrency', selectedCurrency);
+    if (selectedCurrency) {
+      localStorage.setItem('selectedCurrency', selectedCurrency);
+    }
+    let windows = global.currencyWindows.timeOptions[selectedCurrency];
+
+    // Tries to get last time window selected
+    let lastWindowTime = localStorage.getItem('selectedWindowTime');
+    console.log('AGORA VAI');
+    console.log(lastWindowTime);
+    console.log(windows);
+    if (lastWindowTime) {
+      console.log(lastWindowTime);
+      selectWindowTime(lastWindowTime);
+    } else {
+      let value = windows[0].value;
+      // If value didnt change, change the contract
+      if (value == selectedWindowTime) {
+        changeContract();
+      }
+      selectWindowTime(value);
+    }
   }, [selectedCurrency]);
+
+  // When window time changes
+  useEffect(() => {
+    console.log('AQUI ATÉ QUE TA PASSANDO');
+    if (selectedWindowTime) {
+      localStorage.setItem('selectedTimeWindow', selectedWindowTime);
+    }
+    changeContract();
+  }, [selectedWindowTime]);
 
   useEffect(() => {
     if (!account || !contract) return;
@@ -473,12 +512,12 @@ export const BettingProvider = ({ children }) => {
 
   // initialPrice , finalPrice
   const updatePricesForWindow = async (where, _windowNumber) => {
-    if (active) {
+    if (active && contract) {
       if (Number.isInteger(_windowNumber) === false) return;
       var prices;
-      if (selectedCurrency === CURRENCY_AVAX) {
+      if (contract._address === avaxContract._address) {
         prices = await getPastEvents(contract, _windowNumber, 'PriceUpdated');
-      } else if (selectedCurrency === CURRENCY_KITTY) {
+      } else if (contract._address === kittyContract._address) {
         prices = await getPastEvents(
           avaxContract,
           _windowNumber,
@@ -577,10 +616,10 @@ export const BettingProvider = ({ children }) => {
               }
             }
             // Bets Amount
-            const transactionBetAmount = transaction.returnValues.value.toString();
-            const weiTransactionBetAmount = weiToCurrency(
-              transactionBetAmount
-            ).toFixed(2);
+            const transactionBetAmount =
+              transaction.returnValues.value.toString();
+            const weiTransactionBetAmount =
+              weiToCurrency(transactionBetAmount).toFixed(2);
             if (direction === 1) {
               _betAmountUp += parseFloat(weiTransactionBetAmount);
             } else {
@@ -1012,7 +1051,9 @@ export const BettingProvider = ({ children }) => {
     contract,
     tokenContract,
     selectedCurrency,
+    selectedWindowTime,
     selectCurrency,
+    selectWindowTime,
     userAllowance,
     contractPermissionRequested,
   };
