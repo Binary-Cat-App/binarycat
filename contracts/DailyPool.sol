@@ -24,7 +24,7 @@ contract DailyPool {
     mapping(address => BetLibrary.User) user;
     mapping(uint256 => BetLibrary.Pool) public pools; //windowNumber => Pool
 
-    uint windowDuration;
+    uint public windowDuration;
 
     //EVENTS
     event NewBet(
