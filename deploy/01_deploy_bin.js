@@ -66,6 +66,16 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         },
         log: true,
     });
+
+    let dailyPool = await deploy('DailyPool', {
+        from: deployer,
+        args: [14400, token.address, bet.address],
+        libraries: {
+            BetLibrary: betLibrary.address
+        },
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
 }
 
-module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock', 'KittyPool'];
+module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock', 'KittyPool', 'DailyPool'];
