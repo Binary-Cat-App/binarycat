@@ -1000,11 +1000,12 @@ export const BettingProvider = ({ children }) => {
   // MARK: Currency contract interation
 
   const getPastEvents = async (selectedContract, windowNumber, event) => {
+    let blockNumber = await library.eth.getBlockNumber();
     var prices;
     prices = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
-        fromBlock: 0,
+        fromBlock: blockNumber - 2000,
         toBlock: 'latest',
       })
       .then((result) => result);
@@ -1013,11 +1014,12 @@ export const BettingProvider = ({ children }) => {
 
   // Return Bets for that window
   const getBets = async (currency, windowNumber, account) => {
+    let blockNumber = await library.eth.getBlockNumber();
     if (currency === CURRENCY_AVAX) {
       const result = await contract
         .getPastEvents('NewBet', {
           filter: { windowNumber: windowNumber },
-          fromBlock: 0,
+          fromBlock: blockNumber - 2000,
           toBlock: 'latest',
         })
         .then((result) => result);
@@ -1027,7 +1029,7 @@ export const BettingProvider = ({ children }) => {
       const result = await contract
         .getPastEvents('NewBet', {
           filter: { windowNumber: windowNumber },
-          fromBlock: 0,
+          fromBlock: blockNumber - 2000,
           toBlock: 'latest',
         })
         .then((result) => result);
