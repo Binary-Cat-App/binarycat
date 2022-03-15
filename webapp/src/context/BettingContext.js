@@ -31,7 +31,7 @@ export const BettingProvider = ({ children }) => {
 
   const web3Eth = library.eth;
   const web3Utils = library.utils;
-  const blockSize = 1500;
+  const blocksRange = 1500;
 
   // Available Contracts
   const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
@@ -948,7 +948,7 @@ export const BettingProvider = ({ children }) => {
     prices = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
-        fromBlock: blockNumber - blockSize,
+        fromBlock: blockNumber - blocksRange,
         toBlock: 'latest',
       })
       .then((result) => result);
@@ -962,7 +962,7 @@ export const BettingProvider = ({ children }) => {
       const result = await contract
         .getPastEvents('NewBet', {
           filter: { windowNumber: windowNumber },
-          fromBlock: blockNumber - blockSize,
+          fromBlock: blockNumber - blocksRange,
           toBlock: 'latest',
         })
         .then((result) => result);
@@ -971,7 +971,7 @@ export const BettingProvider = ({ children }) => {
       const result = await contract
         .getPastEvents('NewBet', {
           filter: { windowNumber: windowNumber },
-          fromBlock: blockNumber - blockSize,
+          fromBlock: blockNumber - blocksRange,
           toBlock: 'latest',
         })
         .then((result) => result);
