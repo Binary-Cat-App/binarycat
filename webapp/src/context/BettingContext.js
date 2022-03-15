@@ -123,7 +123,9 @@ export const BettingProvider = ({ children }) => {
     let windows = global.currencyWindows.timeOptions[selectedCurrency];
 
     // Tries to get last time window selected
-    let lastWindowTime = localStorage.getItem('selectedWindowTime');
+    let lastWindowTime = Number.parseInt(
+      localStorage.getItem('selectedWindowTime')
+    );
     if (lastWindowTime) {
       console.log(lastWindowTime);
       selectWindowTime(lastWindowTime);
@@ -526,17 +528,11 @@ export const BettingProvider = ({ children }) => {
   const updatePricesForWindow = async (where, _windowNumber) => {
     if (active && contract) {
       if (Number.isInteger(_windowNumber) === false) return;
-      var prices;
-      // TODO: pegar os preços do contrato certo
-      if (contract._address === avaxContract._address) {
-        prices = await getPastEvents(contract, _windowNumber, 'PriceUpdated');
-      } else if (contract._address === kittyContract._address) {
-        prices = await getPastEvents(
-          avaxContract,
-          _windowNumber,
-          'PriceUpdated'
-        );
-      }
+      let prices = await getPastEvents(
+        avaxContract,
+        _windowNumber,
+        'PriceUpdated'
+      );
 
       let initialPrice =
         prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
@@ -825,7 +821,7 @@ export const BettingProvider = ({ children }) => {
           if (userBetList > 0) {
             // userBetList is BettingWindow #
             var targetContract = null;
-            if (selectWindowTime == 5) {
+            if (selectedWindowTime === 5) {
               targetContract = avaxContract;
             } else {
               targetContract = contract;
