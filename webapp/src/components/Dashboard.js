@@ -57,6 +57,8 @@ export const Dashboard = () => {
     contract,
     selectedCurrency,
     selectCurrency,
+    selectedWindowTime,
+    selectWindowTime,
     userAllowance,
     contractPermissionRequested,
   } = useBetting();
@@ -336,6 +338,8 @@ export const Dashboard = () => {
       <ControlBar
         selectedCurrency={selectedCurrency}
         selectCurrency={selectCurrency}
+        selectedWindowTime={selectedWindowTime / 1} // Forces cast to int
+        selectWindowTime={selectWindowTime}
       ></ControlBar>
 
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">

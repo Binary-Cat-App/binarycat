@@ -65,7 +65,6 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
             BetLibrary: betLibrary.address
         },
         log: true,
-        skipIfAlreadyDeployed: true,
     });
 
     let dailyPool = await deploy('DailyPool', {
