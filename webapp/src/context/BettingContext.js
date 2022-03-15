@@ -943,8 +943,6 @@ export const BettingProvider = ({ children }) => {
 
   const getPastEvents = async (selectedContract, windowNumber, event) => {
     let blockNumber = await library.eth.getBlockNumber();
-    console.log('BLOCK NUMBER:::');
-    console.log(blockNumber);
     var prices;
     prices = await selectedContract
       .getPastEvents(event, {
@@ -959,8 +957,6 @@ export const BettingProvider = ({ children }) => {
   // Return Bets for that window
   const getBets = async (currency, windowNumber, account) => {
     let blockNumber = await library.eth.getBlockNumber();
-    console.log('BLOCK NUMBER:::');
-    console.log(blockNumber);
     if (currency === CURRENCY_AVAX) {
       const result = await contract
         .getPastEvents('NewBet', {
