@@ -577,10 +577,10 @@ export const BettingProvider = ({ children }) => {
               }
             }
             // Bets Amount
-            const transactionBetAmount = transaction.returnValues.value.toString();
-            const weiTransactionBetAmount = weiToCurrency(
-              transactionBetAmount
-            ).toFixed(2);
+            const transactionBetAmount =
+              transaction.returnValues.value.toString();
+            const weiTransactionBetAmount =
+              weiToCurrency(transactionBetAmount).toFixed(2);
             if (direction === 1) {
               _betAmountUp += parseFloat(weiTransactionBetAmount);
             } else {
@@ -942,11 +942,14 @@ export const BettingProvider = ({ children }) => {
   // MARK: Currency contract interation
 
   const getPastEvents = async (selectedContract, windowNumber, event) => {
+    let blockNumber = await library.eth.getBlockNumber();
+    console.log('BLOCK NUMBER:::');
+    console.log(blockNumber);
     var prices;
     prices = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
-        fromBlock: 0,
+        fromBlock: blockNumber - 2000,
         toBlock: 'latest',
       })
       .then((result) => result);
@@ -955,11 +958,14 @@ export const BettingProvider = ({ children }) => {
 
   // Return Bets for that window
   const getBets = async (currency, windowNumber, account) => {
+    let blockNumber = await library.eth.getBlockNumber();
+    console.log('BLOCK NUMBER:::');
+    console.log(blockNumber);
     if (currency === CURRENCY_AVAX) {
       const result = await contract
         .getPastEvents('NewBet', {
           filter: { windowNumber: windowNumber },
-          fromBlock: 0,
+          fromBlock: blockNumber - 2000,
           toBlock: 'latest',
         })
         .then((result) => result);
@@ -969,7 +975,7 @@ export const BettingProvider = ({ children }) => {
       const result = await contract
         .getPastEvents('NewBet', {
           filter: { windowNumber: windowNumber },
-          fromBlock: 0,
+          fromBlock: blockNumber - 2000,
           toBlock: 'latest',
         })
         .then((result) => result);
