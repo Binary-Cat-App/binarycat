@@ -16,8 +16,7 @@ import { io } from 'socket.io-client';
 import BinaryBet from '../contracts/BinaryBet.json';
 import KittyPool from '../contracts/KittyPool.json';
 import BinToken from '../contracts/BinToken.json';
-// NEW:
-// import BinToken from '../contracts/BinToken.json';
+import DailyContract from '../contracts/DailyPool.json';
 
 const BettingContext = createContext();
 
@@ -38,6 +37,10 @@ export const BettingProvider = ({ children }) => {
   const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
   const kittyContract = new web3Eth.Contract(KittyPool.abi, KittyPool.address);
   const tokenContract = new web3Eth.Contract(BinToken.abi, BinToken.address);
+  const dailyContract = new web3Eth.Contract(
+    DailyContract.abi,
+    DailyContract.address
+  );
 
   const [contract, setContract] = useState(null);
   const [selectedCurrency, selectCurrency] = useState(null);
@@ -64,15 +67,33 @@ export const BettingProvider = ({ children }) => {
   const [socketData, setSocketData] = useState([]);
 
   const changeContract = async () => {
-    console.log('CHANGE CONTRACTY');
-    console.log(selectedCurrency);
-    console.log(selectedWindowTime);
-
     if (!selectedCurrency || !selectedWindowTime) return;
     if (selectedCurrency === CURRENCY_AVAX) {
-      setContract(avaxContract);
+      if (selectedWindowTime == 5) {
+        setContract(avaxContract);
+      } else if (selectedWindowTime == 1440) {
+        setContract(dailyContract);
+      }
     } else if (selectedCurrency === CURRENCY_KITTY) {
       setContract(kittyContract);
+    }
+  };
+
+  const configTimes = () => {
+    avaxContract.methods
+      .deployTimestamp()
+      .call()
+      .then((response) => setInitTimestamp(Number.parseInt(response)));
+    if (selectedWindowTime == 5) {
+      avaxContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
+    } else {
+      dailyContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
     }
   };
 
@@ -80,16 +101,7 @@ export const BettingProvider = ({ children }) => {
   useEffect(() => {
     console.log('Initializing...');
     if (active && account) {
-      // TODO: select the correct timestamp according to the time window
-      avaxContract.methods
-        .deployTimestamp()
-        .call()
-        .then((response) => setInitTimestamp(Number.parseInt(response)));
-
-      avaxContract.methods
-        .windowDuration()
-        .call()
-        .then((response) => setWindowDuration(Number.parseInt(response)));
+      configTimes();
     }
     // Check for the last defined currency
     let lastSelected = localStorage.getItem('selectedCurrency');
@@ -112,9 +124,6 @@ export const BettingProvider = ({ children }) => {
 
     // Tries to get last time window selected
     let lastWindowTime = localStorage.getItem('selectedWindowTime');
-    console.log('AGORA VAI');
-    console.log(lastWindowTime);
-    console.log(windows);
     if (lastWindowTime) {
       console.log(lastWindowTime);
       selectWindowTime(lastWindowTime);
@@ -130,7 +139,6 @@ export const BettingProvider = ({ children }) => {
 
   // When window time changes
   useEffect(() => {
-    console.log('AQUI ATÉ QUE TA PASSANDO');
     if (selectedWindowTime) {
       localStorage.setItem('selectedTimeWindow', selectedWindowTime);
     }
@@ -139,10 +147,14 @@ export const BettingProvider = ({ children }) => {
 
   useEffect(() => {
     if (!account || !contract) return;
-    if (selectedCurrency !== CURRENCY_AVAX) {
+    if (!(selectedCurrency == CURRENCY_AVAX && selectedWindowTime == 5)) {
       checkContractAllownce();
     }
   }, [account, contract]);
+
+  useEffect(() => {
+    configTimes();
+  }, [contract]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -515,6 +527,7 @@ export const BettingProvider = ({ children }) => {
     if (active && contract) {
       if (Number.isInteger(_windowNumber) === false) return;
       var prices;
+      // TODO: pegar os preços do contrato certo
       if (contract._address === avaxContract._address) {
         prices = await getPastEvents(contract, _windowNumber, 'PriceUpdated');
       } else if (contract._address === kittyContract._address) {
@@ -811,7 +824,13 @@ export const BettingProvider = ({ children }) => {
 
           if (userBetList > 0) {
             // userBetList is BettingWindow #
-            const windowBetPrices = await avaxContract.methods
+            var targetContract = null;
+            if (selectWindowTime == 5) {
+              targetContract = avaxContract;
+            } else {
+              targetContract = contract;
+            }
+            const windowBetPrices = await targetContract.methods
               .getWindowBetPrices(userBetList)
               .call({
                 from: account,
