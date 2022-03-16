@@ -314,7 +314,6 @@ export const Dashboard = () => {
             callback();
           });
       } else {
-        console.log(_bet.toString());
         contract.methods
           .placeBet(direction, _bet.toString())
           .send({
