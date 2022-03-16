@@ -314,11 +314,11 @@ export const Dashboard = () => {
             callback();
           });
       } else {
+        console.log(_bet.toString());
         contract.methods
           .placeBet(direction, _bet.toString())
           .send({
             from: account,
-            // value: _bet.toString(),
           })
           .on('transactionHash', function (hash) {
             setIsOpenForBetting(true);
@@ -389,6 +389,7 @@ export const Dashboard = () => {
                     onBet={onBetHandler}
                     isOpenForBetting={isOpenForBetting}
                     selectedCurrency={selectedCurrency}
+                    selectedWindowTime={selectedWindowTime}
                     userAllowance={userAllowance}
                     permissionRequested={contractPermissionRequested}
                   />
