@@ -580,69 +580,33 @@ export const BettingProvider = ({ children }) => {
       var _poolTotalDown = 0;
       var _userBets = 0;
 
-      const result = await getBets(selectedCurrency, _windowNumber, account);
+      const poolValues = await getPoolValues(_windowNumber);
+      _poolTotalUp = weiToCurrency(poolValues[1]);
+      _poolTotalDown = weiToCurrency(poolValues[0]);
+      _poolSize = _poolTotalUp + _poolTotalDown;
 
-      if (result.length > 0) {
-        // poolSize
-        _poolSize = result.reduce((acc, current) => {
-          return acc + weiToCurrency(current.returnValues.value.toString());
-        }, 0);
-        _poolSize = _poolSize.toFixed(2);
+      const userBetAmounts = await getUserBets(_windowNumber, account);
+      _betAmountUp = weiToCurrency(userBetAmounts[1]);
+      _betAmountDown = weiToCurrency(userBetAmounts[0]);
+      _betAmount = _betAmountUp + _betAmountDown;
 
-        // poolTotalUp
-        _poolTotalUp = result
-          .filter((key) => Number.parseInt(key.returnValues.side) === 1)
-          .reduce((acc, current) => {
-            return acc + weiToCurrency(current.returnValues.value.toString());
-          }, 0);
-        _poolTotalUp = _poolTotalUp.toFixed(2);
-
-        // poolTotalDown
-        _poolTotalDown = result
-          .filter((key) => Number.parseInt(key.returnValues.side) === 0)
-          .reduce((acc, current) => {
-            return acc + weiToCurrency(current.returnValues.value.toString());
-          }, 0);
-        _poolTotalDown = _poolTotalDown.toFixed(2);
-
-        // Filter user bets
-        const userBets = result.filter(
-          (key) => key.returnValues.user.toLowerCase() === account.toLowerCase()
-        );
-        _userBets = userBets.length;
-        if (userBets.length > 0) {
-          // The user could made lots of bets in this window
-          userBets.forEach((transaction) => {
-            // Bets direction
-            const directionValue = transaction.returnValues.side;
-            const direction = Number.parseInt(directionValue);
-            const transactionBetDirection = direction === 1 ? 'up' : 'down';
-            if (_betDirection === '') {
-              _betDirection = transactionBetDirection;
-            } else {
-              if (_betDirection !== transactionBetDirection) {
-                _betDirection = 'both';
-              }
-            }
-            // Bets Amount
-            const transactionBetAmount =
-              transaction.returnValues.value.toString();
-            const weiTransactionBetAmount =
-              weiToCurrency(transactionBetAmount).toFixed(2);
-            if (direction === 1) {
-              _betAmountUp += parseFloat(weiTransactionBetAmount);
-            } else {
-              _betAmountDown += parseFloat(weiTransactionBetAmount);
-            }
-          });
-          _betAmount += _betAmountUp + _betAmountDown;
-          _betAmount = _betAmount.toFixed(2);
-          _betAmountUp = _betAmountUp.toFixed(2);
-          _betAmountDown = _betAmountDown.toFixed(2);
-        }
+      if (_betAmountUp > 0 && _betAmountDown === 0) {
+        _betDirection = 'up';
+      } else if (_betAmountUp === 0 && _betAmountDown > 0) {
+        _betDirection = 'down';
+      } else if (_betAmountUp > 0 && _betAmountDown > 0) {
+        _betDirection = 'both';
       }
+
+      _poolTotalUp = _poolTotalUp.toFixed(2);
+      _poolTotalDown = _poolTotalDown.toFixed(2);
+      _poolSize = _poolSize.toFixed(2);
+      _betAmountUp = _betAmountUp.toFixed(2);
+      _betAmountDown = _betAmountDown.toFixed(2);
+      _betAmount = _betAmount.toFixed(2);
+
       updatePoolAndAccountsData(where, {
-        accounts: result,
+        accounts: [],
         _betAmount,
         _betAmountUp,
         _betAmountDown,
@@ -660,7 +624,6 @@ export const BettingProvider = ({ children }) => {
       case 'Opened':
         if (
           // Check if something changed
-          Number(openedAccountsData.accounts) !== details.accounts.length ||
           parseFloat(openedPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
           parseFloat(openedPoolData.betAmountUp) !==
@@ -677,7 +640,8 @@ export const BettingProvider = ({ children }) => {
           parseFloat(openedPoolData.poolSize) !== parseFloat(details._poolSize)
         ) {
           setOpenedPoolData(
-            details.accounts.length > 0
+            // TODO: Substituir com o numero de apostas
+            true
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -703,7 +667,6 @@ export const BettingProvider = ({ children }) => {
       case 'Ongoing':
         if (
           // Check if something changed
-          Number(ongoingAccountsData.accounts) !== details.accounts.length ||
           parseFloat(ongoingPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
           parseFloat(ongoingPoolData.betAmountUp) !==
@@ -720,7 +683,8 @@ export const BettingProvider = ({ children }) => {
           parseFloat(ongoingPoolData.poolSize) !== parseFloat(details._poolSize)
         ) {
           setOngoingPoolData(
-            details.accounts.length > 0
+            // TODO: Substituir com o numero de apostas
+            true > 0
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -746,7 +710,6 @@ export const BettingProvider = ({ children }) => {
       case 'Finalized':
         if (
           // Check if something changed
-          Number(finalizedAccountsData.accounts) !== details.accounts.length ||
           parseFloat(finalizedPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
           parseFloat(finalizedPoolData.betAmountUp) !==
@@ -764,7 +727,8 @@ export const BettingProvider = ({ children }) => {
             parseFloat(details._poolSize)
         ) {
           setFinalizedPoolData(
-            details.accounts.length > 0
+            // TODO: Substituir com o numero de apostas
+            true > 0
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -994,7 +958,6 @@ export const BettingProvider = ({ children }) => {
   };
 
   // MARK: Currency contract interation
-
   const getPastEvents = async (selectedContract, windowNumber, event) => {
     let blockNumber = await library.eth.getBlockNumber();
     var prices;
@@ -1031,6 +994,22 @@ export const BettingProvider = ({ children }) => {
         .then((result) => result);
       return result;
     }
+  };
+
+  const getUserBets = async (windowNumber, address) => {
+    const result = await contract.methods
+      .getUserStake(windowNumber, address)
+      .call()
+      .then((result) => result);
+    return result;
+  };
+
+  const getPoolValues = async (windowNumber) => {
+    const result = await contract.methods
+      .getPoolValues(windowNumber)
+      .call()
+      .then((result) => result);
+    return result;
   };
 
   const value = {
