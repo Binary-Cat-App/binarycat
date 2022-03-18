@@ -259,12 +259,12 @@ export const Bet = ({
           </div>
         </div>
 
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <span className="text-xs text-gray-300 w-1/4">Total bets</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{accounts}</span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

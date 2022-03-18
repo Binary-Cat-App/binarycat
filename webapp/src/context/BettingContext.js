@@ -528,6 +528,14 @@ export const BettingProvider = ({ children }) => {
   const updatePricesForWindow = async (where, _windowNumber) => {
     if (active && contract) {
       if (Number.isInteger(_windowNumber) === false) return;
+
+      var targetContract = null;
+      if (selectedWindowTime === 5) {
+        targetContract = avaxContract;
+      } else {
+        targetContract = contract;
+      }
+
       let prices = await getPastEvents(
         avaxContract,
         _windowNumber,
@@ -684,7 +692,7 @@ export const BettingProvider = ({ children }) => {
         ) {
           setOngoingPoolData(
             // TODO: Substituir com o numero de apostas
-            true > 0
+            true
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -728,7 +736,7 @@ export const BettingProvider = ({ children }) => {
         ) {
           setFinalizedPoolData(
             // TODO: Substituir com o numero de apostas
-            true > 0
+            true
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
