@@ -29,8 +29,6 @@ describe("KITTY pool", function () {
         Library = await ethers.getContractFactory("BetLibrary")
         lib = await Library.deploy();
 
-        BinaryBet = await ethers.getContractFactory("BinaryBet");
-        BinaryStaking = await ethers.getContractFactory("BinaryStaking");
         BinToken = await ethers.getContractFactory("BinToken");
         DailyPool = await ethers.getContractFactory("DailyPool", {
             libraries: {
@@ -39,13 +37,9 @@ describe("KITTY pool", function () {
         ,});
 
         token = await BinToken.deploy(owner.address);
-        stk = await BinaryStaking.deploy(token.address);
-        bet = await BinaryBet.deploy(30, 2, aggregatorAddress, stk.address, token.address, 332);
-        dpool = await DailyPool.deploy(8640, token.address, bet.address)
+        dpool = await DailyPool.deploy(8640, token.address, aggregatorAddress)
 
         await mockAggregator.mock.latestRoundData.returns(100, 100,100,100,100);
-
-        token.connect(owner).transfer(bet.address, 1000)
 
         token.connect(owner).transfer(account1.address, 100000)
         token.connect(owner).transfer(account2.address, 100000)
@@ -123,7 +117,7 @@ describe("KITTY pool", function () {
         await provider.send("evm_mine");
 
         await mockAggregator.mock.latestRoundData.returns(101, 101,101,101,101);
-        await bet.connect(owner).updatePrice()
+        await dpool.connect(owner).updatePrice()
 
         await provider.send("evm_increaseTime", [
                 Number(8640),
@@ -131,7 +125,7 @@ describe("KITTY pool", function () {
         await provider.send("evm_mine");
 
         await mockAggregator.mock.latestRoundData.returns(102, 102,102,102,102);
-        await bet.connect(owner).updatePrice()
+        await dpool.connect(owner).updatePrice()
         
         await dpool.connect(owner).updateBalance(account3.address)
         await dpool.connect(owner).updateBalance(account2.address)

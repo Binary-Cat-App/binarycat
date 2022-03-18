@@ -13,18 +13,21 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./BinaryBet.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./BetLibrary.sol";
 import "./BinToken.sol";
 
 contract DailyPool {
-    BinaryBet immutable binarybet;
+    AggregatorV3Interface internal priceFeed;
     BinToken immutable token;
 
     mapping(address => BetLibrary.User) user;
     mapping(uint256 => BetLibrary.Pool) public pools; //windowNumber => Pool
 
     uint public windowDuration;
+    uint public deployTimestamp;
+
+    mapping(uint => uint) public windowPrice;
 
     //EVENTS
     event NewBet(
@@ -38,28 +41,29 @@ contract DailyPool {
         address indexed user,
         uint256 gain
     );
+    event PriceUpdated(uint256 indexed windowNumber, uint256 price);
 
     constructor(
         uint _windowDuration,
         address tokenContract,
-        address binarybetContract
+        address aggregator
     ) {
-        binarybet = BinaryBet(binarybetContract);
+        priceFeed = AggregatorV3Interface(aggregator);
         token = BinToken(tokenContract);
         windowDuration = _windowDuration;
+        deployTimestamp = block.timestamp;
     }
 
     function placeBet(uint8 side, uint value) external payable {
         require(value > 0, "Only strictly positive values");
-        binarybet.updatePrice();
+        updatePrice();
         updateBalance(msg.sender);
 
         token.transferFrom(msg.sender, address(this), value);
         uint256 windowNumber = BetLibrary.getWindowNumber(
             block.timestamp,
             windowDuration,
-            binarybet.deployTimestamp()
-        );
+            deployTimestamp);
 
 
         BetLibrary.User storage sender = user[msg.sender];
@@ -102,8 +106,7 @@ contract DailyPool {
             uint256 currentWindow = BetLibrary.getWindowNumber(
                 block.timestamp,
                 windowDuration,
-                binarybet.deployTimestamp()
-            );
+                deployTimestamp);
             (
                 uint256 referencePrice,
                 uint256 settlementPrice
@@ -180,20 +183,31 @@ contract DailyPool {
         }
     }
 
-    function getWindowBetPrices (uint windowNumber) public returns (uint, uint) {
-        uint initialTimestamp = BetLibrary.getWindowStartingTimestamp(windowNumber,
-                                                                      windowDuration,
-                                                                      binarybet.deployTimestamp()
-                                                                     );
-        uint finalTimestamp = initialTimestamp + windowDuration;
-
-        //Window number from original binarybet contract.
-        uint initialWindow = BetLibrary.getWindowNumber(initialTimestamp, binarybet.windowDuration(), binarybet.deployTimestamp());
-        uint finalWindow = BetLibrary.getWindowNumber(finalTimestamp, binarybet.windowDuration(), binarybet.deployTimestamp());
-
-        return (binarybet.windowPrice(initialWindow), binarybet.windowPrice(finalWindow));
-        
+    function updatePrice() public {
+        uint256 window = BetLibrary.getWindowNumber(
+            block.timestamp,
+            windowDuration,
+            deployTimestamp
+        );
+        if (windowPrice[window] == 0) {
+            windowPrice[window] = priceOracle();
+            emit PriceUpdated(window, windowPrice[window]);
+        }
     }
+
+    function priceOracle() internal view returns (uint256) {
+        (, int256 price, , , ) = priceFeed.latestRoundData();
+        return uint256(price);
+    }
+
+    function getWindowBetPrices(uint256 window)
+        public
+        view
+        returns (uint256, uint256)
+    {
+        return (windowPrice[window + 1], windowPrice[window + 2]);
+    }
+
     function getPoolValues(uint256 windowNumber)
         public
         view
