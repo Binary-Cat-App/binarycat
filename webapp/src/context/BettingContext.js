@@ -69,31 +69,36 @@ export const BettingProvider = ({ children }) => {
   const changeContract = async () => {
     if (!selectedCurrency || !selectedWindowTime) return;
     if (selectedCurrency === CURRENCY_AVAX) {
-      if (selectedWindowTime == 5) {
-        setContract(avaxContract);
-      } else if (selectedWindowTime == 1440) {
+      setContract(avaxContract);
+    } else if (selectedCurrency === CURRENCY_KITTY) {
+      if (selectedWindowTime === 5) {
+        setContract(kittyContract);
+      } else if (selectedWindowTime === 1440) {
         setContract(dailyContract);
       }
-    } else if (selectedCurrency === CURRENCY_KITTY) {
-      setContract(kittyContract);
     }
   };
 
   const configTimes = () => {
-    avaxContract.methods
-      .deployTimestamp()
-      .call()
-      .then((response) => setInitTimestamp(Number.parseInt(response)));
-    if (selectedWindowTime == 5) {
+    if (selectedWindowTime === 5) {
       avaxContract.methods
         .windowDuration()
         .call()
         .then((response) => setWindowDuration(Number.parseInt(response)));
+      avaxContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
     } else {
       dailyContract.methods
         .windowDuration()
         .call()
         .then((response) => setWindowDuration(Number.parseInt(response)));
+
+      dailyContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
     }
   };
 
@@ -127,15 +132,16 @@ export const BettingProvider = ({ children }) => {
       localStorage.getItem('selectedWindowTime')
     );
     if (lastWindowTime) {
-      console.log(lastWindowTime);
       selectWindowTime(lastWindowTime);
     } else {
       let value = windows[0].value;
+      localStorage.setItem('selectedWindowTime', value);
       // If value didnt change, change the contract
       if (value == selectedWindowTime) {
         changeContract();
+      } else {
+        selectWindowTime(value);
       }
-      selectWindowTime(value);
     }
   }, [selectedCurrency]);
 
@@ -537,7 +543,7 @@ export const BettingProvider = ({ children }) => {
       }
 
       let prices = await getPastEvents(
-        avaxContract,
+        targetContract,
         _windowNumber,
         'PriceUpdated'
       );
@@ -589,6 +595,7 @@ export const BettingProvider = ({ children }) => {
       var _userBets = 0;
 
       const poolValues = await getPoolValues(_windowNumber);
+
       _poolTotalUp = weiToCurrency(poolValues[1]);
       _poolTotalDown = weiToCurrency(poolValues[0]);
       _poolSize = _poolTotalUp + _poolTotalDown;
@@ -968,40 +975,14 @@ export const BettingProvider = ({ children }) => {
   // MARK: Currency contract interation
   const getPastEvents = async (selectedContract, windowNumber, event) => {
     let blockNumber = await library.eth.getBlockNumber();
-    var prices;
-    prices = await selectedContract
+    let result = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
         fromBlock: blockNumber - 2000,
         toBlock: 'latest',
       })
       .then((result) => result);
-    return prices;
-  };
-
-  // Return Bets for that window
-  const getBets = async (currency, windowNumber, account) => {
-    let blockNumber = await library.eth.getBlockNumber();
-    if (currency === CURRENCY_AVAX) {
-      const result = await contract
-        .getPastEvents('NewBet', {
-          filter: { windowNumber: windowNumber },
-          fromBlock: blockNumber - 2000,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
-      return result;
-    } else if (currency === CURRENCY_KITTY) {
-      // const betContract = await contractObj.
-      const result = await contract
-        .getPastEvents('NewBet', {
-          filter: { windowNumber: windowNumber },
-          fromBlock: blockNumber - 2000,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
-      return result;
-    }
+    return result;
   };
 
   const getUserBets = async (windowNumber, address) => {
