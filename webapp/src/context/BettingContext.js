@@ -94,7 +94,6 @@ export const BettingProvider = ({ children }) => {
         .windowDuration()
         .call()
         .then((response) => setWindowDuration(Number.parseInt(response)));
-
       dailyContract.methods
         .deployTimestamp()
         .call()
@@ -110,7 +109,6 @@ export const BettingProvider = ({ children }) => {
     }
     // Check for the last defined currency
     let lastSelected = localStorage.getItem('selectedCurrency');
-
     if (lastSelected) {
       selectCurrency(lastSelected);
     } else {
@@ -126,7 +124,6 @@ export const BettingProvider = ({ children }) => {
       localStorage.setItem('selectedCurrency', selectedCurrency);
     }
     let windows = global.currencyWindows.timeOptions[selectedCurrency];
-
     // Tries to get last time window selected
     let lastWindowTime = Number.parseInt(
       localStorage.getItem('selectedWindowTime')
@@ -541,19 +538,20 @@ export const BettingProvider = ({ children }) => {
       } else {
         targetContract = contract;
       }
+      console.log(_windowNumber);
 
-      let prices = await getPastEvents(
-        targetContract,
-        _windowNumber,
-        'PriceUpdated'
-      );
+      let prices = await getPrices(_windowNumber);
+      console.log('AQUI CARAI');
+      console.log(prices);
+      // let prices = await getPastEvents(
+      //   targetContract,
+      //   _windowNumber,
+      //   'PriceUpdated'
+      // );
 
-      let initialPrice =
-        prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
+      let initialPrice = prices[0] > 0 ? prices[0] / 100000000 : '0.00';
       let finalPrice =
-        where === 'Finalized' && prices.length > 1
-          ? prices[1].returnValues.price / 100000000
-          : '0.00';
+        where === 'Finalized' && prices[1] > 1 ? prices[1] / 100000000 : '0.00';
 
       switch (where) {
         case 'Ongoing':
@@ -981,6 +979,14 @@ export const BettingProvider = ({ children }) => {
         fromBlock: blockNumber - 2000,
         toBlock: 'latest',
       })
+      .then((result) => result);
+    return result;
+  };
+
+  const getPrices = async (windowNumber) => {
+    const result = await contract.methods
+      .getWindowBetPrices(windowNumber)
+      .call()
       .then((result) => result);
     return result;
   };
