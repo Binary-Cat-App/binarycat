@@ -538,20 +538,31 @@ export const BettingProvider = ({ children }) => {
       } else {
         targetContract = contract;
       }
-      console.log(_windowNumber);
 
-      let prices = await getPrices(_windowNumber);
-      console.log('AQUI CARAI');
-      console.log(prices);
-      // let prices = await getPastEvents(
-      //   targetContract,
-      //   _windowNumber,
-      //   'PriceUpdated'
-      // );
+      var prices;
+      var initialPrice;
+      var finalPrice;
 
-      let initialPrice = prices[0] > 0 ? prices[0] / 100000000 : '0.00';
-      let finalPrice =
-        where === 'Finalized' && prices[1] > 1 ? prices[1] / 100000000 : '0.00';
+      if (selectedWindowTime === 5) {
+        prices = await getPastEvents(
+          targetContract,
+          _windowNumber,
+          'PriceUpdated'
+        );
+        initialPrice =
+          prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
+        finalPrice =
+          where === 'Finalized' && prices.length > 1
+            ? prices[1].returnValues.price / 100000000
+            : '0.00';
+      } else {
+        prices = await getPrices(_windowNumber);
+        initialPrice = prices[0] > 0 ? prices[0] / 100000000 : '0.00';
+        finalPrice =
+          where === 'Finalized' && prices[1] > 1
+            ? prices[1] / 100000000
+            : '0.00';
+      }
 
       switch (where) {
         case 'Ongoing':
