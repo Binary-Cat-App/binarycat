@@ -155,9 +155,6 @@ describe("KITTY pool", function () {
         let balance2Final = await token.balanceOf(account2.address)
         let burnBalance = await token.balanceOf(burn.address);
 
-        console.log(balance2Initial.toString(), balance2Final.toString())
-        console.log(balance3Initial.toString(), balance3Final.toString())
-
         expect((balance2Final.sub(balance2Initial)).toString()).to.equal('192')
         expect((balance3Final.sub(balance3Initial)).toString()).to.equal('-200')
         expect(burnBalance.toString()).to.equal('8')
