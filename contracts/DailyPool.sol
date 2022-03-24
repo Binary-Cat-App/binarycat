@@ -178,8 +178,8 @@ contract DailyPool {
         } else if (result == BetLibrary.BetResult.tie) {
             gain = upStake + downStake;
         } else {
-            //If the winning pool is empty, all stake goes to the fees.
-            gain = 0;
+            //if winning pool is empty the losers get money back.
+            gain = upStake + downStake;
         }
     }
 
