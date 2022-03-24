@@ -27,6 +27,7 @@ export const Bet = ({
   chart,
   userBets,
   selectedCurrency,
+  selectedWindowTime,
   userAllowance,
   permissionRequested,
 }) => {
@@ -141,7 +142,7 @@ export const Bet = ({
 
         <div className="-mx-2 flex-grow ">
           {status === 'open' &&
-          selectedCurrency !== CURRENCY_AVAX &&
+          (selectedCurrency !== CURRENCY_AVAX || selectedWindowTime !== 5) &&
           userAllowance === '0' ? (
             <PermissionRequest
               selectedCurrency={selectedCurrency}
@@ -258,12 +259,12 @@ export const Bet = ({
           </div>
         </div>
 
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <span className="text-xs text-gray-300 w-1/4">Total bets</span>
           <div className="w-3/4 flex items-center">
             <span className="font-digits text-xl xl:text-2xl">{accounts}</span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

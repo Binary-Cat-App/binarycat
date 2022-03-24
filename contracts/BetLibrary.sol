@@ -97,13 +97,13 @@ library BetLibrary {
     function getWindowStartingTimestamp(
         uint256 windowNumber,
         uint256 _windowDuration,
-        uint256 _currentTimestamp
+        uint256 _deployTimestamp
     ) public pure returns (uint256 startingTimestamp) {
         //deployTimestamp + (n-1 - (offset + 1))*windowDuration
         startingTimestamp =
-            _currentTimestamp +
+            _deployTimestamp +
             (windowNumber - 1) *
-            _windowDuration;
+            _deployTimestamp;
     }
 
     function computeFee(uint256 value, uint256 _fee)

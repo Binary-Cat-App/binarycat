@@ -57,6 +57,8 @@ export const Dashboard = () => {
     contract,
     selectedCurrency,
     selectCurrency,
+    selectedWindowTime,
+    selectWindowTime,
     userAllowance,
     contractPermissionRequested,
   } = useBetting();
@@ -299,7 +301,7 @@ export const Dashboard = () => {
 
       const _bet = currencyToWei(value, true);
       // Check currency
-      if (selectedCurrency === CURRENCY_AVAX) {
+      if (selectedCurrency === CURRENCY_AVAX && selectedWindowTime === 5) {
         contract.methods
           .placeBet(direction)
           .send({
@@ -311,12 +313,11 @@ export const Dashboard = () => {
             setIsBetPlaced(true);
             callback();
           });
-      } else if (selectedCurrency === CURRENCY_KITTY) {
+      } else {
         contract.methods
           .placeBet(direction, _bet.toString())
           .send({
             from: account,
-            // value: _bet.toString(),
           })
           .on('transactionHash', function (hash) {
             setIsOpenForBetting(true);
@@ -336,6 +337,8 @@ export const Dashboard = () => {
       <ControlBar
         selectedCurrency={selectedCurrency}
         selectCurrency={selectCurrency}
+        selectedWindowTime={selectedWindowTime / 1} // Forces cast to int
+        selectWindowTime={selectWindowTime}
       ></ControlBar>
 
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
@@ -385,6 +388,7 @@ export const Dashboard = () => {
                     onBet={onBetHandler}
                     isOpenForBetting={isOpenForBetting}
                     selectedCurrency={selectedCurrency}
+                    selectedWindowTime={selectedWindowTime}
                     userAllowance={userAllowance}
                     permissionRequested={contractPermissionRequested}
                   />

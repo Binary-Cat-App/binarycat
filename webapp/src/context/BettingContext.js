@@ -16,6 +16,7 @@ import { io } from 'socket.io-client';
 import BinaryBet from '../contracts/BinaryBet.json';
 import KittyPool from '../contracts/KittyPool.json';
 import BinToken from '../contracts/BinToken.json';
+import DailyContract from '../contracts/DailyPool.json';
 
 const BettingContext = createContext();
 
@@ -37,9 +38,15 @@ export const BettingProvider = ({ children }) => {
   const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
   const kittyContract = new web3Eth.Contract(KittyPool.abi, KittyPool.address);
   const tokenContract = new web3Eth.Contract(BinToken.abi, BinToken.address);
+  const dailyContract = new web3Eth.Contract(
+    DailyContract.abi,
+    DailyContract.address
+  );
 
   const [contract, setContract] = useState(null);
   const [selectedCurrency, selectCurrency] = useState(null);
+  const [selectedWindowTime, selectWindowTime] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [unsettledBets, setUnsettledBets] = useState(0);
   const [unsettledWins, setUnsettledWins] = useState(0);
@@ -61,11 +68,37 @@ export const BettingProvider = ({ children }) => {
   const [socketData, setSocketData] = useState([]);
 
   const changeContract = async () => {
-    if (!selectedCurrency) return;
+    if (!selectedCurrency || !selectedWindowTime) return;
     if (selectedCurrency === CURRENCY_AVAX) {
       setContract(avaxContract);
     } else if (selectedCurrency === CURRENCY_KITTY) {
-      setContract(kittyContract);
+      if (selectedWindowTime === 5) {
+        setContract(kittyContract);
+      } else if (selectedWindowTime === 1440) {
+        setContract(dailyContract);
+      }
+    }
+  };
+
+  const configTimes = () => {
+    if (selectedWindowTime === 5) {
+      avaxContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
+      avaxContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
+    } else {
+      dailyContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
+      dailyContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
     }
   };
 
@@ -73,15 +106,7 @@ export const BettingProvider = ({ children }) => {
   useEffect(() => {
     console.log('Initializing...');
     if (active && account) {
-      avaxContract.methods
-        .deployTimestamp()
-        .call()
-        .then((response) => setInitTimestamp(Number.parseInt(response)));
-
-      avaxContract.methods
-        .windowDuration()
-        .call()
-        .then((response) => setWindowDuration(Number.parseInt(response)));
+      configTimes();
     }
     // Check for the last defined currency
     let lastSelected = localStorage.getItem('selectedCurrency');
@@ -92,19 +117,50 @@ export const BettingProvider = ({ children }) => {
     }
   }, []);
 
-  // Contract Initials
+  // When currency changes
   useEffect(() => {
-    changeContract();
+    if (!selectedCurrency) return;
     // Save the currency
-    localStorage.setItem('selectedCurrency', selectedCurrency);
+    if (selectedCurrency) {
+      localStorage.setItem('selectedCurrency', selectedCurrency);
+    }
+    let windows = global.currencyWindows.timeOptions[selectedCurrency];
+    // Tries to get last time window selected
+    let lastWindowTime = Number.parseInt(
+      localStorage.getItem('selectedWindowTime')
+    );
+    if (lastWindowTime) {
+      selectWindowTime(lastWindowTime);
+    } else {
+      let value = windows[0].value;
+      localStorage.setItem('selectedWindowTime', value);
+      // If value didnt change, change the contract
+      if (value == selectedWindowTime) {
+        changeContract();
+      } else {
+        selectWindowTime(value);
+      }
+    }
   }, [selectedCurrency]);
+
+  // When window time changes
+  useEffect(() => {
+    if (selectedWindowTime) {
+      localStorage.setItem('selectedTimeWindow', selectedWindowTime);
+    }
+    changeContract();
+  }, [selectedWindowTime]);
 
   useEffect(() => {
     if (!account || !contract) return;
-    if (selectedCurrency !== CURRENCY_AVAX) {
+    if (!(selectedCurrency == CURRENCY_AVAX && selectedWindowTime == 5)) {
       checkContractAllownce();
     }
   }, [account, contract]);
+
+  useEffect(() => {
+    configTimes();
+  }, [contract]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -474,25 +530,40 @@ export const BettingProvider = ({ children }) => {
 
   // initialPrice , finalPrice
   const updatePricesForWindow = async (where, _windowNumber) => {
-    if (active) {
+    if (active && contract) {
       if (Number.isInteger(_windowNumber) === false) return;
+
+      var targetContract = null;
+      if (selectedWindowTime === 5) {
+        targetContract = avaxContract;
+      } else {
+        targetContract = contract;
+      }
+
       var prices;
-      if (selectedCurrency === CURRENCY_AVAX) {
-        prices = await getPastEvents(contract, _windowNumber, 'PriceUpdated');
-      } else if (selectedCurrency === CURRENCY_KITTY) {
+      var initialPrice;
+      var finalPrice;
+
+      if (selectedWindowTime === 5) {
         prices = await getPastEvents(
-          avaxContract,
+          targetContract,
           _windowNumber,
           'PriceUpdated'
         );
+        initialPrice =
+          prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
+        finalPrice =
+          where === 'Finalized' && prices.length > 1
+            ? prices[1].returnValues.price / 100000000
+            : '0.00';
+      } else {
+        prices = await getPrices(_windowNumber);
+        initialPrice = prices[0] > 0 ? prices[0] / 100000000 : '0.00';
+        finalPrice =
+          where === 'Finalized' && prices[1] > 1
+            ? prices[1] / 100000000
+            : '0.00';
       }
-
-      let initialPrice =
-        prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
-      let finalPrice =
-        where === 'Finalized' && prices.length > 1
-          ? prices[1].returnValues.price / 100000000
-          : '0.00';
 
       switch (where) {
         case 'Ongoing':
@@ -533,69 +604,35 @@ export const BettingProvider = ({ children }) => {
       var _poolTotalDown = 0;
       var _userBets = 0;
 
-      const result = await getBets(selectedCurrency, _windowNumber, account);
+<<<<<<< HEAD
+      const poolValues = await getPoolValues(_windowNumber);
 
-      if (result.length > 0) {
-        // poolSize
-        _poolSize = result.reduce((acc, current) => {
-          return acc + weiToCurrency(current.returnValues.value.toString());
-        }, 0);
-        _poolSize = _poolSize.toFixed(2);
+      _poolTotalUp = weiToCurrency(poolValues[1]);
+      _poolTotalDown = weiToCurrency(poolValues[0]);
+      _poolSize = _poolTotalUp + _poolTotalDown;
 
-        // poolTotalUp
-        _poolTotalUp = result
-          .filter((key) => Number.parseInt(key.returnValues.side) === 1)
-          .reduce((acc, current) => {
-            return acc + weiToCurrency(current.returnValues.value.toString());
-          }, 0);
-        _poolTotalUp = _poolTotalUp.toFixed(2);
+      const userBetAmounts = await getUserBets(_windowNumber, account);
+      _betAmountUp = weiToCurrency(userBetAmounts[1]);
+      _betAmountDown = weiToCurrency(userBetAmounts[0]);
+      _betAmount = _betAmountUp + _betAmountDown;
 
-        // poolTotalDown
-        _poolTotalDown = result
-          .filter((key) => Number.parseInt(key.returnValues.side) === 0)
-          .reduce((acc, current) => {
-            return acc + weiToCurrency(current.returnValues.value.toString());
-          }, 0);
-        _poolTotalDown = _poolTotalDown.toFixed(2);
-
-        // Filter user bets
-        const userBets = result.filter(
-          (key) => key.returnValues.user.toLowerCase() === account.toLowerCase()
-        );
-        _userBets = userBets.length;
-        if (userBets.length > 0) {
-          // The user could made lots of bets in this window
-          userBets.forEach((transaction) => {
-            // Bets direction
-            const directionValue = transaction.returnValues.side;
-            const direction = Number.parseInt(directionValue);
-            const transactionBetDirection = direction === 1 ? 'up' : 'down';
-            if (_betDirection === '') {
-              _betDirection = transactionBetDirection;
-            } else {
-              if (_betDirection !== transactionBetDirection) {
-                _betDirection = 'both';
-              }
-            }
-            // Bets Amount
-            const transactionBetAmount =
-              transaction.returnValues.value.toString();
-            const weiTransactionBetAmount =
-              weiToCurrency(transactionBetAmount).toFixed(2);
-            if (direction === 1) {
-              _betAmountUp += parseFloat(weiTransactionBetAmount);
-            } else {
-              _betAmountDown += parseFloat(weiTransactionBetAmount);
-            }
-          });
-          _betAmount += _betAmountUp + _betAmountDown;
-          _betAmount = _betAmount.toFixed(2);
-          _betAmountUp = _betAmountUp.toFixed(2);
-          _betAmountDown = _betAmountDown.toFixed(2);
-        }
+      if (_betAmountUp > 0 && _betAmountDown === 0) {
+        _betDirection = 'up';
+      } else if (_betAmountUp === 0 && _betAmountDown > 0) {
+        _betDirection = 'down';
+      } else if (_betAmountUp > 0 && _betAmountDown > 0) {
+        _betDirection = 'both';
       }
+
+      _poolTotalUp = _poolTotalUp.toFixed(2);
+      _poolTotalDown = _poolTotalDown.toFixed(2);
+      _poolSize = _poolSize.toFixed(2);
+      _betAmountUp = _betAmountUp.toFixed(2);
+      _betAmountDown = _betAmountDown.toFixed(2);
+      _betAmount = _betAmount.toFixed(2);
+
       updatePoolAndAccountsData(where, {
-        accounts: result,
+        accounts: [],
         _betAmount,
         _betAmountUp,
         _betAmountDown,
@@ -613,7 +650,6 @@ export const BettingProvider = ({ children }) => {
       case 'Opened':
         if (
           // Check if something changed
-          Number(openedAccountsData.accounts) !== details.accounts.length ||
           parseFloat(openedPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
           parseFloat(openedPoolData.betAmountUp) !==
@@ -630,7 +666,8 @@ export const BettingProvider = ({ children }) => {
           parseFloat(openedPoolData.poolSize) !== parseFloat(details._poolSize)
         ) {
           setOpenedPoolData(
-            details.accounts.length > 0
+            // TODO: Substituir com o numero de apostas
+            true
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -656,7 +693,6 @@ export const BettingProvider = ({ children }) => {
       case 'Ongoing':
         if (
           // Check if something changed
-          Number(ongoingAccountsData.accounts) !== details.accounts.length ||
           parseFloat(ongoingPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
           parseFloat(ongoingPoolData.betAmountUp) !==
@@ -673,7 +709,8 @@ export const BettingProvider = ({ children }) => {
           parseFloat(ongoingPoolData.poolSize) !== parseFloat(details._poolSize)
         ) {
           setOngoingPoolData(
-            details.accounts.length > 0
+            // TODO: Substituir com o numero de apostas
+            true
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -699,7 +736,6 @@ export const BettingProvider = ({ children }) => {
       case 'Finalized':
         if (
           // Check if something changed
-          Number(finalizedAccountsData.accounts) !== details.accounts.length ||
           parseFloat(finalizedPoolData.betAmount) !==
             parseFloat(details._betAmount) ||
           parseFloat(finalizedPoolData.betAmountUp) !==
@@ -717,7 +753,8 @@ export const BettingProvider = ({ children }) => {
             parseFloat(details._poolSize)
         ) {
           setFinalizedPoolData(
-            details.accounts.length > 0
+            // TODO: Substituir com o numero de apostas
+            true
               ? {
                   betAmount: details._betAmount,
                   betAmountUp: details._betAmountUp,
@@ -773,7 +810,13 @@ export const BettingProvider = ({ children }) => {
 
           if (userBetList > 0) {
             // userBetList is BettingWindow #
-            const windowBetPrices = await avaxContract.methods
+            var targetContract = null;
+            if (selectedWindowTime === 5) {
+              targetContract = avaxContract;
+            } else {
+              targetContract = contract;
+            }
+            const windowBetPrices = await targetContract.methods
               .getWindowBetPrices(userBetList)
               .call({
                 from: account,
@@ -941,20 +984,51 @@ export const BettingProvider = ({ children }) => {
   };
 
   // MARK: Currency contract interation
-
   const getPastEvents = async (selectedContract, windowNumber, event) => {
+<<<<<<< HEAD
+    let blockNumber = await library.eth.getBlockNumber();
+    let result = await selectedContract
+      .getPastEvents(event, {
+        filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
+        fromBlock: blockNumber - 2000,
+=======
     let blockNumber = await web3Eth.getBlockNumber();
     var prices;
     prices = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
         fromBlock: blockNumber - blocksRange,
+>>>>>>> 942053c328e46cdcfe4f20d4b368650195849b4b
         toBlock: 'latest',
       })
       .then((result) => result);
-    return prices;
+    return result;
   };
 
+<<<<<<< HEAD
+  const getPrices = async (windowNumber) => {
+    const result = await contract.methods
+      .getWindowBetPrices(windowNumber)
+      .call()
+      .then((result) => result);
+    return result;
+  };
+
+  const getUserBets = async (windowNumber, address) => {
+    const result = await contract.methods
+      .getUserStake(windowNumber, address)
+      .call()
+      .then((result) => result);
+    return result;
+  };
+
+  const getPoolValues = async (windowNumber) => {
+    const result = await contract.methods
+      .getPoolValues(windowNumber)
+      .call()
+      .then((result) => result);
+    return result;
+=======
   // Return Bets for that window
   const getBets = async (currency, windowNumber, account) => {
     let blockNumber = await web3Eth.getBlockNumber();
@@ -977,6 +1051,7 @@ export const BettingProvider = ({ children }) => {
         .then((result) => result);
       return result;
     }
+>>>>>>> 942053c328e46cdcfe4f20d4b368650195849b4b
   };
 
   const value = {
@@ -1014,7 +1089,9 @@ export const BettingProvider = ({ children }) => {
     contract,
     tokenContract,
     selectedCurrency,
+    selectedWindowTime,
     selectCurrency,
+    selectWindowTime,
     userAllowance,
     contractPermissionRequested,
   };

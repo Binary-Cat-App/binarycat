@@ -6,6 +6,7 @@ import Web3 from 'web3';
 import WebFontLoader from 'webfontloader';
 import './assets/css/app.css';
 import './config/globals';
+import './config/windowOptions';
 
 import App from './components/App';
 import MetamaskProvider from './components/MetamaskProvider';
