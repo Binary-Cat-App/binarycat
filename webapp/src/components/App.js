@@ -11,7 +11,11 @@ import { Staking } from './Staking';
 import { Container } from './Container';
 import { Footer } from './Footer';
 
-import { BettingProvider } from '../context/BettingContext';
+import {
+  BettingProvider,
+  CURRENCY_AVAX,
+  CURRENCY_KITTY,
+} from '../context/BettingContext';
 import { StakingProvider } from '../context/StakingContext';
 
 // Google Analytics
@@ -66,6 +70,21 @@ const RoutesComponent = () => {
               </Route>
               <Route exact path="/">
                 <BettingProvider>
+                  <Dashboard />
+                </BettingProvider>
+              </Route>
+              <Route exact path="/avax">
+                <BettingProvider currency={CURRENCY_AVAX}>
+                  <Dashboard />
+                </BettingProvider>
+              </Route>
+              <Route exact path="/kitty">
+                <BettingProvider currency={CURRENCY_KITTY}>
+                  <Dashboard />
+                </BettingProvider>
+              </Route>
+              <Route exact path="/daily">
+                <BettingProvider currency={CURRENCY_KITTY} timeWindow={1440}>
                   <Dashboard />
                 </BettingProvider>
               </Route>
