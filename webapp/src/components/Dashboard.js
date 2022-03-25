@@ -56,9 +56,9 @@ export const Dashboard = () => {
     web3Utils,
     contract,
     selectedCurrency,
-    selectCurrency,
+    changeCurrency,
     selectedWindowTime,
-    selectWindowTime,
+    changeTimeWindow,
     userAllowance,
     contractPermissionRequested,
   } = useBetting();
@@ -336,9 +336,9 @@ export const Dashboard = () => {
     <>
       <ControlBar
         selectedCurrency={selectedCurrency}
-        selectCurrency={selectCurrency}
+        selectCurrency={changeCurrency}
         selectedWindowTime={selectedWindowTime / 1} // Forces cast to int
-        selectWindowTime={selectWindowTime}
+        selectWindowTime={changeTimeWindow}
       ></ControlBar>
 
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">

@@ -18,6 +18,8 @@ import KittyPool from '../contracts/KittyPool.json';
 import BinToken from '../contracts/BinToken.json';
 import DailyContract from '../contracts/DailyPool.json';
 
+import { useHistory } from 'react-router-dom';
+
 const BettingContext = createContext();
 
 export const useBetting = () => {
@@ -27,8 +29,9 @@ export const useBetting = () => {
 export const CURRENCY_AVAX = 'AVAX';
 export const CURRENCY_KITTY = 'KITTY';
 
-export const BettingProvider = ({ children }) => {
+export const BettingProvider = ({ children, currency, timeWindow }) => {
   const { active, account, library } = useWeb3React();
+  const history = useHistory();
 
   const web3Eth = library.eth;
   const web3Utils = library.utils;
@@ -108,6 +111,10 @@ export const BettingProvider = ({ children }) => {
     if (active && account) {
       configTimes();
     }
+    if (currency) {
+      selectCurrency(currency);
+      return;
+    }
     // Check for the last defined currency
     let lastSelected = localStorage.getItem('selectedCurrency');
     if (lastSelected) {
@@ -125,23 +132,57 @@ export const BettingProvider = ({ children }) => {
       localStorage.setItem('selectedCurrency', selectedCurrency);
     }
     let windows = global.currencyWindows.timeOptions[selectedCurrency];
-    // Tries to get last time window selected
-    let lastWindowTime = Number.parseInt(
-      localStorage.getItem('selectedWindowTime')
-    );
-    if (lastWindowTime) {
-      selectWindowTime(lastWindowTime);
+    var selectedWindowTime;
+    // Verifica se esta em um path específico
+    if (timeWindow) {
+      selectedWindowTime = timeWindow;
+    } else {
+      // Tries to get last time window selected
+      selectedWindowTime = Number.parseInt(
+        localStorage.getItem('selectedWindowTime')
+      );
+    }
+
+    if (selectedWindowTime) {
+      // Verifica se o selecionado é aceito na currency selecionada
+      if (windows.filter((w) => w.value === selectedWindowTime).length > 0) {
+        selectWindowTime(selectedWindowTime);
+      } else {
+        let value = windows[0].value;
+        localStorage.setItem('selectedWindowTime', value);
+        selectWindowTime(value);
+      }
     } else {
       let value = windows[0].value;
       localStorage.setItem('selectedWindowTime', value);
       // If value didnt change, change the contract
-      if (value == selectedWindowTime) {
+      if (value === selectedWindowTime) {
+        // selectWindowTime(value);
         changeContract();
       } else {
         selectWindowTime(value);
       }
     }
   }, [selectedCurrency]);
+
+  const changeCurrency = (currency) => {
+    let currecnyPath = currency.toLowerCase();
+    history.push('/' + currecnyPath);
+    selectCurrency(currency);
+  };
+
+  const changeTimeWindow = (timeWindow) => {
+    var timeWindowPath;
+    if (timeWindow === 5 && selectedCurrency === CURRENCY_AVAX) {
+      timeWindowPath = 'avax';
+    } else if (timeWindow === 5 && selectedCurrency === CURRENCY_KITTY) {
+      timeWindowPath = 'kitty';
+    } else {
+      timeWindowPath = 'daily';
+    }
+    history.push('/' + timeWindowPath);
+    selectWindowTime(timeWindow);
+  };
 
   // When window time changes
   useEffect(() => {
@@ -605,6 +646,9 @@ export const BettingProvider = ({ children }) => {
       var _userBets = 0;
 
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/main
       const poolValues = await getPoolValues(_windowNumber);
 
       _poolTotalUp = weiToCurrency(poolValues[1]);
@@ -865,8 +909,14 @@ export const BettingProvider = ({ children }) => {
                         from: account,
                       })
                       .then((response) => response);
+
                     if (settledBet) {
-                      const gain = BigInt(settledBet.gain);
+                      var gain;
+                      if (contract._address === dailyContract._address) {
+                        gain = BigInt(settledBet);
+                      } else {
+                        gain = BigInt(settledBet.gain);
+                      }
 
                       if (gain > 0) {
                         unsettledUserWins = unsettledUserWins + 1;
@@ -985,27 +1035,25 @@ export const BettingProvider = ({ children }) => {
 
   // MARK: Currency contract interation
   const getPastEvents = async (selectedContract, windowNumber, event) => {
-<<<<<<< HEAD
     let blockNumber = await library.eth.getBlockNumber();
     let result = await selectedContract
       .getPastEvents(event, {
         filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
         fromBlock: blockNumber - 2000,
-=======
-    let blockNumber = await web3Eth.getBlockNumber();
-    var prices;
-    prices = await selectedContract
-      .getPastEvents(event, {
-        filter: { windowNumber: [windowNumber + 1, windowNumber + 2] },
-        fromBlock: blockNumber - blocksRange,
->>>>>>> 942053c328e46cdcfe4f20d4b368650195849b4b
         toBlock: 'latest',
       })
       .then((result) => result);
     return result;
   };
 
-<<<<<<< HEAD
+  const getPrices = async (windowNumber) => {
+    const result = await contract.methods
+      .getWindowBetPrices(windowNumber)
+      .call()
+      .then((result) => result);
+    return result;
+  };
+
   const getPrices = async (windowNumber) => {
     const result = await contract.methods
       .getWindowBetPrices(windowNumber)
@@ -1028,7 +1076,8 @@ export const BettingProvider = ({ children }) => {
       .call()
       .then((result) => result);
     return result;
-=======
+   };
+   
   // Return Bets for that window
   const getBets = async (currency, windowNumber, account) => {
     let blockNumber = await web3Eth.getBlockNumber();
@@ -1051,7 +1100,6 @@ export const BettingProvider = ({ children }) => {
         .then((result) => result);
       return result;
     }
->>>>>>> 942053c328e46cdcfe4f20d4b368650195849b4b
   };
 
   const value = {
@@ -1090,8 +1138,8 @@ export const BettingProvider = ({ children }) => {
     tokenContract,
     selectedCurrency,
     selectedWindowTime,
-    selectCurrency,
-    selectWindowTime,
+    changeCurrency,
+    changeTimeWindow,
     userAllowance,
     contractPermissionRequested,
   };
