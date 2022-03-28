@@ -645,10 +645,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       var _poolTotalDown = 0;
       var _userBets = 0;
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> origin/main
       const poolValues = await getPoolValues(_windowNumber);
 
       _poolTotalUp = weiToCurrency(poolValues[1]);
@@ -1054,14 +1050,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
     return result;
   };
 
-  const getPrices = async (windowNumber) => {
-    const result = await contract.methods
-      .getWindowBetPrices(windowNumber)
-      .call()
-      .then((result) => result);
-    return result;
-  };
-
   const getUserBets = async (windowNumber, address) => {
     const result = await contract.methods
       .getUserStake(windowNumber, address)
@@ -1076,8 +1064,8 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       .call()
       .then((result) => result);
     return result;
-   };
-   
+  };
+
   // Return Bets for that window
   const getBets = async (currency, windowNumber, account) => {
     let blockNumber = await web3Eth.getBlockNumber();
