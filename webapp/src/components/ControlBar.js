@@ -12,18 +12,14 @@ export const ControlBar = ({
   selectWindowTime,
 }) => {
   const selectAvax = () => {
-    localStorage.removeItem('selectedWindowTime');
     selectCurrency('AVAX');
   };
 
   const selectKitty = () => {
-    localStorage.removeItem('selectedWindowTime');
     selectCurrency('KITTY');
   };
 
   const onWindowTimeSelected = (value) => {
-    console.log(value);
-    localStorage.setItem('selectedWindowTime', value.value);
     selectWindowTime(value.value);
   };
 

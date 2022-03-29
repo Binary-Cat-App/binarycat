@@ -84,6 +84,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
   };
 
   const configTimes = () => {
+    if (!selectedWindowTime) return;
     if (selectedWindowTime === 5) {
       avaxContract.methods
         .windowDuration()
@@ -108,9 +109,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
   // INIT
   useEffect(() => {
     console.log('Initializing...');
-    if (active && account) {
-      configTimes();
-    }
     if (currency) {
       selectCurrency(currency);
       return;
@@ -132,29 +130,26 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       localStorage.setItem('selectedCurrency', selectedCurrency);
     }
     let windows = global.currencyWindows.timeOptions[selectedCurrency];
-    var selectedWindowTime;
+    var targetWindowTime;
     // Verifica se esta em um path específico
     if (timeWindow) {
-      selectedWindowTime = timeWindow;
+      targetWindowTime = timeWindow;
     } else {
       // Tries to get last time window selected
-      selectedWindowTime = Number.parseInt(
+      targetWindowTime = Number.parseInt(
         localStorage.getItem('selectedWindowTime')
       );
     }
-
-    if (selectedWindowTime) {
+    if (targetWindowTime) {
       // Verifica se o selecionado é aceito na currency selecionada
-      if (windows.filter((w) => w.value === selectedWindowTime).length > 0) {
-        selectWindowTime(selectedWindowTime);
+      if (windows.filter((w) => w.value === targetWindowTime).length > 0) {
+        selectWindowTime(targetWindowTime);
       } else {
         let value = windows[0].value;
-        localStorage.setItem('selectedWindowTime', value);
         selectWindowTime(value);
       }
     } else {
       let value = windows[0].value;
-      localStorage.setItem('selectedWindowTime', value);
       // If value didnt change, change the contract
       if (value === selectedWindowTime) {
         // selectWindowTime(value);
@@ -168,6 +163,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
   const changeCurrency = (currency) => {
     let currecnyPath = currency.toLowerCase();
     history.push('/' + currecnyPath);
+    localStorage.removeItem('selectedWindowTime');
     selectCurrency(currency);
   };
 
@@ -180,6 +176,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
     } else {
       timeWindowPath = 'daily';
     }
+    localStorage.setItem('selectedWindowTime', timeWindow);
     history.push('/' + timeWindowPath);
     selectWindowTime(timeWindow);
   };
@@ -1064,30 +1061,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       .call()
       .then((result) => result);
     return result;
-  };
-
-  // Return Bets for that window
-  const getBets = async (currency, windowNumber, account) => {
-    let blockNumber = await web3Eth.getBlockNumber();
-    if (currency === CURRENCY_AVAX) {
-      const result = await contract
-        .getPastEvents('NewBet', {
-          filter: { windowNumber: windowNumber },
-          fromBlock: blockNumber - blocksRange,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
-      return result;
-    } else if (currency === CURRENCY_KITTY) {
-      const result = await contract
-        .getPastEvents('NewBet', {
-          filter: { windowNumber: windowNumber },
-          fromBlock: blockNumber - blocksRange,
-          toBlock: 'latest',
-        })
-        .then((result) => result);
-      return result;
-    }
   };
 
   const value = {
