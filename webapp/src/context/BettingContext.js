@@ -963,9 +963,12 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       default:
     }
 
-    const _windowNumber = Math.floor(
+    var _windowNumber = Math.floor(
       (currentTimestamp - initTimestamp) / windowDuration + 1 - offset
     );
+    if (_windowNumber < 0) {
+      _windowNumber = 0;
+    }
 
     const _windowStartingTimestamp =
       initTimestamp + (_windowNumber - 1) * windowDuration;
