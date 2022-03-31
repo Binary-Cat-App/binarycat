@@ -165,10 +165,9 @@ contract DailyPool {
         uint256 poolUp,
         uint256 poolDown,
         uint8 res
-    ) public view returns (uint256 gain) {
+    ) public pure returns (uint256 gain) {
         BetLibrary.BetResult result = BetLibrary.BetResult(res);
         uint256 poolTotal = poolUp + poolDown;
-        uint256 value;
         if (result == BetLibrary.BetResult.up && poolUp != 0) {
             //(upStake/poolUp)*poolTotal
             gain = BetLibrary.sharePool(poolTotal, upStake, poolUp);

@@ -1,0 +1,547 @@
+{
+  "address": "0x96411838e37B9463a76BE2b9858833589bB7a783",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_windowDuration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenContract",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "aggregator",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "windowNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "gain",
+          "type": "uint256"
+        }
+      ],
+      "name": "BetSettled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "windowNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "side",
+          "type": "uint8"
+        }
+      ],
+      "name": "NewBet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "windowNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "PriceUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "betListLen",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "deployTimestamp",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "windowNumber",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPoolValues",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getUserBetList",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "windowNumber",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserStake",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "window",
+          "type": "uint256"
+        }
+      ],
+      "name": "getWindowBetPrices",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "side",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "placeBet",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "pools",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "downValue",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "upValue",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "upStake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "downStake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "poolUp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "poolDown",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "res",
+          "type": "uint8"
+        }
+      ],
+      "name": "settleBet",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "gain",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "updateBalance",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "updatePrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "windowDuration",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "windowPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xfad8416d07097f52afcaacd2faafe298200775ce37562c6d367a5963a020828d",
+  "receipt": {
+    "to": null,
+    "from": "0xb81332e1BEAAAC8F6d74fECAfaD9Fb4f28f32E2B",
+    "contractAddress": "0x96411838e37B9463a76BE2b9858833589bB7a783",
+    "transactionIndex": 0,
+    "gasUsed": "1186111",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x213bfed00c6584b084a125b4dd036e8d05977b8a96d8f71a2e96db886f65bbc8",
+    "transactionHash": "0xfad8416d07097f52afcaacd2faafe298200775ce37562c6d367a5963a020828d",
+    "logs": [],
+    "blockNumber": 12822487,
+    "cumulativeGasUsed": "1186111",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    86400,
+    "0xbca7f1998Dc9FFB70b086543a808960a460aBcA7",
+    "0x0A77230d17318075983913bC2145DB16C7366156"
+  ],
+  "solcInputHash": "1782761e6195bd04cb42af74acc3175d",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.8+commit.dddeac2f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_windowDuration\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"tokenContract\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"aggregator\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"windowNumber\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"gain\",\"type\":\"uint256\"}],\"name\":\"BetSettled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"windowNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"side\",\"type\":\"uint8\"}],\"name\":\"NewBet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"windowNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"PriceUpdated\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"betListLen\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"deployTimestamp\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"windowNumber\",\"type\":\"uint256\"}],\"name\":\"getPoolValues\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getUserBetList\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"windowNumber\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getUserStake\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"window\",\"type\":\"uint256\"}],\"name\":\"getWindowBetPrices\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"side\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"placeBet\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"pools\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"downValue\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"upValue\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"upStake\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"downStake\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"poolUp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"poolDown\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"res\",\"type\":\"uint8\"}],\"name\":\"settleBet\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"gain\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"updateBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"updatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"windowDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"windowPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/DailyPool.sol\":\"DailyPool\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":10000},\"remappings\":[]},\"sources\":{\"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\ninterface AggregatorV3Interface {\\n\\n  function decimals()\\n    external\\n    view\\n    returns (\\n      uint8\\n    );\\n\\n  function description()\\n    external\\n    view\\n    returns (\\n      string memory\\n    );\\n\\n  function version()\\n    external\\n    view\\n    returns (\\n      uint256\\n    );\\n\\n  // getRoundData and latestRoundData should both raise \\\"No data present\\\"\\n  // if they do not have data to report, instead of returning unset values\\n  // which could be misinterpreted as actual reported values.\\n  function getRoundData(\\n    uint80 _roundId\\n  )\\n    external\\n    view\\n    returns (\\n      uint80 roundId,\\n      int256 answer,\\n      uint256 startedAt,\\n      uint256 updatedAt,\\n      uint80 answeredInRound\\n    );\\n\\n  function latestRoundData()\\n    external\\n    view\\n    returns (\\n      uint80 roundId,\\n      int256 answer,\\n      uint256 startedAt,\\n      uint256 updatedAt,\\n      uint80 answeredInRound\\n    );\\n\\n}\\n\",\"keccak256\":\"0xe6f5ac8c47f3b9b6135051efb9216f9ba5b312a6ecc20209b4f66a780443c328\",\"license\":\"MIT\"},\"@openzeppelin/contracts/token/ERC20/ERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/ERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"./IERC20.sol\\\";\\nimport \\\"./extensions/IERC20Metadata.sol\\\";\\nimport \\\"../../utils/Context.sol\\\";\\n\\n/**\\n * @dev Implementation of the {IERC20} interface.\\n *\\n * This implementation is agnostic to the way tokens are created. This means\\n * that a supply mechanism has to be added in a derived contract using {_mint}.\\n * For a generic mechanism see {ERC20PresetMinterPauser}.\\n *\\n * TIP: For a detailed writeup see our guide\\n * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How\\n * to implement supply mechanisms].\\n *\\n * We have followed general OpenZeppelin Contracts guidelines: functions revert\\n * instead returning `false` on failure. This behavior is nonetheless\\n * conventional and does not conflict with the expectations of ERC20\\n * applications.\\n *\\n * Additionally, an {Approval} event is emitted on calls to {transferFrom}.\\n * This allows applications to reconstruct the allowance for all accounts just\\n * by listening to said events. Other implementations of the EIP may not emit\\n * these events, as it isn't required by the specification.\\n *\\n * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}\\n * functions have been added to mitigate the well-known issues around setting\\n * allowances. See {IERC20-approve}.\\n */\\ncontract ERC20 is Context, IERC20, IERC20Metadata {\\n    mapping(address => uint256) private _balances;\\n\\n    mapping(address => mapping(address => uint256)) private _allowances;\\n\\n    uint256 private _totalSupply;\\n\\n    string private _name;\\n    string private _symbol;\\n\\n    /**\\n     * @dev Sets the values for {name} and {symbol}.\\n     *\\n     * The default value of {decimals} is 18. To select a different value for\\n     * {decimals} you should overload it.\\n     *\\n     * All two of these values are immutable: they can only be set once during\\n     * construction.\\n     */\\n    constructor(string memory name_, string memory symbol_) {\\n        _name = name_;\\n        _symbol = symbol_;\\n    }\\n\\n    /**\\n     * @dev Returns the name of the token.\\n     */\\n    function name() public view virtual override returns (string memory) {\\n        return _name;\\n    }\\n\\n    /**\\n     * @dev Returns the symbol of the token, usually a shorter version of the\\n     * name.\\n     */\\n    function symbol() public view virtual override returns (string memory) {\\n        return _symbol;\\n    }\\n\\n    /**\\n     * @dev Returns the number of decimals used to get its user representation.\\n     * For example, if `decimals` equals `2`, a balance of `505` tokens should\\n     * be displayed to a user as `5.05` (`505 / 10 ** 2`).\\n     *\\n     * Tokens usually opt for a value of 18, imitating the relationship between\\n     * Ether and Wei. This is the value {ERC20} uses, unless this function is\\n     * overridden;\\n     *\\n     * NOTE: This information is only used for _display_ purposes: it in\\n     * no way affects any of the arithmetic of the contract, including\\n     * {IERC20-balanceOf} and {IERC20-transfer}.\\n     */\\n    function decimals() public view virtual override returns (uint8) {\\n        return 18;\\n    }\\n\\n    /**\\n     * @dev See {IERC20-totalSupply}.\\n     */\\n    function totalSupply() public view virtual override returns (uint256) {\\n        return _totalSupply;\\n    }\\n\\n    /**\\n     * @dev See {IERC20-balanceOf}.\\n     */\\n    function balanceOf(address account) public view virtual override returns (uint256) {\\n        return _balances[account];\\n    }\\n\\n    /**\\n     * @dev See {IERC20-transfer}.\\n     *\\n     * Requirements:\\n     *\\n     * - `recipient` cannot be the zero address.\\n     * - the caller must have a balance of at least `amount`.\\n     */\\n    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {\\n        _transfer(_msgSender(), recipient, amount);\\n        return true;\\n    }\\n\\n    /**\\n     * @dev See {IERC20-allowance}.\\n     */\\n    function allowance(address owner, address spender) public view virtual override returns (uint256) {\\n        return _allowances[owner][spender];\\n    }\\n\\n    /**\\n     * @dev See {IERC20-approve}.\\n     *\\n     * Requirements:\\n     *\\n     * - `spender` cannot be the zero address.\\n     */\\n    function approve(address spender, uint256 amount) public virtual override returns (bool) {\\n        _approve(_msgSender(), spender, amount);\\n        return true;\\n    }\\n\\n    /**\\n     * @dev See {IERC20-transferFrom}.\\n     *\\n     * Emits an {Approval} event indicating the updated allowance. This is not\\n     * required by the EIP. See the note at the beginning of {ERC20}.\\n     *\\n     * Requirements:\\n     *\\n     * - `sender` and `recipient` cannot be the zero address.\\n     * - `sender` must have a balance of at least `amount`.\\n     * - the caller must have allowance for ``sender``'s tokens of at least\\n     * `amount`.\\n     */\\n    function transferFrom(\\n        address sender,\\n        address recipient,\\n        uint256 amount\\n    ) public virtual override returns (bool) {\\n        _transfer(sender, recipient, amount);\\n\\n        uint256 currentAllowance = _allowances[sender][_msgSender()];\\n        require(currentAllowance >= amount, \\\"ERC20: transfer amount exceeds allowance\\\");\\n        unchecked {\\n            _approve(sender, _msgSender(), currentAllowance - amount);\\n        }\\n\\n        return true;\\n    }\\n\\n    /**\\n     * @dev Atomically increases the allowance granted to `spender` by the caller.\\n     *\\n     * This is an alternative to {approve} that can be used as a mitigation for\\n     * problems described in {IERC20-approve}.\\n     *\\n     * Emits an {Approval} event indicating the updated allowance.\\n     *\\n     * Requirements:\\n     *\\n     * - `spender` cannot be the zero address.\\n     */\\n    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {\\n        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);\\n        return true;\\n    }\\n\\n    /**\\n     * @dev Atomically decreases the allowance granted to `spender` by the caller.\\n     *\\n     * This is an alternative to {approve} that can be used as a mitigation for\\n     * problems described in {IERC20-approve}.\\n     *\\n     * Emits an {Approval} event indicating the updated allowance.\\n     *\\n     * Requirements:\\n     *\\n     * - `spender` cannot be the zero address.\\n     * - `spender` must have allowance for the caller of at least\\n     * `subtractedValue`.\\n     */\\n    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {\\n        uint256 currentAllowance = _allowances[_msgSender()][spender];\\n        require(currentAllowance >= subtractedValue, \\\"ERC20: decreased allowance below zero\\\");\\n        unchecked {\\n            _approve(_msgSender(), spender, currentAllowance - subtractedValue);\\n        }\\n\\n        return true;\\n    }\\n\\n    /**\\n     * @dev Moves `amount` of tokens from `sender` to `recipient`.\\n     *\\n     * This internal function is equivalent to {transfer}, and can be used to\\n     * e.g. implement automatic token fees, slashing mechanisms, etc.\\n     *\\n     * Emits a {Transfer} event.\\n     *\\n     * Requirements:\\n     *\\n     * - `sender` cannot be the zero address.\\n     * - `recipient` cannot be the zero address.\\n     * - `sender` must have a balance of at least `amount`.\\n     */\\n    function _transfer(\\n        address sender,\\n        address recipient,\\n        uint256 amount\\n    ) internal virtual {\\n        require(sender != address(0), \\\"ERC20: transfer from the zero address\\\");\\n        require(recipient != address(0), \\\"ERC20: transfer to the zero address\\\");\\n\\n        _beforeTokenTransfer(sender, recipient, amount);\\n\\n        uint256 senderBalance = _balances[sender];\\n        require(senderBalance >= amount, \\\"ERC20: transfer amount exceeds balance\\\");\\n        unchecked {\\n            _balances[sender] = senderBalance - amount;\\n        }\\n        _balances[recipient] += amount;\\n\\n        emit Transfer(sender, recipient, amount);\\n\\n        _afterTokenTransfer(sender, recipient, amount);\\n    }\\n\\n    /** @dev Creates `amount` tokens and assigns them to `account`, increasing\\n     * the total supply.\\n     *\\n     * Emits a {Transfer} event with `from` set to the zero address.\\n     *\\n     * Requirements:\\n     *\\n     * - `account` cannot be the zero address.\\n     */\\n    function _mint(address account, uint256 amount) internal virtual {\\n        require(account != address(0), \\\"ERC20: mint to the zero address\\\");\\n\\n        _beforeTokenTransfer(address(0), account, amount);\\n\\n        _totalSupply += amount;\\n        _balances[account] += amount;\\n        emit Transfer(address(0), account, amount);\\n\\n        _afterTokenTransfer(address(0), account, amount);\\n    }\\n\\n    /**\\n     * @dev Destroys `amount` tokens from `account`, reducing the\\n     * total supply.\\n     *\\n     * Emits a {Transfer} event with `to` set to the zero address.\\n     *\\n     * Requirements:\\n     *\\n     * - `account` cannot be the zero address.\\n     * - `account` must have at least `amount` tokens.\\n     */\\n    function _burn(address account, uint256 amount) internal virtual {\\n        require(account != address(0), \\\"ERC20: burn from the zero address\\\");\\n\\n        _beforeTokenTransfer(account, address(0), amount);\\n\\n        uint256 accountBalance = _balances[account];\\n        require(accountBalance >= amount, \\\"ERC20: burn amount exceeds balance\\\");\\n        unchecked {\\n            _balances[account] = accountBalance - amount;\\n        }\\n        _totalSupply -= amount;\\n\\n        emit Transfer(account, address(0), amount);\\n\\n        _afterTokenTransfer(account, address(0), amount);\\n    }\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.\\n     *\\n     * This internal function is equivalent to `approve`, and can be used to\\n     * e.g. set automatic allowances for certain subsystems, etc.\\n     *\\n     * Emits an {Approval} event.\\n     *\\n     * Requirements:\\n     *\\n     * - `owner` cannot be the zero address.\\n     * - `spender` cannot be the zero address.\\n     */\\n    function _approve(\\n        address owner,\\n        address spender,\\n        uint256 amount\\n    ) internal virtual {\\n        require(owner != address(0), \\\"ERC20: approve from the zero address\\\");\\n        require(spender != address(0), \\\"ERC20: approve to the zero address\\\");\\n\\n        _allowances[owner][spender] = amount;\\n        emit Approval(owner, spender, amount);\\n    }\\n\\n    /**\\n     * @dev Hook that is called before any transfer of tokens. This includes\\n     * minting and burning.\\n     *\\n     * Calling conditions:\\n     *\\n     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens\\n     * will be transferred to `to`.\\n     * - when `from` is zero, `amount` tokens will be minted for `to`.\\n     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.\\n     * - `from` and `to` are never both zero.\\n     *\\n     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].\\n     */\\n    function _beforeTokenTransfer(\\n        address from,\\n        address to,\\n        uint256 amount\\n    ) internal virtual {}\\n\\n    /**\\n     * @dev Hook that is called after any transfer of tokens. This includes\\n     * minting and burning.\\n     *\\n     * Calling conditions:\\n     *\\n     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens\\n     * has been transferred to `to`.\\n     * - when `from` is zero, `amount` tokens have been minted for `to`.\\n     * - when `to` is zero, `amount` of ``from``'s tokens have been burned.\\n     * - `from` and `to` are never both zero.\\n     *\\n     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].\\n     */\\n    function _afterTokenTransfer(\\n        address from,\\n        address to,\\n        uint256 amount\\n    ) internal virtual {}\\n}\\n\",\"keccak256\":\"0xd1d8caaeb45f78e0b0715664d56c220c283c89bf8b8c02954af86404d6b367f8\",\"license\":\"MIT\"},\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `recipient`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address recipient, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `sender` to `recipient` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(\\n        address sender,\\n        address recipient,\\n        uint256 amount\\n    ) external returns (bool);\\n\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n}\\n\",\"keccak256\":\"0x61437cb513a887a1bbad006e7b1c8b414478427d33de47c5600af3c748f108da\",\"license\":\"MIT\"},\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../IERC20.sol\\\";\\n\\n/**\\n * @dev Interface for the optional metadata functions from the ERC20 standard.\\n *\\n * _Available since v4.1._\\n */\\ninterface IERC20Metadata is IERC20 {\\n    /**\\n     * @dev Returns the name of the token.\\n     */\\n    function name() external view returns (string memory);\\n\\n    /**\\n     * @dev Returns the symbol of the token.\\n     */\\n    function symbol() external view returns (string memory);\\n\\n    /**\\n     * @dev Returns the decimals places of the token.\\n     */\\n    function decimals() external view returns (uint8);\\n}\\n\",\"keccak256\":\"0x8de418a5503946cabe331f35fe242d3201a73f67f77aaeb7110acb1f30423aca\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n}\\n\",\"keccak256\":\"0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7\",\"license\":\"MIT\"},\"contracts/BetLibrary.sol\":{\"content\":\"// Copyright 2021 Binary Cat Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\npragma solidity ^0.8.0;\\n\\nlibrary BetLibrary {\\n    //Structs and enums\\n    enum BetSide {\\n        down,\\n        up\\n    }\\n    enum BetResult {\\n        down,\\n        up,\\n        tie\\n    }\\n    enum WindowStatus {\\n        notFinalized,\\n        waitingPrice,\\n        failedUpdate,\\n        finalized\\n    }\\n\\n    struct Pool {\\n        uint256 downValue;\\n        uint256 upValue;\\n    }\\n\\n    struct User {\\n        mapping(uint256 => Pool) stake;\\n        uint256[] bets;\\n    }\\n\\n\\n\\n    function windowStatus(\\n        uint256 window,\\n        uint256 currentWindow,\\n        uint256 initialPrice,\\n        uint256 finalPrice\\n    ) public pure returns (WindowStatus status) {\\n        if (currentWindow < window + 2) {\\n            //window not yet settled\\n            return WindowStatus.notFinalized;\\n        } else if (currentWindow < window + 3 && finalPrice == 0) {\\n            //price not updated but update still possible.\\n            return WindowStatus.waitingPrice;\\n        } else if (initialPrice == 0 || finalPrice == 0) {\\n            return WindowStatus.failedUpdate;\\n        } else {\\n            return WindowStatus.finalized;\\n        }\\n    }\\n\\n    function betResultBinary(uint256 referencePrice, uint256 settlementPrice)\\n        public\\n        pure\\n        returns (uint8)\\n    {\\n        if (settlementPrice < referencePrice) {\\n            return 0;\\n        } else if (settlementPrice > referencePrice) {\\n            return 1;\\n        }\\n        return 2;\\n    }\\n\\n    function sharePool(\\n        uint256 value,\\n        uint256 shares,\\n        uint256 totalShares\\n    ) internal pure returns (uint256) {\\n        return (shares * value) / totalShares;\\n    }\\n\\n\\n    function getWindowNumber(\\n        uint256 currentTimestamp,\\n        uint256 _windowDuration,\\n        uint256 _deployTimestamp\\n    ) public pure returns (uint256 windowNumber) {\\n        //n = floor((currentTimestamp - deployTimestamp)/windowDuration  + 1)\\n        windowNumber =\\n            ((currentTimestamp - _deployTimestamp) / _windowDuration)\\n            + 1; //integer division => floor\\n    }\\n\\n    function getWindowStartingTimestamp(\\n        uint256 windowNumber,\\n        uint256 _windowDuration,\\n        uint256 _deployTimestamp\\n    ) public pure returns (uint256 startingTimestamp) {\\n        //deployTimestamp + (n-1 - (offset + 1))*windowDuration\\n        startingTimestamp =\\n            _deployTimestamp +\\n            (windowNumber - 1) *\\n            _deployTimestamp;\\n    }\\n\\n    function computeFee(uint256 value, uint256 _fee)\\n        public\\n        pure\\n        returns (uint256 betFee)\\n    {\\n        betFee = (value * _fee) / 100;\\n    }\\n\\n    function computeFeeCapped(uint256 value, uint256 _fee, uint cap)\\n        public\\n        pure\\n        returns (uint256 betFee)\\n    {\\n        if ( (value * _fee) / 100 < cap) {\\n            betFee = (value * _fee) / 100;\\n        }\\n        else {\\n            betFee = cap;\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x100ea4efa7e8468280d5acc339ef74e13538a07fbf062ff0a72642a9afbc3d0f\",\"license\":\"Apache-2.0\"},\"contracts/BinToken.sol\":{\"content\":\"// Copyright 2021 Binary Cat Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"@openzeppelin/contracts/token/ERC20/ERC20.sol\\\";\\n\\n\\ncontract BinToken is ERC20 {\\n    //using SafeMath for uint256;\\n\\n    string public constant NAME = \\\"KITTY\\\";\\n    string public constant SYMBOL = \\\"KITTY\\\";\\n    uint8 public constant DECIMALS = 18;\\n    uint256 public constant INITIAL_SUPPLY =\\n        100000000 * (10**uint256(DECIMALS));\\n    uint256 public constant IDO_SUPPLY =\\n        12500000 * (10**uint256(DECIMALS));\\n\\n    mapping(address => mapping(address => uint256)) allowed;\\n\\n    constructor(address ido) ERC20(NAME, SYMBOL) {\\n        _mint(ido, IDO_SUPPLY);\\n        _mint(msg.sender, INITIAL_SUPPLY - IDO_SUPPLY);\\n    }\\n}\\n\",\"keccak256\":\"0xc41bc4caa22127ea48e686a90bf656737be43cda0a8ceedb8e8e2101792243d2\",\"license\":\"Apache-2.0\"},\"contracts/DailyPool.sol\":{\"content\":\"// Copyright 2021 Binary Cat Ltd.\\n\\n// SPDX-License-Identifier: Apache-2.0\\n// Licensed under the Apache License, Version 2.0 (the \\\"License\\\"); you may not use\\n// this file except in compliance with the License. You may obtain a copy of the\\n// License at http://www.apache.org/licenses/LICENSE-2.0\\n\\n// Unless required by applicable law or agreed to in writing, software distributed\\n// under the License is distributed on an \\\"AS IS\\\" BASIS, WITHOUT WARRANTIES OR\\n// CONDITIONS OF ANY KIND, either express or implied. See the License for the\\n// specific language governing permissions and limitations under the License.\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\nimport \\\"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\\\";\\nimport \\\"./BetLibrary.sol\\\";\\nimport \\\"./BinToken.sol\\\";\\n\\ncontract DailyPool {\\n    AggregatorV3Interface internal priceFeed;\\n    BinToken immutable token;\\n\\n    mapping(address => BetLibrary.User) user;\\n    mapping(uint256 => BetLibrary.Pool) public pools; //windowNumber => Pool\\n\\n    uint public windowDuration;\\n    uint public deployTimestamp;\\n\\n    mapping(uint => uint) public windowPrice;\\n\\n    //EVENTS\\n    event NewBet(\\n        address indexed user,\\n        uint256 indexed windowNumber,\\n        uint256 value,\\n        uint8 side\\n    );\\n    event BetSettled(\\n        uint256 indexed windowNumber,\\n        address indexed user,\\n        uint256 gain\\n    );\\n    event PriceUpdated(uint256 indexed windowNumber, uint256 price);\\n\\n    constructor(\\n        uint _windowDuration,\\n        address tokenContract,\\n        address aggregator\\n    ) {\\n        priceFeed = AggregatorV3Interface(aggregator);\\n        token = BinToken(tokenContract);\\n        windowDuration = _windowDuration;\\n        deployTimestamp = block.timestamp;\\n    }\\n\\n    function placeBet(uint8 side, uint value) external payable {\\n        require(value > 0, \\\"Only strictly positive values\\\");\\n        updatePrice();\\n        updateBalance(msg.sender);\\n\\n        token.transferFrom(msg.sender, address(this), value);\\n        uint256 windowNumber = BetLibrary.getWindowNumber(\\n            block.timestamp,\\n            windowDuration,\\n            deployTimestamp);\\n\\n\\n        BetLibrary.User storage sender = user[msg.sender];\\n        if (sender.bets.length == 0 ||\\n            windowNumber != sender.bets[sender.bets.length - 1]) {\\n            /*\\n               Only adds to the list if its the first user bet on the window.\\n               If length is zero, the code only evaluates the first condition,\\n               avoiding the possible underflow length - 1.\\n            */\\n            sender.bets.push(windowNumber);\\n        }\\n\\n        //Update the user stake and pool for the window.\\n        if (BetLibrary.BetSide(side) == BetLibrary.BetSide.up) {\\n            sender.stake[windowNumber].upValue += value;\\n            pools[windowNumber].upValue += value;\\n        }\\n        else {\\n            sender.stake[windowNumber].downValue += value;\\n            pools[windowNumber].downValue += value;\\n        }\\n\\n        emit NewBet(msg.sender, windowNumber, value, side);\\n    }\\n\\n    function updateBalance(address _user) public{\\n        BetLibrary.User storage userData = user[_user];\\n        if (userData.bets.length == 0) {\\n            //No bets to settle\\n            return;\\n        }\\n\\n        uint256 totalGain = 0;\\n        for (uint256 i = userData.bets.length; i > 0; i--) {\\n            /*Maximum number of itens in list is 2, when the user bets\\n              on 2 subsequent windows and the first window is not yet settled.\\n            */\\n            uint256 window = userData.bets[i - 1];\\n            uint256 currentWindow = BetLibrary.getWindowNumber(\\n                block.timestamp,\\n                windowDuration,\\n                deployTimestamp);\\n            (\\n                uint256 referencePrice,\\n                uint256 settlementPrice\\n            ) = getWindowBetPrices(window);\\n\\n            BetLibrary.WindowStatus status = BetLibrary.windowStatus(\\n                window,\\n                currentWindow,\\n                referencePrice,\\n                settlementPrice\\n            );\\n            if (\\n                status == BetLibrary.WindowStatus.notFinalized ||\\n                status == BetLibrary.WindowStatus.waitingPrice\\n            ) {\\n                continue;\\n            }\\n\\n            uint8 result;\\n            if (status == BetLibrary.WindowStatus.finalized) {\\n                result = BetLibrary.betResultBinary(referencePrice, settlementPrice);\\n            } else if (status == BetLibrary.WindowStatus.failedUpdate) {\\n                result = 2;\\n            }\\n\\n            //Remove window from list of unsettled bets.\\n            userData.bets[i - 1] = userData.bets[\\n                userData.bets.length - 1\\n            ];\\n            userData.bets.pop();\\n\\n            BetLibrary.Pool memory stake = userData.stake[window];\\n            BetLibrary.Pool memory pool = pools[window];\\n            uint256 windowGain = settleBet(\\n                stake.upValue,\\n                stake.downValue,\\n                pool.upValue,\\n                pool.downValue,\\n                result\\n            );\\n\\n            totalGain += windowGain;\\n\\n            emit BetSettled(window, _user, windowGain);\\n        }\\n\\n\\n        if (totalGain > 0) {\\n            token.transfer(_user, totalGain);\\n        }\\n    }\\n\\n    function settleBet(\\n        uint256 upStake,\\n        uint256 downStake,\\n        uint256 poolUp,\\n        uint256 poolDown,\\n        uint8 res\\n    ) public pure returns (uint256 gain) {\\n        BetLibrary.BetResult result = BetLibrary.BetResult(res);\\n        uint256 poolTotal = poolUp + poolDown;\\n        if (result == BetLibrary.BetResult.up && poolUp != 0) {\\n            //(upStake/poolUp)*poolTotal\\n            gain = BetLibrary.sharePool(poolTotal, upStake, poolUp);\\n        } else if (result == BetLibrary.BetResult.down && poolDown != 0) {\\n            //(downStake/poolDown)*poolTotal\\n            gain = BetLibrary.sharePool(poolTotal, downStake, poolDown);\\n        } else if (result == BetLibrary.BetResult.tie) {\\n            gain = upStake + downStake;\\n        } else {\\n            //if winning pool is empty the losers get money back.\\n            gain = upStake + downStake;\\n        }\\n    }\\n\\n    function updatePrice() public {\\n        uint256 window = BetLibrary.getWindowNumber(\\n            block.timestamp,\\n            windowDuration,\\n            deployTimestamp\\n        );\\n        if (windowPrice[window] == 0) {\\n            windowPrice[window] = priceOracle();\\n            emit PriceUpdated(window, windowPrice[window]);\\n        }\\n    }\\n\\n    function priceOracle() internal view returns (uint256) {\\n        (, int256 price, , , ) = priceFeed.latestRoundData();\\n        return uint256(price);\\n    }\\n\\n    function getWindowBetPrices(uint256 window)\\n        public\\n        view\\n        returns (uint256, uint256)\\n    {\\n        return (windowPrice[window + 1], windowPrice[window + 2]);\\n    }\\n\\n    function getPoolValues(uint256 windowNumber)\\n        public\\n        view\\n        returns (uint256, uint256)\\n    {\\n        BetLibrary.Pool memory pool = pools[windowNumber];\\n        return (pool.downValue, pool.upValue);\\n    }\\n\\n    function getUserStake(uint256 windowNumber, address _user)\\n        public\\n        view\\n        returns (uint256, uint256)\\n    {\\n        BetLibrary.Pool memory stake = user[_user].stake[windowNumber];\\n        return (stake.downValue, stake.upValue);\\n    }\\n\\n    function getUserBetList(address _user, uint256 index)\\n        public\\n        view\\n        returns (uint256)\\n    {\\n        return user[_user].bets[index];\\n    }\\n\\n    function betListLen(address _user) public view returns (uint256) {\\n        return user[_user].bets.length;\\n    }\\n\\n\\n}\\n\",\"keccak256\":\"0xac033aa3bf11e39891a848e800537bdea1efb4aa99ccd4f4cd56c755d9279ec5\",\"license\":\"Apache-2.0\"}},\"version\":1}",
+  "bytecode": "0x60a060405234801561001057600080fd5b5060405161143938038061143983398101604081905261002f91610087565b600080546001600160a01b0319166001600160a01b039290921691909117905560601b6001600160601b031916608052600355426004556100c3565b80516001600160a01b038116811461008257600080fd5b919050565b60008060006060848603121561009c57600080fd5b835192506100ac6020850161006b565b91506100ba6040850161006b565b90509250925092565b60805160601c6113516100e8600039600081816108100152610b8d01526113516000f3fe6080604052600436106100d25760003560e01c80639626a2301161007f578063ca055e5311610059578063ca055e53146102ad578063dcb3b30e146102cd578063e0d65d87146102e0578063f83b35fb1461030d57600080fd5b80639626a230146101f3578063ac4afa3814610259578063b47a35661461028d57600080fd5b8063607ad0d7116100b0578063607ad0d714610181578063673a7e281461019757806389b808a7146101ac57600080fd5b80630eff4d88146100d757806340b8405a1461013b5780635c11ff7a1461015d575b600080fd5b3480156100e357600080fd5b506101216100f2366004610f6c565b600090815260026020908152604091829020825180840190935280548084526001909101549290910182905291565b604080519283526020830191909152015b60405180910390f35b34801561014757600080fd5b5061015b610156366004610fae565b61032d565b005b34801561016957600080fd5b5061017360035481565b604051908152602001610132565b34801561018d57600080fd5b5061017360045481565b3480156101a357600080fd5b5061015b610893565b3480156101b857600080fd5b506101736101c7366004610fae565b73ffffffffffffffffffffffffffffffffffffffff166000908152600160208190526040909120015490565b3480156101ff57600080fd5b5061012161020e366004610fd0565b73ffffffffffffffffffffffffffffffffffffffff16600090815260016020818152604080842094845293815291839020835180850190945280548085529101549290910182905291565b34801561026557600080fd5b50610121610274366004610f6c565b6002602052600090815260409020805460019091015482565b34801561029957600080fd5b506101736102a8366004610ffc565b6109bb565b3480156102b957600080fd5b506101736102c8366004611035565b610a08565b61015b6102db366004611082565b610ad3565b3480156102ec57600080fd5b506101736102fb366004610f6c565b60056020526000908152604090205481565b34801561031957600080fd5b50610121610328366004610f6c565b610e56565b73ffffffffffffffffffffffffffffffffffffffff8116600090815260016020819052604090912090810154610361575050565b60018101546000905b80156107bd5760008360010160018361038391906110cf565b81548110610393576103936110e6565b6000918252602082200154600354600480546040517f508ba0bd00000000000000000000000000000000000000000000000000000000815293955073fe04787035122436690EC52f3f5DDC0B84208ae09363508ba0bd936104099342939192019283526020830191909152604082015260600190565b60206040518083038186803b15801561042157600080fd5b505af4158015610435573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104599190611115565b905060008061046784610e56565b6040517fb134894e00000000000000000000000000000000000000000000000000000000815260048101879052602481018690526044810183905260648101829052919350915060009073fe04787035122436690EC52f3f5DDC0B84208ae09063b134894e9060840160206040518083038186803b1580156104e857600080fd5b505af41580156104fc573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610520919061112e565b905060008160038111156105365761053661114f565b1480610553575060018160038111156105515761055161114f565b145b156105625750505050506107ab565b600060038260038111156105785761057861114f565b1415610628576040517fc886d8a4000000000000000000000000000000000000000000000000000000008152600481018590526024810184905273fe04787035122436690EC52f3f5DDC0B84208ae09063c886d8a49060440160206040518083038186803b1580156105e957600080fd5b505af41580156105fd573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610621919061117e565b9050610646565b600282600381111561063c5761063c61114f565b1415610646575060025b6001808a0180549091610658916110cf565b81548110610668576106686110e6565b90600052602060002001548960010160018961068491906110cf565b81548110610694576106946110e6565b600091825260209091200155600189018054806106b3576106b361119b565b6000828152602080822083017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9081018390559092019092558782528a8152604080832081518083018352815481526001918201548185019081528b86526002855283862084518086019095528054808652930154948401859052518151919593946107429391929188610a08565b905061074e818c6111ca565b9a508c73ffffffffffffffffffffffffffffffffffffffff16897f6f277b50171c654e40c771d9c2bbf19e070eeb21cce6f8e9a80334564279e3958360405161079991815260200190565b60405180910390a35050505050505050505b806107b5816111e2565b91505061036a565b50801561088e576040517fa9059cbb00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff8481166004830152602482018390527f0000000000000000000000000000000000000000000000000000000000000000169063a9059cbb90604401602060405180830381600087803b15801561085457600080fd5b505af1158015610868573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061088c9190611217565b505b505050565b600354600480546040517f508ba0bd00000000000000000000000000000000000000000000000000000000815260009373fe04787035122436690EC52f3f5DDC0B84208ae09363508ba0bd936108fd93429392019283526020830191909152604082015260600190565b60206040518083038186803b15801561091557600080fd5b505af4158015610929573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061094d9190611115565b6000818152600560205260409020549091506109b85761096b610e9f565b600082815260056020526040908190208290555182917f945c1c4e99aa89f648fbfe3df471b916f719e16d960fcec0737d4d56bd696838916109af91815260200190565b60405180910390a25b50565b73ffffffffffffffffffffffffffffffffffffffff821660009081526001602081905260408220018054839081106109f5576109f56110e6565b9060005260206000200154905092915050565b6000808260ff166002811115610a2057610a2061114f565b90506000610a2e85876111ca565b90506001826002811115610a4457610a4461114f565b148015610a5057508515155b15610a6757610a60818988610f4d565b9250610ac8565b6000826002811115610a7b57610a7b61114f565b148015610a8757508415155b15610a9757610a60818887610f4d565b6002826002811115610aab57610aab61114f565b1415610abb57610a6087896111ca565b610ac587896111ca565b92505b505095945050505050565b60008111610b41576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f4f6e6c79207374726963746c7920706f7369746976652076616c756573000000604482015260640160405180910390fd5b610b49610893565b610b523361032d565b6040517f23b872dd000000000000000000000000000000000000000000000000000000008152336004820152306024820152604481018290527f000000000000000000000000000000000000000000000000000000000000000073ffffffffffffffffffffffffffffffffffffffff16906323b872dd90606401602060405180830381600087803b158015610be657600080fd5b505af1158015610bfa573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c1e9190611217565b50600354600480546040517f508ba0bd00000000000000000000000000000000000000000000000000000000815260009373fe04787035122436690EC52f3f5DDC0B84208ae09363508ba0bd93610c8993429392019283526020830191909152604082015260600190565b60206040518083038186803b158015610ca157600080fd5b505af4158015610cb5573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610cd99190611115565b33600090815260016020819052604090912090810154919250901580610d2b5750600180820180549091610d0c916110cf565b81548110610d1c57610d1c6110e6565b90600052602060002001548214155b15610d4a57600180820180549182018155600090815260209020018290555b60018460ff166001811115610d6157610d6161114f565b6001811115610d7257610d7261114f565b1415610dca5760008281526020829052604081206001018054859290610d999084906111ca565b909155505060008281526002602052604081206001018054859290610dbf9084906111ca565b90915550610e119050565b60008281526020829052604081208054859290610de89084906111ca565b909155505060008281526002602052604081208054859290610e0b9084906111ca565b90915550505b6040805184815260ff86166020820152839133917f85ff162f60a0eab11e1e0d3d9cfa18a46d7038a29751af4130dbaeeadbd37ed4910160405180910390a350505050565b600080600581610e678560016111ca565b81526020019081526020016000205460056000856002610e8791906111ca565b81526020019081526020016000205491509150915091565b60008054604080517ffeaf968c0000000000000000000000000000000000000000000000000000000081529051839273ffffffffffffffffffffffffffffffffffffffff169163feaf968c9160048083019260a0929190829003018186803b158015610f0a57600080fd5b505afa158015610f1e573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610f429190611253565b509195945050505050565b600081610f5a85856112a3565b610f6491906112e0565b949350505050565b600060208284031215610f7e57600080fd5b5035919050565b803573ffffffffffffffffffffffffffffffffffffffff81168114610fa957600080fd5b919050565b600060208284031215610fc057600080fd5b610fc982610f85565b9392505050565b60008060408385031215610fe357600080fd5b82359150610ff360208401610f85565b90509250929050565b6000806040838503121561100f57600080fd5b61101883610f85565b946020939093013593505050565b60ff811681146109b857600080fd5b600080600080600060a0868803121561104d57600080fd5b85359450602086013593506040860135925060608601359150608086013561107481611026565b809150509295509295909350565b6000806040838503121561109557600080fd5b823561101881611026565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b6000828210156110e1576110e16110a0565b500390565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052603260045260246000fd5b60006020828403121561112757600080fd5b5051919050565b60006020828403121561114057600080fd5b815160048110610fc957600080fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602160045260246000fd5b60006020828403121561119057600080fd5b8151610fc981611026565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052603160045260246000fd5b600082198211156111dd576111dd6110a0565b500190565b6000816111f1576111f16110a0565b507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0190565b60006020828403121561122957600080fd5b81518015158114610fc957600080fd5b805169ffffffffffffffffffff81168114610fa957600080fd5b600080600080600060a0868803121561126b57600080fd5b61127486611239565b945060208601519350604086015192506060860151915061129760808701611239565b90509295509295909350565b6000817fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff04831182151516156112db576112db6110a0565b500290565b600082611316577f4e487b7100000000000000000000000000000000000000000000000000000000600052601260045260246000fd5b50049056fea2646970667358221220dc85f37e8765d8805d47a5e8fa03b4f805c205f016ec91ce51b1ba24e51f79d964736f6c63430008080033",
+  "deployedBytecode": "0x6080604052600436106100d25760003560e01c80639626a2301161007f578063ca055e5311610059578063ca055e53146102ad578063dcb3b30e146102cd578063e0d65d87146102e0578063f83b35fb1461030d57600080fd5b80639626a230146101f3578063ac4afa3814610259578063b47a35661461028d57600080fd5b8063607ad0d7116100b0578063607ad0d714610181578063673a7e281461019757806389b808a7146101ac57600080fd5b80630eff4d88146100d757806340b8405a1461013b5780635c11ff7a1461015d575b600080fd5b3480156100e357600080fd5b506101216100f2366004610f6c565b600090815260026020908152604091829020825180840190935280548084526001909101549290910182905291565b604080519283526020830191909152015b60405180910390f35b34801561014757600080fd5b5061015b610156366004610fae565b61032d565b005b34801561016957600080fd5b5061017360035481565b604051908152602001610132565b34801561018d57600080fd5b5061017360045481565b3480156101a357600080fd5b5061015b610893565b3480156101b857600080fd5b506101736101c7366004610fae565b73ffffffffffffffffffffffffffffffffffffffff166000908152600160208190526040909120015490565b3480156101ff57600080fd5b5061012161020e366004610fd0565b73ffffffffffffffffffffffffffffffffffffffff16600090815260016020818152604080842094845293815291839020835180850190945280548085529101549290910182905291565b34801561026557600080fd5b50610121610274366004610f6c565b6002602052600090815260409020805460019091015482565b34801561029957600080fd5b506101736102a8366004610ffc565b6109bb565b3480156102b957600080fd5b506101736102c8366004611035565b610a08565b61015b6102db366004611082565b610ad3565b3480156102ec57600080fd5b506101736102fb366004610f6c565b60056020526000908152604090205481565b34801561031957600080fd5b50610121610328366004610f6c565b610e56565b73ffffffffffffffffffffffffffffffffffffffff8116600090815260016020819052604090912090810154610361575050565b60018101546000905b80156107bd5760008360010160018361038391906110cf565b81548110610393576103936110e6565b6000918252602082200154600354600480546040517f508ba0bd00000000000000000000000000000000000000000000000000000000815293955073__$686c523504a9e378bd393220b2fc4a35a6$__9363508ba0bd936104099342939192019283526020830191909152604082015260600190565b60206040518083038186803b15801561042157600080fd5b505af4158015610435573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104599190611115565b905060008061046784610e56565b6040517fb134894e00000000000000000000000000000000000000000000000000000000815260048101879052602481018690526044810183905260648101829052919350915060009073__$686c523504a9e378bd393220b2fc4a35a6$__9063b134894e9060840160206040518083038186803b1580156104e857600080fd5b505af41580156104fc573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610520919061112e565b905060008160038111156105365761053661114f565b1480610553575060018160038111156105515761055161114f565b145b156105625750505050506107ab565b600060038260038111156105785761057861114f565b1415610628576040517fc886d8a4000000000000000000000000000000000000000000000000000000008152600481018590526024810184905273__$686c523504a9e378bd393220b2fc4a35a6$__9063c886d8a49060440160206040518083038186803b1580156105e957600080fd5b505af41580156105fd573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610621919061117e565b9050610646565b600282600381111561063c5761063c61114f565b1415610646575060025b6001808a0180549091610658916110cf565b81548110610668576106686110e6565b90600052602060002001548960010160018961068491906110cf565b81548110610694576106946110e6565b600091825260209091200155600189018054806106b3576106b361119b565b6000828152602080822083017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9081018390559092019092558782528a8152604080832081518083018352815481526001918201548185019081528b86526002855283862084518086019095528054808652930154948401859052518151919593946107429391929188610a08565b905061074e818c6111ca565b9a508c73ffffffffffffffffffffffffffffffffffffffff16897f6f277b50171c654e40c771d9c2bbf19e070eeb21cce6f8e9a80334564279e3958360405161079991815260200190565b60405180910390a35050505050505050505b806107b5816111e2565b91505061036a565b50801561088e576040517fa9059cbb00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff8481166004830152602482018390527f0000000000000000000000000000000000000000000000000000000000000000169063a9059cbb90604401602060405180830381600087803b15801561085457600080fd5b505af1158015610868573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061088c9190611217565b505b505050565b600354600480546040517f508ba0bd00000000000000000000000000000000000000000000000000000000815260009373__$686c523504a9e378bd393220b2fc4a35a6$__9363508ba0bd936108fd93429392019283526020830191909152604082015260600190565b60206040518083038186803b15801561091557600080fd5b505af4158015610929573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061094d9190611115565b6000818152600560205260409020549091506109b85761096b610e9f565b600082815260056020526040908190208290555182917f945c1c4e99aa89f648fbfe3df471b916f719e16d960fcec0737d4d56bd696838916109af91815260200190565b60405180910390a25b50565b73ffffffffffffffffffffffffffffffffffffffff821660009081526001602081905260408220018054839081106109f5576109f56110e6565b9060005260206000200154905092915050565b6000808260ff166002811115610a2057610a2061114f565b90506000610a2e85876111ca565b90506001826002811115610a4457610a4461114f565b148015610a5057508515155b15610a6757610a60818988610f4d565b9250610ac8565b6000826002811115610a7b57610a7b61114f565b148015610a8757508415155b15610a9757610a60818887610f4d565b6002826002811115610aab57610aab61114f565b1415610abb57610a6087896111ca565b610ac587896111ca565b92505b505095945050505050565b60008111610b41576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601d60248201527f4f6e6c79207374726963746c7920706f7369746976652076616c756573000000604482015260640160405180910390fd5b610b49610893565b610b523361032d565b6040517f23b872dd000000000000000000000000000000000000000000000000000000008152336004820152306024820152604481018290527f000000000000000000000000000000000000000000000000000000000000000073ffffffffffffffffffffffffffffffffffffffff16906323b872dd90606401602060405180830381600087803b158015610be657600080fd5b505af1158015610bfa573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c1e9190611217565b50600354600480546040517f508ba0bd00000000000000000000000000000000000000000000000000000000815260009373__$686c523504a9e378bd393220b2fc4a35a6$__9363508ba0bd93610c8993429392019283526020830191909152604082015260600190565b60206040518083038186803b158015610ca157600080fd5b505af4158015610cb5573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610cd99190611115565b33600090815260016020819052604090912090810154919250901580610d2b5750600180820180549091610d0c916110cf565b81548110610d1c57610d1c6110e6565b90600052602060002001548214155b15610d4a57600180820180549182018155600090815260209020018290555b60018460ff166001811115610d6157610d6161114f565b6001811115610d7257610d7261114f565b1415610dca5760008281526020829052604081206001018054859290610d999084906111ca565b909155505060008281526002602052604081206001018054859290610dbf9084906111ca565b90915550610e119050565b60008281526020829052604081208054859290610de89084906111ca565b909155505060008281526002602052604081208054859290610e0b9084906111ca565b90915550505b6040805184815260ff86166020820152839133917f85ff162f60a0eab11e1e0d3d9cfa18a46d7038a29751af4130dbaeeadbd37ed4910160405180910390a350505050565b600080600581610e678560016111ca565b81526020019081526020016000205460056000856002610e8791906111ca565b81526020019081526020016000205491509150915091565b60008054604080517ffeaf968c0000000000000000000000000000000000000000000000000000000081529051839273ffffffffffffffffffffffffffffffffffffffff169163feaf968c9160048083019260a0929190829003018186803b158015610f0a57600080fd5b505afa158015610f1e573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610f429190611253565b509195945050505050565b600081610f5a85856112a3565b610f6491906112e0565b949350505050565b600060208284031215610f7e57600080fd5b5035919050565b803573ffffffffffffffffffffffffffffffffffffffff81168114610fa957600080fd5b919050565b600060208284031215610fc057600080fd5b610fc982610f85565b9392505050565b60008060408385031215610fe357600080fd5b82359150610ff360208401610f85565b90509250929050565b6000806040838503121561100f57600080fd5b61101883610f85565b946020939093013593505050565b60ff811681146109b857600080fd5b600080600080600060a0868803121561104d57600080fd5b85359450602086013593506040860135925060608601359150608086013561107481611026565b809150509295509295909350565b6000806040838503121561109557600080fd5b823561101881611026565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b6000828210156110e1576110e16110a0565b500390565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052603260045260246000fd5b60006020828403121561112757600080fd5b5051919050565b60006020828403121561114057600080fd5b815160048110610fc957600080fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602160045260246000fd5b60006020828403121561119057600080fd5b8151610fc981611026565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052603160045260246000fd5b600082198211156111dd576111dd6110a0565b500190565b6000816111f1576111f16110a0565b507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0190565b60006020828403121561122957600080fd5b81518015158114610fc957600080fd5b805169ffffffffffffffffffff81168114610fa957600080fd5b600080600080600060a0868803121561126b57600080fd5b61127486611239565b945060208601519350604086015192506060860151915061129760808701611239565b90509295509295909350565b6000817fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff04831182151516156112db576112db6110a0565b500290565b600082611316577f4e487b7100000000000000000000000000000000000000000000000000000000600052601260045260246000fd5b50049056fea2646970667358221220dc85f37e8765d8805d47a5e8fa03b4f805c205f016ec91ce51b1ba24e51f79d964736f6c63430008080033",
+  "libraries": {
+    "BetLibrary": "0xfe04787035122436690EC52f3f5DDC0B84208ae0"
+  },
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 2973,
+        "contract": "contracts/DailyPool.sol:DailyPool",
+        "label": "priceFeed",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(AggregatorV3Interface)45"
+      },
+      {
+        "astId": 2981,
+        "contract": "contracts/DailyPool.sol:DailyPool",
+        "label": "user",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_struct(User)1380_storage)"
+      },
+      {
+        "astId": 2986,
+        "contract": "contracts/DailyPool.sol:DailyPool",
+        "label": "pools",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_uint256,t_struct(Pool)1371_storage)"
+      },
+      {
+        "astId": 2988,
+        "contract": "contracts/DailyPool.sol:DailyPool",
+        "label": "windowDuration",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 2990,
+        "contract": "contracts/DailyPool.sol:DailyPool",
+        "label": "deployTimestamp",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 2994,
+        "contract": "contracts/DailyPool.sol:DailyPool",
+        "label": "windowPrice",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_uint256,t_uint256)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_uint256)dyn_storage": {
+        "base": "t_uint256",
+        "encoding": "dynamic_array",
+        "label": "uint256[]",
+        "numberOfBytes": "32"
+      },
+      "t_contract(AggregatorV3Interface)45": {
+        "encoding": "inplace",
+        "label": "contract AggregatorV3Interface",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_struct(User)1380_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct BetLibrary.User)",
+        "numberOfBytes": "32",
+        "value": "t_struct(User)1380_storage"
+      },
+      "t_mapping(t_uint256,t_struct(Pool)1371_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct BetLibrary.Pool)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Pool)1371_storage"
+      },
+      "t_mapping(t_uint256,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(Pool)1371_storage": {
+        "encoding": "inplace",
+        "label": "struct BetLibrary.Pool",
+        "members": [
+          {
+            "astId": 1368,
+            "contract": "contracts/DailyPool.sol:DailyPool",
+            "label": "downValue",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 1370,
+            "contract": "contracts/DailyPool.sol:DailyPool",
+            "label": "upValue",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_struct(User)1380_storage": {
+        "encoding": "inplace",
+        "label": "struct BetLibrary.User",
+        "members": [
+          {
+            "astId": 1376,
+            "contract": "contracts/DailyPool.sol:DailyPool",
+            "label": "stake",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_uint256,t_struct(Pool)1371_storage)"
+          },
+          {
+            "astId": 1379,
+            "contract": "contracts/DailyPool.sol:DailyPool",
+            "label": "bets",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)dyn_storage"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
