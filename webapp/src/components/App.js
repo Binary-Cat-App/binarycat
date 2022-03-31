@@ -44,6 +44,15 @@ const RoutesComponent = () => {
                 <Route exact path="/">
                   <ConnectMetamask />
                 </Route>
+                <Route exact path="/avax">
+                  <ConnectMetamask />
+                </Route>
+                <Route exact path="/kitty">
+                  <ConnectMetamask />
+                </Route>
+                <Route exact path="/daily">
+                  <ConnectMetamask />
+                </Route>
                 <Route path="/staking">
                   <ConnectMetamask />
                 </Route>
