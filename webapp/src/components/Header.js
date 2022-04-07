@@ -81,7 +81,7 @@ export const Header = ({ connected = false }) => {
                   </Link>
                 )}
 
-                {location.pathname === '/' && (
+                {location.pathname !== '/staking' && (
                   <Link to="/staking" className={`btn btn--outline`}>
                     Staking
                   </Link>
