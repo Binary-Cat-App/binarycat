@@ -24,7 +24,13 @@ export const BetsCounter = ({
         <span className="flex-shrink-0 mr-2">
           <IconUp className="icon text-green-500" />
         </span>
-        <span className="font-digits text-xl xl:text-2xl text-green-500">
+        <span
+          className={`font-digits ${
+            poolTotalUp?.length > 5 && window.innerWidth > 600
+              ? 'text-xs'
+              : 'text-xl'
+          } xl:text-2xl text-green-500`}
+        >
           {poolTotalUp}
         </span>
         <span className="text-xs text-gray-300 ml-2">{selectedCurrency}</span>
