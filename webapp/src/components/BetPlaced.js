@@ -64,9 +64,11 @@ export const BetPlaced = ({
           )}
         </span>
         <span
-          className={`font-digits text-xl xl:text-2xl ${
-            !betAmountContract && 'text-gray-300'
-          }`}
+          className={`font-digits ${
+            betAmountContract?.length > 5 && window.innerWidth > 600
+              ? 'text-xs'
+              : 'text-xl'
+          } xl:text-2xl ${!betAmountContract && 'text-gray-300'}`}
         >
           {betAmountContract ? betAmountContract : '0.00'}
         </span>
