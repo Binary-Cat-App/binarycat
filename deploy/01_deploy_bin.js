@@ -78,6 +78,16 @@ module.exports = async ({getNamedAccounts, deployments, network}) => {
         log: true,
         skipIfAlreadyDeployed: true,
     });
+
+    let flip = await deploy('Flip', {
+        from: deployer,
+        args: [86400, FEE, "0x7f8847242a530E809E17bF2DA5D2f9d2c4A43261", "0xd9BdB42229F1aefe47Cdf028408272686445D3ff", stake.address, token.address, REWARD],
+        libraries: {
+            BetLibrary: betLibrary.address
+        },
+        log: true,
+        skipIfAlreadyDeployed: true,
+    });
 }
 
-module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock', 'KittyPool', 'DailyPool'];
+module.exports.tags = ['BinaryStaking', 'BinaryBet', 'BinToken', 'KittyTimeLock', 'KittyPool', 'DailyPool', 'Flip'];
