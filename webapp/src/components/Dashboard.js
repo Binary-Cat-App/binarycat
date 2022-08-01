@@ -12,6 +12,7 @@ import { BetProgressBar } from './BetProgressBar';
 import {
   CURRENCY_AVAX,
   CURRENCY_KITTY,
+  CURRENCY_ETH,
   useBetting,
 } from '../context/BettingContext';
 import _ from 'lodash';
@@ -334,12 +335,14 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
-      <ControlBar
-        selectedCurrency={selectedCurrency}
-        selectCurrency={changeCurrency}
-        selectedWindowTime={selectedWindowTime / 1} // Forces cast to int
-        selectWindowTime={changeTimeWindow}
-      ></ControlBar>
+      {selectedCurrency != CURRENCY_ETH ?? (
+        <ControlBar
+          selectedCurrency={selectedCurrency}
+          selectCurrency={changeCurrency}
+          selectedWindowTime={selectedWindowTime / 1} // Forces cast to int
+          selectWindowTime={changeTimeWindow}
+        ></ControlBar>
+      )}
 
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
         <UserSummary selectedCurrency={selectedCurrency} />

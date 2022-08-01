@@ -15,6 +15,7 @@ import {
   BettingProvider,
   CURRENCY_AVAX,
   CURRENCY_KITTY,
+  CURRENCY_ETH,
 } from '../context/BettingContext';
 import { StakingProvider } from '../context/StakingContext';
 
@@ -94,6 +95,11 @@ const RoutesComponent = () => {
               </Route>
               <Route exact path="/daily">
                 <BettingProvider currency={CURRENCY_KITTY} timeWindow={1440}>
+                  <Dashboard />
+                </BettingProvider>
+              </Route>
+              <Route exact path="/eth">
+                <BettingProvider currency={CURRENCY_ETH}>
                   <Dashboard />
                 </BettingProvider>
               </Route>
