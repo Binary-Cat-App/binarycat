@@ -28,6 +28,7 @@ export const useBetting = () => {
 
 export const CURRENCY_AVAX = 'AVAX';
 export const CURRENCY_KITTY = 'KITTY';
+export const CURRENCY_ETH = 'ETH';
 
 export const BettingProvider = ({ children, currency, timeWindow }) => {
   const { active, account, library } = useWeb3React();
