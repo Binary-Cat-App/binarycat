@@ -99,12 +99,17 @@ const RoutesComponent = () => {
                 </BettingProvider>
               </Route>
               <Route exact path="/eth">
-                <BettingProvider currency={CURRENCY_ETH}>
+                <BettingProvider currency={CURRENCY_ETH} timeWindow={1440}>
                   <Dashboard />
                 </BettingProvider>
               </Route>
               <Route path="/staking">
                 <StakingProvider>
+                  <Staking />
+                </StakingProvider>
+              </Route>
+              <Route path="/eth/staking">
+                <StakingProvider currency={CURRENCY_ETH}>
                   <Staking />
                 </StakingProvider>
               </Route>

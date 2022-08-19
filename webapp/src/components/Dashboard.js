@@ -302,7 +302,10 @@ export const Dashboard = () => {
 
       const _bet = currencyToWei(value, true);
       // Check currency
-      if (selectedCurrency === CURRENCY_AVAX && selectedWindowTime === 5) {
+      if (
+        selectedCurrency === CURRENCY_AVAX ||
+        selectedCurrency === CURRENCY_ETH
+      ) {
         contract.methods
           .placeBet(direction)
           .send({
@@ -335,33 +338,28 @@ export const Dashboard = () => {
     </div>
   ) : (
     <>
-      {selectedCurrency != CURRENCY_ETH ?? (
+      {selectedCurrency !== CURRENCY_ETH ? (
         <ControlBar
           selectedCurrency={selectedCurrency}
           selectCurrency={changeCurrency}
           selectedWindowTime={selectedWindowTime / 1} // Forces cast to int
           selectWindowTime={changeTimeWindow}
         ></ControlBar>
-      )}
+      ) : null}
 
       <div className="flex mb-6 -mx-4 my-auto items-center flex-col md:flex-row">
         <UserSummary selectedCurrency={selectedCurrency} />
         <UserActions />
       </div>
-
       <audio src={soundEffect} ref={audioRef} autoPlay></audio>
-
       <DismissableAlert name="alert-unclaimed-gains">
         <span className="text-sm text-gray-300">
           Unclaimed gains and KITTY tokens are transferred to your MetaMask
           wallet by using the claim button or automatically on your next bet.
         </span>
       </DismissableAlert>
-
       {/* <ControlBar></ControlBar> */}
-
       <BetProgressBar completed={progress} />
-
       <div className="-mx-4 mb-6 overflow-x-hidden">
         <style children={transformAnimation} />
         <div
@@ -401,7 +399,6 @@ export const Dashboard = () => {
           </TransitionGroup>
         </div>
       </div>
-
       <DismissableAlert name="alert-prices">
         <span className="text-sm text-gray-300">
           There may be a discrepancy between initial/final prices and prices
@@ -410,7 +407,6 @@ export const Dashboard = () => {
           collected from the Chainlink onchain API
         </span>
       </DismissableAlert>
-
       <div className="bg-white rounded-3xl mt-2 px-4">
         <BetChart classAlt="h-64" chart={historicalChartData} />
       </div>

@@ -47,9 +47,17 @@ export const Header = ({ connected = false }) => {
       <Container>
         <div className="flex flex-col md:flex-row items-center justify-between">
           <span className="mb-4 md:mb-0 md:mr-4">
-            <Link to="/">
-              <Logo />
-            </Link>
+            {location.pathname !== '/eth/staking' && (
+              <Link to="/">
+                <Logo />
+              </Link>
+            )}
+
+            {location.pathname === '/eth/staking' && (
+              <Link to="/eth">
+                <Logo />
+              </Link>
+            )}
           </span>
           <div>
             <ul className="flex items-center text-sm">
@@ -81,12 +89,18 @@ export const Header = ({ connected = false }) => {
                     Bet
                   </Link>
                 )}
-
-                {location.pathname !== '/staking' && (
-                  <Link to="/staking" className={`btn btn--outline`}>
+                {location.pathname === '/eth' && (
+                  <Link to="/eth/staking" className={`btn btn--outline`}>
                     Staking
                   </Link>
                 )}
+
+                {location.pathname !== '/staking' &&
+                  location.pathname !== '/eth' && (
+                    <Link to="/staking" className={`btn btn--outline`}>
+                      Staking
+                    </Link>
+                  )}
               </li>
             </ul>
           </div>

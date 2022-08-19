@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReactComponent as IconWinningPercentage } from '../assets/images/icon-winning-percantage.svg';
 import { ReactComponent as IconTotalWinnings } from '../assets/images/icon-ballance.svg';
-import { CURRENCY_AVAX, useBetting } from '../context/BettingContext';
+import { CURRENCY_KITTY, useBetting } from '../context/BettingContext';
 
 export const UserSummary = ({ selectedCurrency }) => {
   const { unsettledGains, unsettledKITTY, weiToCurrency } = useBetting();
@@ -25,7 +25,7 @@ export const UserSummary = ({ selectedCurrency }) => {
         </div>
       </div>
 
-      {selectedCurrency === CURRENCY_AVAX && (
+      {selectedCurrency !== CURRENCY_KITTY && (
         <div className="px-2 md:px-4">
           <div className="flex items-center">
             <span className="hidden lg:flex -mr-8 rounded-full bg-white p-4 shadow-xl w-20 h-20 flex items-center justify-center flex-shrink-0 z-10 relative">
