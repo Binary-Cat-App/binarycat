@@ -57,6 +57,9 @@ const RoutesComponent = () => {
                 <Route path="/staking">
                   <ConnectMetamask />
                 </Route>
+                <Route exact path="/eth">
+                  <ConnectMetamask />
+                </Route>
               </Switch>
             </Container>
           </div>
