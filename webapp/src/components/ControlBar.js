@@ -20,8 +20,6 @@ export const ControlBar = ({
   };
 
   const onWindowTimeSelected = (value) => {
-    console.log('TRANQUERADA');
-    console.log(value);
     selectWindowTime(value.value);
   };
 
