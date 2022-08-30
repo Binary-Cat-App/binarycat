@@ -1,0 +1,32 @@
+{
+    "avax": {
+        "chainId": "43113",
+        "chainName": "AVAX",
+        "currency": {
+            "name": "Avalanche",
+            "decimals": 18, 
+            "symbol": "AVAX"
+        },
+        "rpcUrl": "https://api.avax-test.network/ext/bc/C/rpc"
+    },
+    "eth": {
+        "chainId": "69",
+        "chainName": "ETH",
+        "currency": {
+            "name": "Kovan Ether",
+            "decimals": 18, 
+            "symbol": "KOR"
+        },
+        "rpcUrl": "https://kovan.optimism.io/"
+    },
+    "kitty": {
+        "chainId": "43113",
+        "chainName": "AVAX",
+        "currency": {
+            "name": "Avalanche",
+            "decimals": 18, 
+            "symbol": "AVAX"
+        },
+        "rpcUrl": "https://api.avax-test.network/ext/bc/C/rpc"
+    }
+}

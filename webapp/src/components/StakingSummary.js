@@ -12,7 +12,9 @@ export const StakingSummary = () => {
     walletBalance,
     stakedBalance,
     weiToCurrency,
-    stakingObj,
+    stakingContract,
+    currency,
+    web3Eth,
   } = useStaking();
 
   const [effect, setEffect] = useState(false);
@@ -26,7 +28,7 @@ export const StakingSummary = () => {
     setEffect(true);
 
     if (active && account) {
-      const withdraw = await stakingObj.methods.release(account).send({
+      const withdraw = await stakingContract.methods.release(account).send({
         from: account,
       });
 
@@ -42,7 +44,8 @@ export const StakingSummary = () => {
             Unclaimed Rewards
           </dt>
           <dd className="text-xl lg:text-2xl font-black text-green-500 leading-none text-center">
-            {_totalRewards.toFixed(6)} {global.config.currencyName}
+            {_totalRewards.toFixed(6)}{' '}
+            {currency ? currency : global.config.currencyName}
           </dd>
         </dl>
         <Button

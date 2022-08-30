@@ -39,4 +39,17 @@ module.exports = {
       burn_address: "0x000000000000000000000000000000000000dEaD"
   },
 
+  optmism_kovan: {
+      price_feed_address: "0x7f8847242a530E809E17bF2DA5D2f9d2c4A43261", // AVAX/USD price feed
+      window_duration: 300,//5 minutes * 60 seconds/minute
+      fee: 2,
+      reward: 200,
+      ido_address: "0x093e4A781365e1BF3a1170A24B152a46E679B33A",
+      release_timestamp: 1658159404, 
+      beneficiary: "0xfbF8a1D6d712E8A4257C907e027d2B2A881e5cC5",
+
+      max_burn: 400,
+      burn_address: "0x000000000000000000000000000000000000dEaD"
+  },
+
 }

@@ -68,6 +68,12 @@ module.exports = {
           gasPrice: 225000000000,
           chainId: 43114,
           accounts: [`${key}`]
+      },
+      optmism_kovan: {
+          url: 'https://kovan.optimism.io',
+          gasPrice: 225000000000,
+          chainId: 69,
+          accounts: [`${key}`]
       }
   },
     etherscan: {

@@ -15,9 +15,9 @@ export const Stake = () => {
     walletBalance,
     weiToCurrency,
     currencyToWei,
-    stakingObj,
+    stakingContract,
     staking,
-    tokenObj,
+    tokenContract,
   } = useStaking();
 
   const _walletBalance = walletBalance ? weiToCurrency(walletBalance) : 0.0;
@@ -29,7 +29,7 @@ export const Stake = () => {
     if (active && account) {
       const amount = currencyToWei(Number.MAX_SAFE_INTEGER);
 
-      const allowance = await tokenObj.methods
+      const allowance = await tokenContract.methods
         .approve(staking.address, amount)
         .send({
           from: account,
@@ -47,7 +47,7 @@ export const Stake = () => {
     ) {
       const amount = currencyToWei(val);
 
-      const stake = await stakingObj.methods.stake(amount).send({
+      const stake = await stakingContract.methods.stake(amount).send({
         from: account,
       });
 

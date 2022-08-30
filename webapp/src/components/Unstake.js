@@ -14,8 +14,8 @@ export const Unstake = () => {
     stakedBalance,
     weiToCurrency,
     currencyToWei,
-    stakingObj,
-    tokenObj,
+    stakingContract,
+    tokenContract,
   } = useStaking();
 
   const _stakedBalance = stakedBalance ? weiToCurrency(stakedBalance) : 0.0;
@@ -30,7 +30,7 @@ export const Unstake = () => {
     ) {
       const amount = currencyToWei(val);
 
-      const unstake = await stakingObj.methods.unstake(amount).send({
+      const unstake = await stakingContract.methods.unstake(amount).send({
         from: account,
       });
 

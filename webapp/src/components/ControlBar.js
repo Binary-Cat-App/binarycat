@@ -52,7 +52,7 @@ export const ControlBar = ({
           options={
             !selectedCurrency
               ? []
-              : global.currencyWindows.timeOptions[selectedCurrency]
+              : global.currencyConfiguration.timeOptions[selectedCurrency]
           }
           selectedValue={selectedWindowTime}
           className="btn-select"

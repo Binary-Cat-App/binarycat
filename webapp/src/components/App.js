@@ -15,6 +15,7 @@ import {
   BettingProvider,
   CURRENCY_AVAX,
   CURRENCY_KITTY,
+  CURRENCY_ETH,
 } from '../context/BettingContext';
 import { StakingProvider } from '../context/StakingContext';
 
@@ -54,6 +55,9 @@ const RoutesComponent = () => {
                   <ConnectMetamask />
                 </Route>
                 <Route path="/staking">
+                  <ConnectMetamask />
+                </Route>
+                <Route exact path="/eth">
                   <ConnectMetamask />
                 </Route>
               </Switch>
@@ -97,8 +101,18 @@ const RoutesComponent = () => {
                   <Dashboard />
                 </BettingProvider>
               </Route>
+              <Route exact path="/eth">
+                <BettingProvider currency={CURRENCY_ETH} timeWindow={1440}>
+                  <Dashboard />
+                </BettingProvider>
+              </Route>
               <Route path="/staking">
                 <StakingProvider>
+                  <Staking />
+                </StakingProvider>
+              </Route>
+              <Route path="/eth/staking">
+                <StakingProvider currency={CURRENCY_ETH}>
                   <Staking />
                 </StakingProvider>
               </Route>

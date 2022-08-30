@@ -4,7 +4,7 @@ import { PlaceBet } from './PlaceBet';
 import { BetChart } from './Chart';
 import React, { useState } from 'react';
 import { BetsCounter } from './BetsCounter';
-import { CURRENCY_AVAX } from '../context/BettingContext';
+import { CURRENCY_AVAX, CURRENCY_ETH } from '../context/BettingContext';
 import { PermissionRequest } from './PermissionRequest';
 
 export const Bet = ({
@@ -106,6 +106,9 @@ export const Bet = ({
     }
   }
 
+  const toFixed = (n, fixed) =>
+    `${n}`.match(new RegExp(`^-?\\d+(?:\.\\d{0,${fixed}})?`))[0];
+
   return (
     <div className="w-full lg:w-1/3 px-4 pb-4 lg:pb-0 flex-shrink-0">
       <div
@@ -183,7 +186,11 @@ export const Bet = ({
                 >
                   {initialPrice ? (
                     _initialPrice > 0 ? (
-                      _initialPrice.toFixed(2)
+                      selectedCurrency === CURRENCY_ETH ? (
+                        toFixed(_initialPrice, 3)
+                      ) : (
+                        _initialPrice.toFixed(2)
+                      )
                     ) : (
                       <IconSpinner className="spinner animate-spin mt-2 mb-2 h-5 w-5 text-gray" />
                     )
@@ -191,7 +198,11 @@ export const Bet = ({
                     '?'
                   )}
                 </span>
-                <span className={`text-xs`}>{global.config.pricesLabel}</span>
+                <span className={`text-xs`}>
+                  {selectedCurrency === CURRENCY_ETH
+                    ? global.config.pricesLabelEth
+                    : global.config.pricesLabelAvax}
+                </span>
               </div>
             </div>
             <div className="px-2 w-1/2">
@@ -210,7 +221,11 @@ export const Bet = ({
                 >
                   {finalPrice ? (
                     _finalPrice > 0 ? (
-                      _finalPrice.toFixed(2)
+                      selectedCurrency === CURRENCY_ETH ? (
+                        toFixed(_finalPrice, 3)
+                      ) : (
+                        _finalPrice.toFixed(2)
+                      )
                     ) : (
                       <IconSpinner className="spinner animate-spin mt-2 mb-2 h-5 w-5 text-gray" />
                     )
@@ -218,7 +233,11 @@ export const Bet = ({
                     '?'
                   )}
                 </span>
-                <span className={`text-xs`}>{global.config.pricesLabel}</span>
+                <span className={`text-xs`}>
+                  {selectedCurrency === CURRENCY_ETH
+                    ? global.config.pricesLabelEth
+                    : global.config.pricesLabelAvax}
+                </span>
               </div>
             </div>
           </div>

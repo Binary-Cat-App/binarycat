@@ -13,10 +13,12 @@ import _ from 'lodash';
 import { io } from 'socket.io-client';
 
 // Contracts
-import BinaryBet from '../contracts/BinaryBet.json';
-import KittyPool from '../contracts/KittyPool.json';
-import BinToken from '../contracts/BinToken.json';
-import DailyContract from '../contracts/DailyPool.json';
+import BinaryBet from '../contracts/avax/BinaryBet.json';
+import KittyPool from '../contracts/avax/KittyPool.json';
+import BinToken from '../contracts/avax/BinToken.json';
+import DailyContract from '../contracts/avax/DailyPool.json';
+import FlipContract from '../contracts/eth/Flip.json';
+import Networks from '../networks.json';
 
 import { useHistory } from 'react-router-dom';
 
@@ -28,6 +30,7 @@ export const useBetting = () => {
 
 export const CURRENCY_AVAX = 'AVAX';
 export const CURRENCY_KITTY = 'KITTY';
+export const CURRENCY_ETH = 'ETH';
 
 export const BettingProvider = ({ children, currency, timeWindow }) => {
   const { active, account, library } = useWeb3React();
@@ -41,6 +44,10 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
   const avaxContract = new web3Eth.Contract(BinaryBet.abi, BinaryBet.address);
   const kittyContract = new web3Eth.Contract(KittyPool.abi, KittyPool.address);
   const tokenContract = new web3Eth.Contract(BinToken.abi, BinToken.address);
+  const ethContract = new web3Eth.Contract(
+    FlipContract.abi,
+    FlipContract.address
+  );
   const dailyContract = new web3Eth.Contract(
     DailyContract.abi,
     DailyContract.address
@@ -80,8 +87,44 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       } else if (selectedWindowTime === 1440) {
         setContract(dailyContract);
       }
+    } else if (selectedCurrency === CURRENCY_ETH) {
+      setContract(ethContract);
     }
   };
+
+  useEffect(() => {
+    if (!account || !contract) return;
+    if (
+      selectedCurrency !== CURRENCY_AVAX &&
+      selectedCurrency !== CURRENCY_ETH
+    ) {
+      checkContractAllownce();
+    }
+  }, [account, contract]);
+
+  const checkNetwork = async () => {
+    let chainId = await web3Eth.net.getId();
+    if (!selectedCurrency) {
+      return;
+    }
+    if (
+      selectedCurrency === CURRENCY_ETH &&
+      chainId != Networks['eth'].chainId
+    ) {
+      changeNetwork();
+    } else if (
+      (selectedCurrency === CURRENCY_AVAX ||
+        selectedCurrency === CURRENCY_KITTY) &&
+      chainId != Networks['avax'].chainId
+    ) {
+      changeNetwork();
+    }
+  };
+
+  useEffect(() => {
+    checkNetwork();
+    configTimes();
+  }, [contract]);
 
   const configTimes = () => {
     if (!selectedWindowTime) return;
@@ -94,12 +137,21 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
         .deployTimestamp()
         .call()
         .then((response) => setInitTimestamp(Number.parseInt(response)));
-    } else {
+    } else if (selectedCurrency != CURRENCY_ETH) {
       dailyContract.methods
         .windowDuration()
         .call()
         .then((response) => setWindowDuration(Number.parseInt(response)));
       dailyContract.methods
+        .deployTimestamp()
+        .call()
+        .then((response) => setInitTimestamp(Number.parseInt(response)));
+    } else {
+      ethContract.methods
+        .windowDuration()
+        .call()
+        .then((response) => setWindowDuration(Number.parseInt(response)));
+      ethContract.methods
         .deployTimestamp()
         .call()
         .then((response) => setInitTimestamp(Number.parseInt(response)));
@@ -115,8 +167,8 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
     }
     // Check for the last defined currency
     let lastSelected = localStorage.getItem('selectedCurrency');
-    if (lastSelected) {
-      selectCurrency(lastSelected);
+    if (lastSelected && lastSelected != CURRENCY_ETH) {
+      changeCurrency(lastSelected);
     } else {
       selectCurrency(CURRENCY_AVAX);
     }
@@ -129,7 +181,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
     if (selectedCurrency) {
       localStorage.setItem('selectedCurrency', selectedCurrency);
     }
-    let windows = global.currencyWindows.timeOptions[selectedCurrency];
+    let windows = global.currencyConfiguration.timeOptions[selectedCurrency];
     var targetWindowTime;
     // Verifica se esta em um path específico
     if (timeWindow) {
@@ -169,12 +221,14 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
 
   const changeTimeWindow = (timeWindow) => {
     var timeWindowPath;
-    if (timeWindow === 5 && selectedCurrency === CURRENCY_AVAX) {
+    if (selectedCurrency === CURRENCY_AVAX) {
       timeWindowPath = 'avax';
-    } else if (timeWindow === 5 && selectedCurrency === CURRENCY_KITTY) {
+    } else if (selectedCurrency === CURRENCY_KITTY && timeWindow === 5) {
       timeWindowPath = 'kitty';
-    } else {
+    } else if (selectedCurrency === CURRENCY_KITTY) {
       timeWindowPath = 'daily';
+    } else {
+      timeWindowPath = 'eth';
     }
     localStorage.setItem('selectedWindowTime', timeWindow);
     history.push('/' + timeWindowPath);
@@ -188,17 +242,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
     }
     changeContract();
   }, [selectedWindowTime]);
-
-  useEffect(() => {
-    if (!account || !contract) return;
-    if (!(selectedCurrency == CURRENCY_AVAX && selectedWindowTime == 5)) {
-      checkContractAllownce();
-    }
-  }, [account, contract]);
-
-  useEffect(() => {
-    configTimes();
-  }, [contract]);
 
   // Open for betting data
   const [openedWindowData, setOpenedWindowData] = useState({
@@ -588,6 +631,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
           _windowNumber,
           'PriceUpdated'
         );
+
         initialPrice =
           prices.length > 0 ? prices[0].returnValues.price / 100000000 : '0.00';
         finalPrice =
@@ -596,13 +640,21 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
             : '0.00';
       } else {
         prices = await getPrices(_windowNumber);
-        initialPrice = prices[0] > 0 ? prices[0] / 100000000 : '0.00';
-        finalPrice =
-          where === 'Finalized' && prices[1] > 1
-            ? prices[1] / 100000000
-            : '0.00';
+        if (selectedCurrency === CURRENCY_ETH) {
+          initialPrice =
+            prices[0] > 0 ? prices[0] / 1000000000000000000000000000 : '0.00';
+          finalPrice =
+            where === 'Finalized' && prices[1] > 1
+              ? prices[1] / 1000000000000000000000000000
+              : '0.00';
+        } else {
+          initialPrice = prices[0] > 0 ? prices[0] / 100000000 : '0.00';
+          finalPrice =
+            where === 'Finalized' && prices[1] > 1
+              ? prices[1] / 100000000
+              : '0.00';
+        }
       }
-
       switch (where) {
         case 'Ongoing':
           if (
@@ -1047,6 +1099,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       .getWindowBetPrices(windowNumber)
       .call()
       .then((result) => result);
+
     return result;
   };
 
@@ -1064,6 +1117,36 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       .call()
       .then((result) => result);
     return result;
+  };
+
+  const changeNetwork = async () => {
+    let network = Networks[selectedCurrency.toLowerCase()];
+    let chainId = network.chainId;
+    let chainName = network.chainName;
+    let currency = network.currency;
+    let rpcURL = network.rpcUrl;
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: web3Utils.toHex(chainId) }],
+      });
+      window.location.reload(false);
+    } catch (err) {
+      // This error code indicates that the chain has not been added to MetaMask
+      if (err.code === 4902) {
+        await web3Eth.request({
+          method: 'wallet_addEthereumChain',
+          params: [
+            {
+              chainName: chainName,
+              chainId: web3Utils.toHex(chainId),
+              nativeCurrency: currency,
+              rpcUrls: [rpcURL],
+            },
+          ],
+        });
+      }
+    }
   };
 
   const value = {
