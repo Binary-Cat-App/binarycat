@@ -640,7 +640,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
             : '0.00';
       } else {
         prices = await getPrices(_windowNumber);
-
         if (selectedCurrency === CURRENCY_ETH) {
           initialPrice =
             prices[0] > 0 ? prices[0] / 1000000000000000000000000000 : '0.00';
@@ -656,7 +655,6 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
               : '0.00';
         }
       }
-
       switch (where) {
         case 'Ongoing':
           if (
@@ -1101,6 +1099,7 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
       .getWindowBetPrices(windowNumber)
       .call()
       .then((result) => result);
+
     return result;
   };
 

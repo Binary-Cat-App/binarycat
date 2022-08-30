@@ -45,10 +45,11 @@ export const StakingProvider = ({ children, currency }) => {
   useEffect(() => {
     console.log('Staking...');
     checkNetwork();
+    getCurrentBlock();
   }, []);
 
   // Gets Current Blockchain Block
-  useEffect(() => {
+  const getCurrentBlock = async () => {
     if (active && account) {
       web3Eth.getBlock('latest').then((data) => {
         setCurrentBlock({ number: data.number, hash: data.hash });
@@ -77,7 +78,11 @@ export const StakingProvider = ({ children, currency }) => {
         });
       };
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    getCurrentBlock();
+  }, [account]);
 
   const checkNetwork = async () => {
     if (!currency) {

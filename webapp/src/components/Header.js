@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Container } from './Container';
 import { ReactComponent as Logo } from '../assets/images/logo.svg';
+import LogoOp from '../assets/images/logo4.png';
 import { ReactComponent as IconHelp } from '../assets/images/icon-help.svg';
 import { ReactComponent as IconAdd } from '../assets/images/icon-add.svg';
 import { ControlBar } from './ControlBar';
@@ -47,15 +48,22 @@ export const Header = ({ connected = false }) => {
       <Container>
         <div className="flex flex-col md:flex-row items-center justify-between">
           <span className="mb-4 md:mb-0 md:mr-4">
-            {location.pathname !== '/eth/staking' && (
-              <Link to="/">
-                <Logo />
+            {location.pathname !== '/eth/staking' &&
+              location.pathname !== '/eth' && (
+                <Link to="/">
+                  <Logo />
+                </Link>
+              )}
+
+            {location.pathname === '/eth' && (
+              <Link to="/eth">
+                <img src={LogoOp} width="220.0" />
               </Link>
             )}
 
             {location.pathname === '/eth/staking' && (
               <Link to="/eth">
-                <Logo />
+                <img src={LogoOp} width="220.0" />
               </Link>
             )}
           </span>
@@ -89,14 +97,18 @@ export const Header = ({ connected = false }) => {
                     Bet
                   </Link>
                 )}
+                {location.pathname === '/eth/staking' && (
+                  <Link to="/eth" className={`btn btn--outline`}>
+                    Bet
+                  </Link>
+                )}
                 {location.pathname === '/eth' && (
                   <Link to="/eth/staking" className={`btn btn--outline`}>
                     Staking
                   </Link>
                 )}
-
-                {location.pathname !== '/staking' &&
-                  location.pathname !== '/eth' && (
+                {!location.pathname.includes('eth') &&
+                  !location.pathname.includes('staking') && (
                     <Link to="/staking" className={`btn btn--outline`}>
                       Staking
                     </Link>

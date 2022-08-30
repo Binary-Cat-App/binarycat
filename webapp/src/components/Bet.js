@@ -106,6 +106,9 @@ export const Bet = ({
     }
   }
 
+  const toFixed = (n, fixed) =>
+    `${n}`.match(new RegExp(`^-?\\d+(?:\.\\d{0,${fixed}})?`))[0];
+
   return (
     <div className="w-full lg:w-1/3 px-4 pb-4 lg:pb-0 flex-shrink-0">
       <div
@@ -184,7 +187,7 @@ export const Bet = ({
                   {initialPrice ? (
                     _initialPrice > 0 ? (
                       selectedCurrency === CURRENCY_ETH ? (
-                        _initialPrice.toFixed(3)
+                        toFixed(_initialPrice, 3)
                       ) : (
                         _initialPrice.toFixed(2)
                       )
@@ -219,9 +222,9 @@ export const Bet = ({
                   {finalPrice ? (
                     _finalPrice > 0 ? (
                       selectedCurrency === CURRENCY_ETH ? (
-                        _initialPrice.toFixed(3)
+                        toFixed(_finalPrice, 3)
                       ) : (
-                        _initialPrice.toFixed(2)
+                        _finalPrice.toFixed(2)
                       )
                     ) : (
                       <IconSpinner className="spinner animate-spin mt-2 mb-2 h-5 w-5 text-gray" />
