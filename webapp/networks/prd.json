@@ -10,7 +10,7 @@
         "rpcUrl": "https://api.avax.network/ext/bc/C/rpc"
     },
     "eth": {
-        "chainId": "",
+        "chainId": "69",
         "chainName": "ETH",
         "currency": {
             "name": "Kovan Ether",
@@ -18,5 +18,15 @@
             "symbol": "KOR"
         },
         "rpcUrl": ""
+    },
+    "kitty": {
+        "chainId": "43114",
+        "chainName": "AVAX",
+        "currency": {
+            "name": "Avalanche",
+            "decimals": 18,
+            "symbol": "AVAX"
+        },
+        "rpcUrl": "https://api.avax.network/ext/bc/C/rpc"
     }
 }
