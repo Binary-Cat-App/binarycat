@@ -11,13 +11,13 @@
     },
     "eth": {
         "chainId": "69",
-        "chainName": "ETH",
+        "chainName": "Optimism Kovan",
         "currency": {
             "name": "Kovan Ether",
             "decimals": 18, 
             "symbol": "KOR"
         },
-        "rpcUrl": ""
+        "rpcUrl": "https://kovan.optimism.io/"
     },
     "kitty": {
         "chainId": "43114",

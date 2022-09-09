@@ -1134,17 +1134,24 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
     } catch (err) {
       // This error code indicates that the chain has not been added to MetaMask
       if (err.code === 4902) {
-        await web3Eth.request({
-          method: 'wallet_addEthereumChain',
-          params: [
-            {
-              chainName: chainName,
-              chainId: web3Utils.toHex(chainId),
-              nativeCurrency: currency,
-              rpcUrls: [rpcURL],
-            },
-          ],
-        });
+        await window.ethereum
+          .request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainName: chainName,
+                chainId: web3Utils.toHex(chainId),
+                nativeCurrency: currency,
+                rpcUrls: [rpcURL],
+              },
+            ],
+          })
+          .then(() => {
+            changeNetwork();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       }
     }
   };

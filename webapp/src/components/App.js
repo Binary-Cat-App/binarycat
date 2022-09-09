@@ -57,7 +57,7 @@ const RoutesComponent = () => {
                 <Route path="/staking">
                   <ConnectMetamask />
                 </Route>
-                <Route exact path="/eth">
+                <Route exact path="/flippening">
                   <ConnectMetamask />
                 </Route>
               </Switch>
@@ -101,7 +101,7 @@ const RoutesComponent = () => {
                   <Dashboard />
                 </BettingProvider>
               </Route>
-              <Route exact path="/eth">
+              <Route exact path="/flippening">
                 <BettingProvider currency={CURRENCY_ETH} timeWindow={1440}>
                   <Dashboard />
                 </BettingProvider>
@@ -111,7 +111,7 @@ const RoutesComponent = () => {
                   <Staking />
                 </StakingProvider>
               </Route>
-              <Route path="/eth/staking">
+              <Route path="/flippening/staking">
                 <StakingProvider currency={CURRENCY_ETH}>
                   <Staking />
                 </StakingProvider>

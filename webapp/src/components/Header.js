@@ -48,21 +48,21 @@ export const Header = ({ connected = false }) => {
       <Container>
         <div className="flex flex-col md:flex-row items-center justify-between">
           <span className="mb-4 md:mb-0 md:mr-4">
-            {location.pathname !== '/eth/staking' &&
-              location.pathname !== '/eth' && (
+            {location.pathname !== '/flippening/staking' &&
+              location.pathname !== '/flippening' && (
                 <Link to="/">
                   <Logo />
                 </Link>
               )}
 
-            {location.pathname === '/eth' && (
-              <Link to="/eth">
+            {location.pathname === '/flippening' && (
+              <Link to="/flippening">
                 <img src={LogoOp} width="220.0" />
               </Link>
             )}
 
-            {location.pathname === '/eth/staking' && (
-              <Link to="/eth">
+            {location.pathname === '/flippening/staking' && (
+              <Link to="/flippening">
                 <img src={LogoOp} width="220.0" />
               </Link>
             )}
@@ -97,17 +97,17 @@ export const Header = ({ connected = false }) => {
                     Bet
                   </Link>
                 )}
-                {location.pathname === '/eth/staking' && (
-                  <Link to="/eth" className={`btn btn--outline`}>
+                {location.pathname === '/flippening/staking' && (
+                  <Link to="/flippening" className={`btn btn--outline`}>
                     Bet
                   </Link>
                 )}
-                {location.pathname === '/eth' && (
-                  <Link to="/eth/staking" className={`btn btn--outline`}>
+                {location.pathname === '/flippening' && (
+                  <Link to="/flippening/staking" className={`btn btn--outline`}>
                     Staking
                   </Link>
                 )}
-                {!location.pathname.includes('eth') &&
+                {!location.pathname.includes('flippening') &&
                   !location.pathname.includes('staking') && (
                     <Link to="/staking" className={`btn btn--outline`}>
                       Staking
