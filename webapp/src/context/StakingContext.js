@@ -143,7 +143,7 @@ export const StakingProvider = ({ children, currency }) => {
         .then((response) => setTotalStaked(response));
 
       // Wallet Balance
-      stakingContract.methods
+      tokenContract.methods
         .balanceOf(account)
         .call({
           from: account,

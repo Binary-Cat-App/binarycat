@@ -59,21 +59,6 @@ export const ControlBar = ({
           placeholder={'Selecione'}
           onChange={onWindowTimeSelected}
         ></SelectButton>
-
-        {/* <Button
-          className={`btn  mr-3 mt-4 btn--outline `}
-          variant="blue"
-          handleClick={selectKitty}
-        >
-          🕐 5 Minutes Window
-        </Button>
-        <Button
-          className={`btn  mr-3 mt-4 btn--outline `}
-          variant="blue"
-          handleClick={selectKitty}
-        >
-          🕐 24 Hours Window
-        </Button> */}
       </div>
     </div>
   );
