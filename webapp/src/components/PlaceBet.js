@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from './Button';
 import { ReactComponent as IconUp } from '../assets/images/icon-up.svg';
 import { ReactComponent as IconDown } from '../assets/images/icon-down.svg';
-import { useBetting } from '../context/BettingContext';
+import { CURRENCY_ETH, useBetting } from '../context/BettingContext';
 import NumberFormat from 'react-number-format';
 
 export const PlaceBet = ({
@@ -26,7 +26,16 @@ export const PlaceBet = ({
         }}
         isDisabled={!account || !isOpenForBetting}
       >
-        <IconUp className="icon w-16 h-auto" />
+        {selectedCurrency !== CURRENCY_ETH ? (
+          <IconUp className="icon w-16 h-auto" />
+        ) : (
+          <div className="row flex">
+            <div className="col mx-3">
+              <IconUp className="icon w-16 h-auto" />
+            </div>
+            <div className="col align-midle"> ETH</div>
+          </div>
+        )}
       </Button>
       <div
         className={`w-full min-w-0 py-2 px-4 flex items-center bg-white border-l border-r border-gray-200 relative ${
@@ -63,7 +72,16 @@ export const PlaceBet = ({
         }}
         isDisabled={!account || !isOpenForBetting}
       >
-        <IconDown className="icon w-16 h-auto" />
+        {selectedCurrency !== CURRENCY_ETH ? (
+          <IconUp className="icon w-16 h-auto" />
+        ) : (
+          <div className="row flex">
+            <div className="col mx-3">
+              <IconUp className="icon w-16 h-auto" />
+            </div>
+            <div className="col align-midle"> BTC</div>
+          </div>
+        )}
       </Button>
     </div>
   );

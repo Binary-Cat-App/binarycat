@@ -2,7 +2,7 @@ module.exports = global.config = {
   currencyName: 'AVAX',
   tokenName: 'KITTY',
   pricesLabelAvax: 'USD/AVAX',
-  pricesLabelEth: 'BTC/ETH',
+  pricesLabelEth: 'ETH/BTC',
   currencyRequestValue: 'ether',
   currencyRatesNodeAPI: '',
 };
