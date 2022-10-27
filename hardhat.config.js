@@ -10,6 +10,7 @@ const fs = require('fs');
 const mnemonic = fs.readFileSync(".mnemonic").toString().trim();
 const key = fs.readFileSync(".key").toString().trim();
 const snowtrace = fs.readFileSync(".snowtrace").toString().trim();
+const etherscan = fs.readFileSync(".optimismetherscan").toString().trim();
 
 task("accounts", "Prints the list of accounts", async () => {
   const accounts = await ethers.getSigners();
@@ -74,10 +75,15 @@ module.exports = {
           gasPrice: 225000000000,
           chainId: 69,
           accounts: [`${key}`]
-      }
+      },
+      optimism: {
+          url: "https://mainnet.optimism.io",
+          accounts: [`${key}`],
+          gas: 9000000
+    },
   },
     etherscan: {
-        apiKey: snowtrace
+        apiKey: etherscan
     }
 
 };
