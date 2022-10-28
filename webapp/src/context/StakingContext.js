@@ -31,10 +31,10 @@ export const StakingProvider = ({ children, currency }) => {
   const token = currency === CURRENCY_ETH ? AvaxBinToken : AvaxBinToken;
 
   const stakingContract = new web3Eth.Contract(staking.abi, staking.address);
-  const tokenContract = new web3Eth.Contract(
-    token.abi,
-    '0x165DBb08de0476271714952C3C1F068693bd60D7'
-  );
+  const ethBinTokenAddress = '0x165DBb08de0476271714952C3C1F068693bd60D7';
+  const binTokenAddress =
+    currency !== CURRENCY_ETH ? token.address : ethBinTokenAddress;
+  const tokenContract = new web3Eth.Contract(token.abi, binTokenAddress);
 
   const [currentBlock, setCurrentBlock] = useState(null);
   const [totalStaked, setTotalStaked] = useState(0);
@@ -59,9 +59,7 @@ export const StakingProvider = ({ children, currency }) => {
 
       var subscription = web3Eth
         .subscribe('newBlockHeaders')
-        .on('connected', function (subscriptionId) {
-          //console.log(subscriptionId);
-        })
+        .on('connected', function (subscriptionId) {})
         .on('data', function (blockHeader) {
           setCurrentBlock({
             number: blockHeader.number,

@@ -8,16 +8,21 @@ import LogoOp from '../assets/images/logo4.png';
 import { ReactComponent as IconHelp } from '../assets/images/icon-help.svg';
 import { ReactComponent as IconAdd } from '../assets/images/icon-add.svg';
 import { ControlBar } from './ControlBar';
+import { CURRENCY_ETH } from '../context/BettingContext';
 
-export const Header = ({ connected = false }) => {
+export const Header = ({ connected = false, selectedCurrency }) => {
   const location = useLocation();
   const { active, account } = useWeb3React();
   const ethereum = window.ethereum;
 
   const [success, setSuccess] = useState(false);
 
+  const tokenAddress =
+    selectedCurrency === CURRENCY_ETH
+      ? '0x165DBb08de0476271714952C3C1F068693bd60D7'
+      : '0xbca7f1998dc9ffb70b086543a808960a460abca7';
   const token = {
-    address: '0xbca7f1998dc9ffb70b086543a808960a460abca7',
+    address: tokenAddress,
     symbol: 'KITTY',
     decimals: 18,
   };
