@@ -10,14 +10,14 @@
         "rpcUrl": "https://api.avax.network/ext/bc/C/rpc"
     },
     "eth": {
-        "chainId": "69",
-        "chainName": "Optimism Kovan",
+        "chainId": "10",
+        "chainName": "Optimism Mainnet",
         "currency": {
-            "name": "Kovan Ether",
+            "name": "Ether",
             "decimals": 18, 
-            "symbol": "KOR"
+            "symbol": "ETH"
         },
-        "rpcUrl": "https://kovan.optimism.io/"
+        "rpcUrl": "https://mainnet.optimism.io"
     },
     "kitty": {
         "chainId": "43114",

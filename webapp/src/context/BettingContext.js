@@ -104,9 +104,12 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
 
   const checkNetwork = async () => {
     let chainId = await web3Eth.net.getId();
+    console.log('VAMOS LA');
     if (!selectedCurrency) {
       return;
     }
+    console.log(selectedCurrency);
+
     if (
       selectedCurrency === CURRENCY_ETH &&
       chainId != Networks['eth'].chainId
@@ -1120,11 +1123,18 @@ export const BettingProvider = ({ children, currency, timeWindow }) => {
   };
 
   const changeNetwork = async () => {
+    console.log('trocaivos');
+
     let network = Networks[selectedCurrency.toLowerCase()];
     let chainId = network.chainId;
     let chainName = network.chainName;
     let currency = network.currency;
     let rpcURL = network.rpcUrl;
+
+    console.log(chainId);
+    console.log(chainName);
+    console.log(rpcURL);
+
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',

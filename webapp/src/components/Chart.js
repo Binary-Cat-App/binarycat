@@ -1,7 +1,10 @@
 import React from 'react';
 import Chart from 'kaktana-react-lightweight-charts';
+import { CURRENCY_ETH } from '../context/BettingContext';
+import KittyOngoing from '../assets/images/kitty-ongoing.png';
+import KittyFinalized from '../assets/images/kitty-finalized.png';
 
-export const BetChart = ({ classAlt, chart, status }) => {
+export const BetChart = ({ classAlt, chart, status, selectedCurrency }) => {
   const rest = React.useMemo(() => {
     if (chart) {
       if (chart.length > 0) {
@@ -30,27 +33,27 @@ export const BetChart = ({ classAlt, chart, status }) => {
       },
     },
     crosshair: {
-        vertLine: {
-            color: 'rgba(78, 84, 113, 1)',
-            width: 0.5,
-            style: 2,
-            visible: true,
-            labelVisible: false,
-        },
-        horzLine: {
-            color: 'rgba(78, 84, 113, 1)',
-            width: 0.5,
-            style: 2,
-            visible: true,
-            labelVisible: true,
-        },
-        mode: 1,
+      vertLine: {
+        color: 'rgba(78, 84, 113, 1)',
+        width: 0.5,
+        style: 2,
+        visible: true,
+        labelVisible: false,
+      },
+      horzLine: {
+        color: 'rgba(78, 84, 113, 1)',
+        width: 0.5,
+        style: 2,
+        visible: true,
+        labelVisible: true,
+      },
+      mode: 1,
     },
     handleScroll: false,
     handleScale: false,
     axisPressedMouseMove: false,
     priceScale: {
-        borderVisible: false,
+      borderVisible: false,
     },
     timeScale: {
       rightOffset: 0,
@@ -72,23 +75,28 @@ export const BetChart = ({ classAlt, chart, status }) => {
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 8,
       },
-      data: chart ? chart.map((el) => {        
-        const utcTimeObj = new Date(el.time * 1000); 
-        const timezoneOffset = (utcTimeObj.getTimezoneOffset()*60000)/1000;
-        const localTimestamp = el.time-timezoneOffset;
-        dataArr.push(localTimestamp);
-        return { time: localTimestamp, value: el.rate };
-      }) : [],
+      data: chart
+        ? chart.map((el) => {
+            const utcTimeObj = new Date(el.time * 1000);
+            const timezoneOffset =
+              (utcTimeObj.getTimezoneOffset() * 60000) / 1000;
+            const localTimestamp = el.time - timezoneOffset;
+            dataArr.push(localTimestamp);
+            return { time: localTimestamp, value: el.rate };
+          })
+        : [],
     },
   ];
 
-  const visibleFrom = (dataArr.length > 0) ? Math.min(...dataArr) : 0;
-  const visibleTo = (dataArr.length > 0) ? Math.max(...dataArr) : 4102437600;
+  const visibleFrom = dataArr.length > 0 ? Math.min(...dataArr) : 0;
+  const visibleTo = dataArr.length > 0 ? Math.max(...dataArr) : 4102437600;
 
-  return chart.length > 0 ? (
-    <div
-      className={`flex items-center justify-center text-white ${classAlt}`}
-    >
+  return selectedCurrency === CURRENCY_ETH ? (
+    <div>
+      <img src={status === 'ongoing' ? KittyOngoing : KittyFinalized} alt="" />
+    </div>
+  ) : chart.length > 0 ? (
+    <div className={`flex items-center justify-center text-white ${classAlt}`}>
       <Chart
         options={options}
         from={visibleFrom}
@@ -104,5 +112,5 @@ export const BetChart = ({ classAlt, chart, status }) => {
     >
       Loading...
     </div>
-  ); 
+  );
 };

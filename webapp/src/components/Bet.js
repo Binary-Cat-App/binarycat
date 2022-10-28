@@ -160,7 +160,14 @@ export const Bet = ({
               selectedCurrency={selectedCurrency}
             />
           ) : (
-            <BetChart classAlt="h-48" chart={chart} status={status} />
+            <div>
+              <BetChart
+                selectedCurrency={selectedCurrency}
+                classAlt="h-48"
+                chart={chart}
+                status={status}
+              />
+            </div>
           )}
         </div>
 

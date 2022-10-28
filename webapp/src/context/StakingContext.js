@@ -10,7 +10,6 @@ import { useWeb3React } from '@web3-react/core';
 import AvaxBinaryStaking from '../contracts/avax/BinaryStaking.json';
 import AvaxBinToken from '../contracts/avax/BinToken.json';
 import EthBinaryStaking from '../contracts/eth/BinaryStaking.json';
-import EthBinToken from '../contracts/eth/BinToken.json';
 import Networks from '../networks.json';
 
 import { CURRENCY_ETH, CURRENCY_AVAX, CURRENCY_KITTY } from './BettingContext';
@@ -29,10 +28,13 @@ export const StakingProvider = ({ children, currency }) => {
 
   const staking =
     currency === CURRENCY_ETH ? EthBinaryStaking : AvaxBinaryStaking;
-  const token = currency === CURRENCY_ETH ? EthBinToken : AvaxBinToken;
+  const token = currency === CURRENCY_ETH ? AvaxBinToken : AvaxBinToken;
 
   const stakingContract = new web3Eth.Contract(staking.abi, staking.address);
-  const tokenContract = new web3Eth.Contract(token.abi, token.address);
+  const tokenContract = new web3Eth.Contract(
+    token.abi,
+    '0x165DBb08de0476271714952C3C1F068693bd60D7'
+  );
 
   const [currentBlock, setCurrentBlock] = useState(null);
   const [totalStaked, setTotalStaked] = useState(0);
